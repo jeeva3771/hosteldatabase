@@ -174,5 +174,8 @@ foreign key (createdBy) references warden(wardenId);
 insert into course (courseName)values ('BCOM');
 
 
+alter table attendance
+add constraint fk_attendance_studentId
+foreign key (studentId) references student(studentId);
 
 
