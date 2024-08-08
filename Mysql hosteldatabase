@@ -1,0 +1,13 @@
+create database hosteldatabase
+create table block (
+	blockId int auto_increment primary key,
+    blockCode varchar(255), 
+    location varchar(255),
+    isActive tinyint(1),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    createdBy varchar(255), 
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updatedBy varchar(255), 
+    deletedAt timestamp,
+    deletedBy varchar(255)
+)
