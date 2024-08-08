@@ -1,6 +1,6 @@
 create database hosteldatabase;
 create table block (
-    blockId int auto_increment primary key,
+	blockId int auto_increment primary key,
     blockCode varchar(255), 
     location varchar(255),
     isActive tinyint(1),
@@ -9,7 +9,7 @@ create table block (
     updatedAt timestamp default current_timestamp on update current_timestamp,
     updatedBy varchar(255), 
     deletedAt timestamp,
-    deletedBy varchar(255)
+    deletedBy int
 )
 SELECT * FROM block;
 insert into block (blockCode,location,isActive) values ('A-Block','North',1);
@@ -20,13 +20,13 @@ create table blockfloor (
 	blockFloorId int auto_increment primary key,
 	blockId int, 
 	floorNumber int,
-        isActive tinyint(1),
+    isActive tinyint(1),
 	createdAt timestamp default current_timestamp,
 	createdBy varchar(255), 
 	updatedAt timestamp default current_timestamp on update current_timestamp, 
 	updatedBy varchar(255), 
 	deletedAt timestamp, 
-	deletedBy varchar(255),
+	deletedBy int,
     constraint fk_blockfloor_blockId foreign key (blockId)
     references block(blockId)
 )
@@ -46,15 +46,104 @@ create table room (
 	updatedAt timestamp default current_timestamp on update current_timestamp,
 	updatedBy varchar(255), 
 	deletedAt timestamp, 
-	deletedBy varchar(255),
+	deletedBy int,
     constraint fk_room_blockFloorId foreign key (blockFloorId)
     references blockfloor(blockFloorId),
     constraint fk_room_blockId foreign key (blockId)
     references block(blockId)
-)
+);
+drop table room;
 
 select * from room;
 
 
-    
+create table student (
+	studentId int auto_increment,
+	roomId int, 
+	blockFloorId int, 
+	blockId int, 
+	name varchar(255), 
+	registerNumber varchar(255), 
+	dob date, 
+	courseId int, 
+	joinedDate date, 
+	phoneNumber int, 
+	emailId varchar(255), 
+	fatherName varchar(255), 
+	fatherNumber int, 
+	address varchar(255), 
+	createdAt timestamp default current_timestamp,
+	createdBy varchar(255), 
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy varchar(255), 
+	deletedAt timestamp, 
+	deletedBy int,
+    primary key(studentId, emailId),
+    constraint fk_studenId_roomId foreign key (roomId)
+    references room(roomId),
+    constraint fk_studenId_blockFloorId foreign key (blockFloorId)
+    references blockfloor(blockFloorId),
+    constraint fk_studentId_blockId foreign key (blockId)
+    references block(blockId),
+    constraint fk_studentId_courseId foreign key (courseId)
+    references course(courseId)
+);
+drop table student;
+
+select * from student;
+
+create table course (
+	courseId int auto_increment primary key,
+	courseName varchar(255)
+)
+drop table course;
+
+select * from course;
+
+create table attendance (
+	attendanceId int auto_increment primary key,
+	studentId int, 
+	roomId int, 
+	blockFloorId int, 
+	blockId int, 
+	date date, 
+	isPresent tinyint(1), 
+	wardenId int, 
+	createdAt timestamp default current_timestamp,
+    constraint fk_attendance_wardenId foreign key (wardenId)
+    references warden(wardenId)
+);
+drop table attendance;
+select * from attendance;
+
+create table warden (
+	wardenId int auto_increment primary key,
+	name varchar(255), 
+	dob date, 
+	username varchar(255), 
+	password varchar(255), 
+	createdAt timestamp default current_timestamp,
+	createdBy varchar(255),
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy varchar(255), 
+	deletedAt timestamp,
+	deletedBy varchar(255)
+);
+drop table warden;
+alter table block
+add constraint fk_block_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+alter table block
+drop foreign key fk_deletedBy;
+
+alter table blockfloor
+add constraint fk_blockfloor_deletedBy
+foreign key (deletedBy) references wardeattendancen(wardenId);
+
+alter table room
+add constraint fk_room_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+
 
