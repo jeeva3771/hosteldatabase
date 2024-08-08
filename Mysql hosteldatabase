@@ -1,13 +1,60 @@
-create database hosteldatabase
+create database hosteldatabase;
 create table block (
-	blockId int auto_increment primary key,
+    blockId int auto_increment primary key,
     blockCode varchar(255), 
     location varchar(255),
     isActive tinyint(1),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    createdAt timestamp default current_timestamp,
     createdBy varchar(255), 
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updatedAt timestamp default current_timestamp on update current_timestamp,
     updatedBy varchar(255), 
     deletedAt timestamp,
     deletedBy varchar(255)
 )
+SELECT * FROM block;
+insert into block (blockCode,location,isActive) values ('A-Block','North',1);
+update block set isActive = 0 where blockId = 1;
+drop table block;
+
+create table blockfloor (
+	blockFloorId int auto_increment primary key,
+	blockId int, 
+	floorNumber int,
+        isActive tinyint(1),
+	createdAt timestamp default current_timestamp,
+	createdBy varchar(255), 
+	updatedAt timestamp default current_timestamp on update current_timestamp, 
+	updatedBy varchar(255), 
+	deletedAt timestamp, 
+	deletedBy varchar(255),
+    constraint fk_blockfloor_blockId foreign key (blockId)
+    references block(blockId)
+)
+
+select * from blockfloor;
+drop table blockfloor;
+
+create table room (
+	roomId int auto_increment primary key, 
+	blockFloorId int,
+	blockId int, 
+	roomNumber int, 
+	roomCapacity int, 
+	isAc tinyint(1), 
+	createdAt timestamp default current_timestamp,
+	createdBy varchar(255), 
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy varchar(255), 
+	deletedAt timestamp, 
+	deletedBy varchar(255),
+    constraint fk_room_blockFloorId foreign key (blockFloorId)
+    references blockfloor(blockFloorId),
+    constraint fk_room_blockId foreign key (blockId)
+    references block(blockId)
+)
+
+select * from room;
+
+
+    
+
