@@ -5,9 +5,9 @@ create table block (
     location varchar(255),
     isActive tinyint(1),
     createdAt timestamp default current_timestamp,
-    createdBy varchar(255), 
+    createdBy int, 
     updatedAt timestamp default current_timestamp on update current_timestamp,
-    updatedBy varchar(255), 
+    updatedBy int, 
     deletedAt timestamp,
     deletedBy int
 )
@@ -22,9 +22,9 @@ create table blockfloor (
 	floorNumber int,
     isActive tinyint(1),
 	createdAt timestamp default current_timestamp,
-	createdBy varchar(255), 
+	createdBy int, 
 	updatedAt timestamp default current_timestamp on update current_timestamp, 
-	updatedBy varchar(255), 
+	updatedBy int, 
 	deletedAt timestamp, 
 	deletedBy int,
     constraint fk_blockfloor_blockId foreign key (blockId)
@@ -42,9 +42,9 @@ create table room (
 	roomCapacity int, 
 	isAc tinyint(1), 
 	createdAt timestamp default current_timestamp,
-	createdBy varchar(255), 
+	createdBy int, 
 	updatedAt timestamp default current_timestamp on update current_timestamp,
-	updatedBy varchar(255), 
+	updatedBy int, 
 	deletedAt timestamp, 
 	deletedBy int,
     constraint fk_room_blockFloorId foreign key (blockFloorId)
@@ -73,9 +73,9 @@ create table student (
 	fatherNumber int, 
 	address varchar(255), 
 	createdAt timestamp default current_timestamp,
-	createdBy varchar(255), 
+	createdBy int, 
 	updatedAt timestamp default current_timestamp on update current_timestamp,
-	updatedBy varchar(255), 
+	updatedBy int, 
 	deletedAt timestamp, 
 	deletedBy int,
     primary key(studentId, emailId),
@@ -95,7 +95,7 @@ select * from student;
 create table course (
 	courseId int auto_increment primary key,
 	courseName varchar(255)
-)
+);
 drop table course;
 
 select * from course;
@@ -123,11 +123,11 @@ create table warden (
 	username varchar(255), 
 	password varchar(255), 
 	createdAt timestamp default current_timestamp,
-	createdBy varchar(255),
+	createdBy int,
 	updatedAt timestamp default current_timestamp on update current_timestamp,
-	updatedBy varchar(255), 
+	updatedBy int, 
 	deletedAt timestamp,
-	deletedBy varchar(255)
+	deletedBy int
 );
 drop table warden;
 alter table block
@@ -135,15 +135,44 @@ add constraint fk_block_deletedBy
 foreign key (deletedBy) references warden(wardenId);
 
 alter table block
+add constraint fk_block_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table block
+add constraint fk_block_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table block
 drop foreign key fk_deletedBy;
 
 alter table blockfloor
 add constraint fk_blockfloor_deletedBy
-foreign key (deletedBy) references wardeattendancen(wardenId);
+foreign key (deletedBy) references warden(wardenId);
+
+alter table blockfloor
+add constraint fk_blockfloor_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table blockfloor
+add constraint fk_blockfloor_createdBy
+foreign key (createdBy) references warden(wardenId);
+
 
 alter table room
 add constraint fk_room_deletedBy
 foreign key (deletedBy) references warden(wardenId);
+
+alter table room
+add constraint fk_room_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table room
+add constraint fk_room_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+
+insert into course (courseName)values ('BCOM');
+
 
 
 
