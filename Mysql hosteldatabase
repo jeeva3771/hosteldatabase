@@ -191,7 +191,21 @@ alter table attendance
 add constraint fk_attendance_studentId
 foreign key (studentId) references student(studentId);
 
+update course set courseName = 'BSC' where courseId = 1;
+select * from course;
+select * from course where courseId = 1;
 
+alter table warden
+add constraint fk_warden_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table warden
+add constraint fk_warden_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table warden
+add constraint fk_warden_deletedBy
+foreign key (deletedBy) references warden(wardenId);
 
 
 
