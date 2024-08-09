@@ -142,6 +142,18 @@ alter table block
 add constraint fk_block_updatedBy
 foreign key (updatedBy) references warden(wardenId);
 
+alter table student
+add constraint fk_student_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+alter table student
+add constraint fk_student_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table student
+add constraint fk_student_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
 alter table block
 drop foreign key fk_deletedBy;
 
@@ -162,6 +174,8 @@ alter table room
 add constraint fk_room_deletedBy
 foreign key (deletedBy) references warden(wardenId);
 
+
+
 alter table room
 add constraint fk_room_updatedBy
 foreign key (updatedBy) references warden(wardenId);
@@ -173,9 +187,11 @@ foreign key (createdBy) references warden(wardenId);
 
 insert into course (courseName)values ('BCOM');
 
-
 alter table attendance
 add constraint fk_attendance_studentId
 foreign key (studentId) references student(studentId);
+
+
+
 
 
