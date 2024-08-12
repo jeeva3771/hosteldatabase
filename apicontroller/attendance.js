@@ -1,0 +1,68 @@
+function readAttendance(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    try {
+        mysqlClient.query('select * from attendance', (err, result) => {
+            if (err) {
+                res.status(409).send(err.sqlMessage)
+            } else {
+                res.status(200).send(result)
+            }
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+function readOneAttendance(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const attendanceId = req.params.attendanceId;
+    try {
+        mysqlClient.query('select * from attendance where attendanceId = ?', [attendanceId], (err, result) => {
+            if (err) {
+                res.status(404).send(err.sqlMessage)
+            } else {
+                res.status(200).send(result[0])
+            }
+        })
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+function createAttendance(req, res) {
+    const { studentId,
+            roomId,
+            blockFloorId,
+            blockId,
+            date,
+            isPresent,
+            wardenId
+        } = req.body
+
+    if (studentId === '' || roomId === '' || blockFloorId === '' || blockId === '' || date === '' || isPresent === '' || wardenId === '' ) {
+        res.status(400).send(err.sqlMessage)
+    }
+
+    const mysqlClient = req.app.mysqlClient
+
+    try {
+        mysqlClient.query('insert into attendance(studentId,roomId,blockFloorId,blockId,date,ispresent,wardenId) values(?,?,?,?,?,?,?)', [studentId,roomId,blockFloorId,blockId,date,isPresent,wardenId], (err, result) => {
+            if (err) {
+                res.status(409).send(err.sqlMessage)
+            } else {
+                res.status(201).send('insert successfully')
+            }
+        })
+    } catch (error) {
+        console.error(error)
+    }
+}
+
+
+
+module.exports = (app) => {
+    app.get('/api/attendance', readAttendance)
+    app.get('/api/attendance/:attendanceId', readOneAttendance)
+    app.post('/api/attendance', createAttendance)
+
+}
