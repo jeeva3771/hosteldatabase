@@ -58,7 +58,7 @@ function createRoom(req, res) {
     }
 }
 
-function updateRoom(req, res) {
+async function updateRoom(req, res) {
     const roomId = req.params.roomId;
 
     const { blockFloorId = null,
@@ -93,7 +93,7 @@ function updateRoom(req, res) {
         updates.push(' roomCapacity = ?')
     }
 
-    if (isActive) {
+    if (isActive !== undefined) {
         values.push(isActive)
         updates.push(' isActive = ?')
     }
@@ -111,10 +111,9 @@ function updateRoom(req, res) {
     values.push(roomId)
     const mysqlClient = req.app.mysqlClient
 
-
     try {
         if (isActive === 0) {
-            mysqlClient.query('select count(*) from student where roomId = ? and deletedAt is null', [roomId], (err, result) => {
+            mysqlClient.query('select count(*) as count from student where roomId = ? and deletedAt is null', [roomId], (err, result) => {
                 if (err) {
                     return res.status(400).send(err.sqlMessage)
                 } else {
@@ -140,11 +139,11 @@ function updateRoom(req, res) {
                     }
                 }
             })
-            }
+        }
     }
     catch (error) {
-    console.log(error)
-}
+        console.log(error)
+    }
 }
 
 function deleteRoom(req, res) {
@@ -172,6 +171,10 @@ function deleteRoom(req, res) {
         console.log(error)
     }
 }
+
+// async function validateRoomUpdate(req) {
+
+// }
 
 
 module.exports = (app) => {
