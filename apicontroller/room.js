@@ -70,11 +70,6 @@ function updateRoom(req, res) {
         updatedBy = null
     } = req.body;
 
-    // if (isActive === 0) {
-
-    //     // return console.log("students in room shift to another room than try")
-    // }
-
     const values = []
     const updates = []
 
