@@ -1,15 +1,15 @@
 function readBlock(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from block where deletedAt is Null', (err, result) => {
+        mysqlClient.query('select * from block where deletedAt is Null', (err, blocks) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result)
+                res.status(200).send(blocks)
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -17,15 +17,15 @@ function readOneBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
-        mysqlClient.query('select * from block where blockId = ?', [blockId], (err, result) => {
+        mysqlClient.query('select * from block where blockId = ?', [blockId], (err, block) => {
             if (err) {
-                res.status(404).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result[0])
+                res.status(200).send(block[0])
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 

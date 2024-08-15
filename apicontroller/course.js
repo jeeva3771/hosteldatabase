@@ -1,31 +1,31 @@
 function readCourse(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from course', (err, result) => {
+        mysqlClient.query('select * from course', (err, courses) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result)
+                res.status(200).send(courses)
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
-}
+}        
 
 function readOneCourse(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const courId = req.params.courseId;
     try {
-        mysqlClient.query('select * from course where courseId = ?', [courId], (err, result) => {
+        mysqlClient.query('select * from course where courseId = ?', [courId], (err, course) => {
             if (err) {
-                res.status(404).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result[0])
+                res.status(200).send(course[0])
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -47,7 +47,7 @@ function createCourse(req, res) {
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 
 }
@@ -86,7 +86,7 @@ function updateCourse(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -112,7 +112,7 @@ function deleteCourse(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 

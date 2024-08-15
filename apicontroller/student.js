@@ -190,7 +190,7 @@ function updateStudent(req, res) {
     }
 }
 
-function deleteStudent(req, res) {
+async function deleteStudent(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
 
