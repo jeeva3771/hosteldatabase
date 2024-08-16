@@ -9,7 +9,6 @@ function readRooms(req, res) {
             }
         })
     } catch (error) {
-        //res.status(500).send('Internal Server Error')
         res.status(500).send(error)
     }
 }
@@ -45,10 +44,6 @@ async function createRoom(req, res) {
         createdBy = 6
     } = req.body
 
-    // if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === '' || isAc === '') {
-    //     res.status(400).send(err.sqlMessage)
-    // }
-
     const isValidInsert = await validateInsertItems(req);
     if (!isValidInsert) {
         return res.status(400).send("Invalid input data for room creation");
@@ -57,18 +52,21 @@ async function createRoom(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
-
         mysqlClient.query('insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)',
             [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
             (err, result) => {
                 if (err) {
                     res.status(409).send(err.sqlMessage)
-                } else {
+                } 
+                // else if (result.affectedRows === 0){
+                //     res.status(400).send("no insert was made")
+                // } 
+                else {
                     res.status(201).send('insert successfully')
                 }
             })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)   
     }
 }
 
@@ -127,9 +125,14 @@ async function updateRoom(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
+        const room = await getRoomById(roomId, mysqlClient);
+        if (!room || room.deletedAt !== null) {
+            return res.status(404).send("Room not found or already deleted");
+        }
+
         const isValid = await validateUpdateRoom(req)
         if (!isValid) {
-            return res.status(404).send("students in room shift to another room than try");
+            return res.status(409).send("students in room shift to another room than try");
         }
 
         mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ? and deletedAt is null',
@@ -241,19 +244,14 @@ async function validateRoomById(req) {
 
 async function validateInsertItems(req) {
     const {
-            blockFloorId,
-            blockId,
-            roomNumber,
-            roomCapacity,
-            isActive,
-            isAc
-        } = req.body;
-    if (blockFloorId === '' || 
-        blockId === ''|| 
-        roomNumber === ''|| 
-        roomCapacity === '' || 
-        isActive === undefined || 
-        isAc === undefined) {
+        blockFloorId,
+        blockId,
+        roomNumber,
+        roomCapacity,
+        isActive,
+        isAc
+    } = req.body;
+    if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAc === undefined) {
         return false;
     }
     return true;
@@ -265,5 +263,4 @@ module.exports = (app) => {
     app.post('/api/room', createRoom)
     app.put('/api/room/:roomId', updateRoom)
     app.delete('/api/room/:roomId', deleteRoom)
-
 }
