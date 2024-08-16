@@ -329,8 +329,6 @@ function insert(req) {
     })
 }
 
-
-
 async function validateInsertRoom(req) {
     const mysqlClient = req.app.mysqlClient
 
