@@ -1,4 +1,4 @@
-function readBlock(req, res) {
+function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
         mysqlClient.query('select * from block where deletedAt is Null', (err, blocks) => {
@@ -13,10 +13,15 @@ function readBlock(req, res) {
     }
 }
 
-function readOneBlock(req, res) {
+async function readBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
+        const isValid = await validateBlockById(req)
+        if (!isValid) {
+            return res.status(404).send("blockId is not defined")
+        }
+        
         mysqlClient.query('select * from block where blockId = ?', [blockId], (err, block) => {
             if (err) {
                 res.status(500).send(err.sqlMessage)
@@ -34,10 +39,10 @@ function createBlock(req, res) {
         blockCode,
         location,
         isActive,
-        createdBy
+        createdBy = 6
     } = req.body
 
-    if (blockCode === '' || location === '' || isActive === '' || createdBy === '') {
+    if (blockCode === '' || location === '' || isActive === '') {
         res.status(400).send(err.sqlMessage)
     }
 
@@ -52,7 +57,7 @@ function createBlock(req, res) {
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 }
 
@@ -60,10 +65,10 @@ function updateBlock(req, res) {
     const blockId = req.params.blockId;
 
     const { blockCode = null,
-            location = null,
-            isActive = null,
-            updatedBy = null
-        } = req.body;
+        location = null,
+        isActive = null,
+        updatedBy = null
+    } = req.body;
 
     const values = []
     const updates = []
@@ -109,39 +114,71 @@ function updateBlock(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
-function deleteBlock(req, res) {
+async function deleteBlock(req, res) {
     const blockId = req.params.blockId;
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        mysqlClient.query('select * from block where blockId = ?', [blockId], (err, result) => {
-            if (err) {
-                return res.status(400).send(err.sqlMessage)
+        const isValid = await validateBlockById(req)
+        if (!isValid) {
+            return res.status(404).send("blockId is not defined")
+        }
+
+        mysqlClient.query('update block set deletedAt = now() where blockId = ?', [blockId], (err2, result2) => {
+            if (err2) {
+                res.status(500).send(err2.sqlMessage)
             } else {
-                mysqlClient.query('update block set deletedAt = now() where blockId = ?', [blockId], (err2, result2) => {
-                    if (err2) {
-                        res.status(400).send(err.sqlMessage)
+                mysqlClient.query('select * from block where blockId = ?', [blockId], (err3, result3) => {
+                    if (err3) {
+                        res.status(500).send(err3.sqlMessage);
                     } else {
                         res.status(200).send({
                             status: 'deleted',
-                            data: result[0]
-                        })
+                            data: result3[0]
+                        });
                     }
-                })
+                });
             }
         })
-    } catch (error) {
-        console.log(error)
+    }
+    catch (error) {
+        res.status(500).send(error)
     }
 }
 
+function getBlockById(blockId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query('select * from block where blockId = ?', [blockId], (err, block) => {
+            if (err) {
+                return reject(err)
+            }
+            resolve(block.length ? block[0] : null)
+        })
+    })
+}
+
+async function validateBlockById(req) {
+    const blockId = req.params.blockId
+    const mysqlClient = req.app.mysqlClient
+
+    if (req.body.blockId === undefined) {
+        var deleteBlock = await getBlockById(blockId, mysqlClient)
+
+        if (deleteBlock !== null) {
+            return true
+        }
+    }
+    return false
+}
+
+
 module.exports = (app) => {
-    app.get('/api/block', readBlock)
-    app.get('/api/block/:blockId', readOneBlock)
+    app.get('/api/block', readBlocks)
+    app.get('/api/block/:blockId', readBlock)
     app.post('/api/block/', createBlock)
     app.put('/api/block/:blockId', updateBlock)
     app.delete('/api/block/:blockId', deleteBlock)

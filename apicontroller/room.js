@@ -11,7 +11,6 @@ function readRooms(req, res) {
     } catch (error) {
         //res.status(500).send('Internal Server Error')
         res.status(500).send(error)
-
     }
 }
 
@@ -19,9 +18,9 @@ async function readRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
     try {
-        const isValid = await validateRoom(req)
+        const isValid = await validateRoomById(req)
         if (!isValid) {
-            res.status(404).send("notValid")
+            res.status(404).send("roomId not valid")
         }
         mysqlClient.query('select * from room where roomId = ?', [roomId], (err, room) => {
             if (err) {
@@ -35,24 +34,28 @@ async function readRoom(req, res) {
     }
 }
 
-function createRoom(req, res) {
-    const {
-        blockFloorId,
-        blockId,
-        roomNumber,
-        roomCapacity,
-        isActive,
-        isAc,
-        createdBy = 6
-    } = req.body
+async function createRoom(req, res) {
+    // const {
+    //     blockFloorId,
+    //     blockId,
+    //     roomNumber,
+    //     roomCapacity,
+    //     isActive,
+    //     isAc,
+    //     createdBy = 6
+    // } = req.body
 
-    if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === '' || isAc === '') {
-        res.status(400).send(err.sqlMessage)
-    }
+    // if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === '' || isAc === '') {
+    //     res.status(400).send(err.sqlMessage)
+    // }
 
     const mysqlClient = req.app.mysqlClient
 
     try {
+        const validInsert = await validateInsertRoom()
+        if (validInsert) {
+            res.status(500).send("notValid to insert")
+        }
         mysqlClient.query('insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)',
             [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
             (err, result) => {
@@ -124,31 +127,29 @@ async function updateRoom(req, res) {
     try {
         const isValid = await validateUpdateRoom(req)
         if (!isValid) {
-            return res.status(409).send("students in room shift to another room than try");
+            return res.status(404).send("students in room shift to another room than try");
         }
 
-        const isUpdate = await update(req,req.body)
-        if (!isUpdate) {
-            return res.status(400).send("err update")
-        }
-
-        // mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ?', values, (err2, result2) => {
-        //     if (err2) {
-        //         return res.status(409).send(err2.sqlMessage)
-        //     } else {
-        mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, result3) => {
-            if (err3) {
-                res.status(409).send(err3.sqlMessage)
-            } else {
-                res.status(200).send({
-                    status: 'successfull',
-                    data: result3[0]
-                })
-            }
-        })
-    }
-    catch (error) {
-        console.log(error)
+        mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ?',
+            values,
+            (err2, result2) => {
+                if (err2) {
+                    res.status(204).send(err2.sqlMessage)
+                } else {
+                    mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, result3) => {
+                        if (err3) {
+                            res.status(500).send(err3.sqlMessage)
+                        } else {
+                            res.status(200).send({
+                                status: 'successfull',
+                                data: result3[0]
+                            })
+                        }
+                    })
+                }
+            })
+    } catch (error) {
+        res.status(500).send(error)
     }
 }
 
@@ -157,13 +158,15 @@ async function deleteRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const isValid = await validateRoom(req)
+        const isValid = await validateRoomById(req)
         if (!isValid) {
             return res.status(404).send("roomId is not defined")
         }
+
+        
         mysqlClient.query('update room set deletedAt = now() where roomId = ?', [roomId], (err2, result2) => {
             if (err2) {
-                res.status(500).send(err2.sqlMessage)
+                res.status(204).send(err2.sqlMessage)
             } else {
                 mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, result3) => {
                     if (err3) {
@@ -197,7 +200,7 @@ function getStudentCountByRoomId(roomId, mysqlClient) {
     })
 }
 
-async function validateRoomUpdate(req) {
+async function validateUpdateRoom(req) {
     const roomId = req.params.roomId
     const mysqlClient = req.app.mysqlClient
 
@@ -222,12 +225,11 @@ function getRoomById(roomId, mysqlClient) {
     })
 }
 
-async function validateRoom(req) {
+async function validateRoomById(req) {
     const roomId = req.params.roomId
     const mysqlClient = req.app.mysqlClient
     if (req.body.roomId === undefined) {
         var deleteRoom = await getRoomById(roomId, mysqlClient)
-
         if (deleteRoom !== null) {
             return true
         }
@@ -236,20 +238,6 @@ async function validateRoom(req) {
 }
 
 function roomUpdate(roomId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ?',
-        values,
-        (err2, result2) => {
-            if (err2) {
-                reject(err2)
-            }
-            resolve(result2.length ? result2[0] : null)
-        })
-    })
-}
-async function update(req) {
-    const roomId = req.params.roomId
-    const mysqlClient = req.app.mysqlClient
     const {
         blockFloorId = null,
         blockId = null,
@@ -260,14 +248,100 @@ async function update(req) {
         updatedBy = null
     } = req.body;
 
-    // mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ?', values, (err2, result2) => {
-    //     if (err2) {
-    //         return res.status(409).send(err2.sqlMessage)
-    //     } 
-    const updateRoom = await roomUpdate(req)
+    const values = []
+    const updates = []
 
+    if (blockFloorId) {
+        values.push(blockFloorId)
+        updates.push(' blockFloorId = ?')
+    }
 
+    if (blockId) {
+        values.push(blockId)
+        updates.push(' blockId = ?')
+    }
+
+    if (roomNumber) {
+        values.push(roomNumber)
+        updates.push(' roomNumber = ?')
+    }
+
+    if (roomCapacity) {
+        values.push(roomCapacity)
+        updates.push(' roomCapacity = ?')
+    }
+
+    if (isActive !== undefined) {
+        values.push(isActive)
+        updates.push(' isActive = ?')
+    }
+
+    if (isAc) {
+        values.push(isAc)
+        updates.push(' isAc = ?')
+    }
+
+    if (updatedBy) {
+        values.push(updatedBy)
+        updates.push(' updatedBy = ?')
+    }
+
+    values.push(roomId)
+
+    return new Promise((resolve, reject) => {
+
+        if (err2) {
+            reject(err2)
+        }
+        resolve(result2.length ? result2[0] : null)
+    })
 }
+
+
+async function update(req) {
+    const roomId = req.params.roomId
+    const mysqlClient = req.app.mysqlClient
+
+    //  if (req.body === null) {
+    const [updateRoom] = await roomUpdate(roomId, mysqlClient, req.body)
+    console.log(updateRoom)
+    if (updateRoom > 0) {
+        return true
+    }
+    // }
+    return false
+}
+
+function insert(req) {
+    const {
+        blockFloorId,
+        blockId,
+        roomNumber,
+        roomCapacity,
+        isActive,
+        isAc,
+        createdBy = 6
+    } = req.body
+
+
+    return new Promise((resolve, reject) => {
+
+    })
+}
+
+
+
+async function validateInsertRoom(req) {
+    const mysqlClient = req.app.mysqlClient
+
+    const [insertRoom] = await insert(req.body)
+    if (insertRoom === undefined) {
+        return false
+    }
+    return true
+}
+
+
 
 module.exports = (app) => {
     app.get('/api/room', readRooms)

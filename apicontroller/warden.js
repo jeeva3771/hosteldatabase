@@ -1,15 +1,15 @@
 function readWarden(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from warden where deletedAt is null', (err, result) => {
+        mysqlClient.query('select * from warden where deletedAt is null', (err, wardens) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result)
+                res.status(200).send(wardens)
             }
         })
     } catch (error){
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -17,15 +17,15 @@ function readOneWarden(req, res) {
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from warden where wardenId = ?', [wardenId], (err, result) => {
+        mysqlClient.query('select * from warden where wardenId = ?', [wardenId], (err, warden) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result[0])
+                res.status(200).send(warden[0])
             }
         })
     } catch (error){
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -34,10 +34,10 @@ function createWarden(req, res) {
             dob,
             username,
             password,
-            createdBy
+            createdBy = 6
         } = req.body
 
-    if (name === '' || dob === '' || username === '' || password === '' || createdBy === '') {
+    if (name === '' || dob === '' || username === '' || password === '') {
         res.status(400).send(err.sqlMessage)
     }
 
@@ -52,7 +52,7 @@ function createWarden(req, res) {
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 }
 
@@ -115,7 +115,7 @@ function updateWarden(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -141,7 +141,7 @@ function deleteWarden(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 

@@ -9,7 +9,7 @@ function readStudent(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -25,7 +25,7 @@ function readOneStudent(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -44,10 +44,10 @@ function createStudent(req, res) {
         fatherName,
         fatherNumber,
         address,
-        createdBy
+        createdBy = 6
     } = req.body
 
-    if (roomId === '' || blockFloorId === '' || blockId === '' || name === '' || registerNumber === '' || dob === '' || courseId === '' || joinedDate === '' || phoneNumber === '' || emailId === '' || fatherName === '' || fatherNumber === '' || address === '' || createdBy === '') {
+    if (roomId === '' || blockFloorId === '' || blockId === '' || name === '' || registerNumber === '' || dob === '' || courseId === '' || joinedDate === '' || phoneNumber === '' || emailId === '' || fatherName === '' || fatherNumber === '' || address === '') {
         res.status(400).send(err.sqlMessage)
     }
 
@@ -62,10 +62,9 @@ function createStudent(req, res) {
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 }
-//Out of range value for column 'phoneNumber' at row 1
 
 function updateStudent(req, res) {
     const studentId = req.params.studentId;
@@ -186,7 +185,7 @@ function updateStudent(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -212,7 +211,7 @@ async function deleteStudent(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 

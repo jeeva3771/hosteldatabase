@@ -1,15 +1,15 @@
 function readAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from attendance', (err, result) => {
+        mysqlClient.query('select * from attendance', (err, attendances) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result)
+                res.status(200).send(attendances)
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -17,15 +17,15 @@ function readOneAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const attendanceId = req.params.attendanceId;
     try {
-        mysqlClient.query('select * from attendance where attendanceId = ?', [attendanceId], (err, result) => {
+        mysqlClient.query('select * from attendance where attendanceId = ?', [attendanceId], (err, attendance) => {
             if (err) {
-                res.status(404).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result[0])
+                res.status(200).send(attendance[0])
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -54,7 +54,7 @@ function createAttendance(req, res) {
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 }
 

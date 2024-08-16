@@ -1,11 +1,12 @@
-function readBlockFloor(req, res) {
+function readBlockFloors(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from blockfloor where deletedAt is null', (err, result) => {
+        mysqlClient.query('select * from blockfloor where deletedAt is null', (err, blockFloors) => {
             if (err) {
                 res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result)
+                res.
+                status(200).send(blockFloors)
             }
         })
     } catch (error) {
@@ -13,19 +14,24 @@ function readBlockFloor(req, res) {
     }
 }
 
-function readOneBlockFloor(req, res) {
+async function readBlockFloor(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockFloorId = req.params.blockfloorId;
+
     try {
-        mysqlClient.query('select * from blockfloor where blockfloorId = ?', [blockFloorId], (err, result) => {
+        const isValid = await getBlockFloorById(req)
+        if (!isValid) {
+            return res.status(404).send("blockfloorId is not defined")
+        }
+        mysqlClient.query('select * from blockfloor where blockfloorId = ?', [blockFloorId], (err, blockFloor) => {
             if (err) {
-                res.status(404).send(err.sqlMessage)
+                res.status(500).send(err.sqlMessage)
             } else {
-                res.status(200).send(result[0])
+                res.status(200).send(blockFloor[0])
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -34,10 +40,10 @@ function createBlockFloor(req, res) {
         blockId,
         floorNumber,
         isActive,
-        createdBy
+        createdBy = 6
     } = req.body
 
-    if (blockId === '' || floorNumber === '' || isActive === '' || createdBy === '') {
+    if (blockId === '' || floorNumber === '' || isActive === '') {
         res.status(400).send(err.sqlMessage)
     }
 
@@ -46,13 +52,13 @@ function createBlockFloor(req, res) {
     try {
         mysqlClient.query('insert into blockfloor (blockId,floorNumber,isActive,createdBy) values(?,?,?,?)', [blockId, floorNumber, isActive, createdBy], (err, result) => {
             if (err) {
-                res.status(409).send(err.sqlMessage)
+                res.status(400).send(err.sqlMessage)
             } else {
                 res.status(201).send('insert successfully')
             }
         })
     } catch (error) {
-        console.error(error)
+        res.status(500).send(error)
     }
 }
 
@@ -109,7 +115,7 @@ function updateBlockFloor(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
@@ -139,40 +145,39 @@ async function deleteBlockFloor(req, res) {
             }
         })
     } catch (error) {
-        console.log(error)
+        res.status(500).send(error)
     }
 }
 
-    function getDeleteByBlockFloorId(blockFloorId, mysqlClient) {
-        return new Promise((resolve, reject) => {
-            mysqlClient.query('select * from blockfloor where blockfloorId = ?', [blockFloorId], (err, result) => {
-                if (err) {
-                    return reject()
-                }
-                resolve(result)
-            })
-        })
-    }
-
-    async function validateBlockFloorDelete(req) {
-        const roomId = req.params.blockfloorId
-        const mysqlClient = req.app.mysqlClient
-        // console.log(req.body.roomId)
-        if (req.body.roomId === undefined) {
-            var [deleteBlockFloor] = await getDeleteByBlockFloorId(roomId, mysqlClient)
-            if (deleteBlockFloor && deleteBlockFloor.roomId !== null) {
-                return true
+function getBlockFloorById(blockFloorId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query('select * from blockfloor where blockfloorId = ?', [blockFloorId], (err, blockFloor) => {
+            if (err) {
+                return reject(err)
             }
+            resolve(blockFloor.length ? blockFloor[0] : null)
+        })
+    })
+}
+
+async function validateBlockFloorDelete(req) {
+    const blockFloorId = req.params.blockfloorId
+    const mysqlClient = req.app.mysqlClient
+    if (req.body.blockFloorId === undefined) {
+        var [deleteBlockFloor] = await getBlockFloorById(blockFloorId, mysqlClient)
+        if (deleteBlockFloor !== null) {
+            return true
         }
-        return false
     }
+    return false
+}
 
 
 
-    module.exports = (app) => {
-        app.get('/api/blockfloor', readBlockFloor)
-        app.get('/api/blockfloor/:blockfloorId', readOneBlockFloor)
-        app.post('/api/blockfloor', createBlockFloor)
-        app.put('/api/blockfloor/:blockfloorId', updateBlockFloor)
-        app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloor)
-    }
+module.exports = (app) => {
+    app.get('/api/blockfloor', readBlockFloors)
+    app.get('/api/blockfloor/:blockfloorId', readBlockFloor)
+    app.post('/api/blockfloor', createBlockFloor)
+    app.put('/api/blockfloor/:blockfloorId', updateBlockFloor)
+    app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloor)
+}
