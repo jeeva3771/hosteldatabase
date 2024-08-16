@@ -54,7 +54,7 @@ async function createRoom(req, res) {
     try {
         mysqlClient.query('insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)',
             [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
-            (err, result) => {
+            (err, insertedRoom) => {
                 if (err) {
                     res.status(409).send(err.sqlMessage)
                 } 
@@ -137,19 +137,19 @@ async function updateRoom(req, res) {
 
         mysqlClient.query('update room set ' + updates.join(',') + ' where roomId = ? and deletedAt is null',
             values,
-            (err2, result2) => {
+            (err2, updatedRoom) => {
                 if (err2) {
                     res.status(500).send(err2.sqlMessage)
-                } else if (result2.affectedRows === 0) {
+                } else if (updatedRoom.affectedRows === 0) {
                     res.status(204).send("Room not found or no changes made")
                 } else {
-                    mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, result3) => {
+                    mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, room) => {
                         if (err3) {
                             res.status(500).send(err3.sqlMessage)
                         } else {
                             res.status(200).send({
                                 status: 'successfull',
-                                data: result3[0]
+                                data: room[0]
                             })
                         }
                     })
@@ -170,17 +170,17 @@ async function deleteRoom(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        mysqlClient.query('update room set deletedAt = now() where roomId = ?', [roomId], (err2, result2) => {
+        mysqlClient.query('update room set deletedAt = now() where roomId = ?', [roomId], (err2, deletedRoom) => {
             if (err2) {
                 res.status(204).send(err2.sqlMessage)
             } else {
-                mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, result3) => {
+                mysqlClient.query('select * from room where roomId = ?', [roomId], (err3, getDeletedRoom) => {
                     if (err3) {
                         res.status(500).send(err3.sqlMessage);
                     } else {
                         res.status(200).send({
                             status: 'deleted',
-                            data: result3[0]
+                            data: getDeletedRoom[0]
                         });
                     }
                 });
@@ -196,11 +196,11 @@ function getStudentCountByRoomId(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
         mysqlClient.query('select count(*) as count from student where roomId = ? and deletedAt is null',
             [roomId],
-            (err, result) => {
+            (err, roomIdCount) => {
                 if (err) {
                     return reject(err)
                 }
-                resolve(result)
+                resolve(roomIdCount)
             })
     })
 }
