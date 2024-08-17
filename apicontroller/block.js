@@ -21,7 +21,7 @@ async function readBlock(req, res) {
         if (!isValid) {
             return res.status(404).send("blockId is not defined")
         }
-        
+
         mysqlClient.query('select * from block where blockId = ?', [blockId], (err, block) => {
             if (err) {
                 res.status(500).send(err.sqlMessage)
@@ -64,7 +64,8 @@ function createBlock(req, res) {
 function updateBlock(req, res) {
     const blockId = req.params.blockId;
 
-    const { blockCode = null,
+    const {
+        blockCode = null,
         location = null,
         isActive = null,
         updatedBy = null
