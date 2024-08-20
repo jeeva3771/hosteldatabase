@@ -37,7 +37,7 @@ async function createBlock(req, res) {
 
     const isValidInsert = await validateInsertItems(req);
     if (!isValidInsert) {
-        return res.status(400).send("Invalid input data for room creation");
+        return res.status(400).send("Invalid input data for block creation");
     }
 
     const mysqlClient = req.app.mysqlClient
@@ -79,7 +79,7 @@ async function updateBlock(req, res) {
     }
 
     if (isActive !== undefined) {
-        values.push(isActive !== undefined)
+        values.push(isActive)
         updates.push(' isActive = ?')
     }
 

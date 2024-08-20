@@ -11,9 +11,6 @@ const room = require('./apicontroller/room.js')
 const student = require('./apicontroller/student.js')
 const attendance = require('./apicontroller/attendance.js')
 
-
-
-
 const app = express()
 app.use(logger('dev'))
 app.use(express.json())

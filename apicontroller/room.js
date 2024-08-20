@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient
@@ -14,7 +14,7 @@ async function readRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
     try {
-        const isValid = await validateRoomById(req)
+        const isValid = await validateRoomById(roomId, mysqlClient)
         if (!isValid) {
             return res.status(404).send("roomId not valid")
         }
@@ -42,10 +42,10 @@ async function createRoom(req, res) {
     }
 
     const mysqlClient = req.app.mysqlClient
-
+    // const createdBy = insertedBy();
     try {
         const newRoom = await mysqlQuery('insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)',
-            [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
+        [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
             mysqlClient)
         if (newRoom.affectedRows === 0) {
             res.status(400).send("no insert was made")
@@ -66,7 +66,6 @@ async function updateRoom(req, res) {
         roomCapacity = null,
         isActive = null,
         isAc = null,
-        updatedBy = 8
     } = req.body;
 
     const values = []
@@ -102,8 +101,7 @@ async function updateRoom(req, res) {
         updates.push(' isAc = ?')
     }
 
-    values.push(8)
-    updates.push(' updatedBy = ?')
+    updates.push(' updatedBy = 8')
 
     values.push(roomId)
     const mysqlClient = req.app.mysqlClient
@@ -114,11 +112,10 @@ async function updateRoom(req, res) {
             return res.status(404).send("Room not found or already deleted");
         }
 
-        const isValid = await validateUpdateRoom(req)
+        const isValid = await validateUpdateRoom(roomId, mysqlClient)
         if (!isValid) {
             return res.status(409).send("students in room shift to another room than try");
         }
-        // console.log('update room set'  + updates.join(',') +  'where roomId = ? ')
         const isUpdate = await mysqlQuery('update room set ' + updates.join(',') + ' where roomId = ? and deletedAt is null',
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
@@ -132,6 +129,7 @@ async function updateRoom(req, res) {
         })
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -141,7 +139,7 @@ async function deleteRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const isValid = await validateRoomById(req)
+        const isValid = await validateRoomById(roomId, mysqlClient)
         if (!isValid) {
             return res.status(404).send("roomId is not defined")
         }
@@ -149,7 +147,6 @@ async function deleteRoom(req, res) {
         const deletedRoom = await mysqlQuery('update room set deletedAt = now(), deletedBy = 8 where roomId = ? and deletedAt is null', [roomId], mysqlClient)
         if (deletedRoom.affectedRows === 0) {
             return res.status(404).send("Room not found or already deleted")
-
         }
 
         const getDeletedRoom = await mysqlQuery('select * from room where roomId = ?', [roomId], mysqlClient)
@@ -174,9 +171,7 @@ function getRoomById(roomId, mysqlClient) {
     })
 }
 
-async function validateRoomById(req) {
-    const roomId = req.params.roomId
-    const mysqlClient = req.app.mysqlClient
+async function validateRoomById(roomId, mysqlClient) {
     var room = await getRoomById(roomId, mysqlClient)
     if (room !== null) {
         return true
@@ -193,7 +188,6 @@ async function validateInsertItems(req) {
         isActive,
         isAc
     } = req.body;
-    console.log({ blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc });
 
     if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAc === '') {
         return false;
@@ -214,10 +208,7 @@ function getStudentCountByRoomId(roomId, mysqlClient) {
     })
 }
 
-async function validateUpdateRoom(req) {
-    const roomId = req.params.roomId
-    const mysqlClient = req.app.mysqlClient
-
+async function validateUpdateRoom(roomId, mysqlClient) {
     // validate isActive
     if (req.body.isActive === 0) {
         var [studentRoom] = await getStudentCountByRoomId(roomId, mysqlClient)

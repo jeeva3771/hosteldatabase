@@ -1,58 +1,58 @@
-function readCourse(req, res) {
+const { mysqlQuery } = require('../utilityclient.js')
+
+async function readCourses(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from course', (err, courses) => {
-            if (err) {
-                res.status(500).send(err.sqlMessage)
-            } else {
-                res.status(200).send(courses)
-            }
-        })
-    } catch (error) {
-        res.status(500).send(error)
+        const courses = await mysqlQuery('select * from course', [], mysqlClient);
+        res.status(200).send(courses)
     }
-}        
-
-function readOneCourse(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const courId = req.params.courseId;
-    try {
-        mysqlClient.query('select * from course where courseId = ?', [courId], (err, course) => {
-            if (err) {
-                res.status(500).send(err.sqlMessage)
-            } else {
-                res.status(200).send(course[0])
-            }
-        })
-    } catch (error) {
-        res.status(500).send(error)
+    catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
-function createCourse(req, res) {
+async function readCourse(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const courseId = req.params.courseId;
+    try {
+        const isValid = await validateCourseById(req)
+        if (!isValid) {
+            return res.status(404).send("courseId not valid")
+        }
+
+        const course = await mysqlQuery('select * from course where courseId = ?', [courseId], mysqlClient)
+        res.status(200).send(course[0])
+    }
+    catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function createCourse(req, res) {
     const { courseName } = req.body
 
-    if (courseName === '') {
-        res.status(400).send(err.sqlMessage)
+    const isValidInsert = await validateInsertItems(req);
+    if (!isValidInsert) {
+        return res.status(400).send("Invalid input data for course creation");
     }
 
     const mysqlClient = req.app.mysqlClient
 
     try {
-        mysqlClient.query('insert into course(courseName) values(?)', [courseName], (err, result) => {
-            if (err) {
-                res.status(409).send(err.sqlMessage)
-            } else {
-                res.status(201).send('insert successfully')
-            }
-        })
-    } catch (error) {
-        res.status(500).send(error)
+        const newCourse = await mysqlQuery('insert into course(courseName) values(?)', [courseName], mysqlClient)
+        if (newCourse.affectedRows === 0) {
+            res.status(400).send("no insert was made")
+        } else {
+            res.status(201).send('insert successfully')
+        }
     }
-
+    catch (error) {
+        console.log(error)
+        res.status(500).send(error.message)
+    }
 }
 
-function updateCourse(req, res) {
+async function updateCourse(req, res) {
     const courseId = req.params.courseId;
 
     const { courseName = null } = req.body;
@@ -69,57 +69,81 @@ function updateCourse(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
-        mysqlClient.query('update course set ' + updates.join(',') + ' where courseId = ?', values, (err, result) => {
-            if (err) {
-                return res.status(409).send(err.sqlMessage)
-            } else {
-                mysqlClient.query('select * from course where courseId = ?', [courseId], (err2, result2) => {
-                    if (err2) {
-                        res.status(409).send(err2.sqlMessage)
-                    } else {
-                        res.status(200).send({
-                            status: 'successfull',
-                            data: result2[0]
-                        })
-                    }
-                })
-            }
+        const course = await validateCourseById(courseId, mysqlClient);
+        if (!course) {
+            return res.status(404).send("course not found or already deleted");
+        }
+
+        const isUpdate = await mysqlQuery('update course set ' + updates.join(',') + ' where courseId = ?',
+            values, mysqlClient)
+        if (isUpdate.affectedRows === 0) {
+            res.status(204).send("course not found or no changes made")
+        }
+
+        const getUpdatedCourse = await mysqlQuery('select * from course where courseId = ?', [courseId], mysqlClient)
+        res.status(200).send({
+            status: 'successfull',
+            data: getUpdatedCourse[0]
         })
-    } catch (error) {
-        res.status(500).send(error)
+    }
+    catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
-function deleteCourse(req, res) {
+async function deleteCourse(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        mysqlClient.query('select * from course where courseId = ?', [courseId], (err, result) => {
-            if (err) {
-                return res.status(400).send(err.sqlMessage)
-            } else {
-                mysqlClient.query('delete from course where courseId = ?', [courseId], (err2, result2) => {
-                    if (err2) {
-                        res.status(400).send(err.sqlMessage)
-                    } else {
-                        res.status(200).send({
-                            status: 'deleted',
-                            data: result[0]
-                        })
-                    }
-                })
-            }
+        const course = await validateCourseById(courseId, mysqlClient);
+        if (!course) {
+            return res.status(404).send("Course not found or already deleted");
+        }
+
+        const deleteCourse = await mysqlQuery('delete from course where courseId = ?', [courseId], mysqlClient)
+        res.status(200).send({
+            status: 'deleted',
         })
-    } catch (error) {
-        res.status(500).send(error)
+    }
+    catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
+function getCourseById(courseId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query('select * from course where courseId = ?', [courseId], (err, course) => {
+            if (err) {
+                return reject(err)
+            }
+            resolve(course.length ? course[0] : null)
+        })
+    })
+}
+
+async function validateCourseById(req) {
+    const courseId = req.params.courseId
+    const mysqlClient = req.app.mysqlClient
+    var course = await getCourseById(courseId, mysqlClient)
+    if (course !== null) {
+        return true
+    }
+    return false
+}
+
+async function validateInsertItems(req) {
+    const { courseName } = req.body
+
+    if (courseName === '') {
+        return false
+    }
+    return true
+}
 
 module.exports = (app) => {
-    app.get('/api/course', readCourse)
-    app.get('/api/course/:courseId', readOneCourse)
+    app.get('/api/course', readCourses)
+    app.get('/api/course/:courseId', readCourse)
     app.post('/api/course', createCourse)
     app.put('/api/course/:courseId', updateCourse)
     app.put('/api/course/:courseId', updateCourse)

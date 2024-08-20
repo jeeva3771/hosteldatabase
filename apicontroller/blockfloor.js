@@ -7,7 +7,7 @@ async function readBlockFloors(req, res) {
         res.status(200).send(blockFloors)
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -45,14 +45,16 @@ async function createBlockFloor(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
-        const newBlockFloor = await mysqlQuery('insert into blockfloor (blockId,floorNumber,isActive,createdBy) values(?,?,?,?)', [blockId, floorNumber, isActive, createdBy], mysqlClient)
+        const newBlockFloor = await mysqlQuery('insert into blockfloor (blockId,floorNumber,isActive,createdBy) values(?,?,?,?)',
+                              [blockId, floorNumber, isActive, createdBy], mysqlClient)
         if (newBlockFloor.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
-        res.status(500).send(error.Message)
+        console.log(error)
+        res.status(500).send(error.message)
     }
 }
 
@@ -79,7 +81,7 @@ async function updateBlockFloor(req, res) {
         updates.push(' floorNumber = ?')
     }
 
-    if (isActive) {
+    if (isActive !== undefined) {
         values.push(isActive)
         updates.push(' isActive = ?')
     }
@@ -116,7 +118,7 @@ async function updateBlockFloor(req, res) {
         })
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -142,6 +144,7 @@ async function deleteBlockFloor(req, res) {
         });
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -153,7 +156,7 @@ async function validateInsertItems(req) {
         isActive,
     } = req.body
 
-    if (blockId === '' || floorNumber === '' || isActive === undefined) {
+    if (blockId === '' || floorNumber === '' || isActive === '') {
         return false
     }
     return true;
@@ -173,11 +176,9 @@ function getBlockFloorById(blockFloorId, mysqlClient) {
 async function validateBlockFloorById(req) {
     const blockFloorId = req.params.blockfloorId
     const mysqlClient = req.app.mysqlClient
-    if (req.body.blockFloorId === undefined) {
-        var [blockFloor] = await getBlockFloorById(blockFloorId, mysqlClient)
-        if (blockFloor !== null) {
-            return true
-        }
+    var blockFloor = await getBlockFloorById(blockFloorId, mysqlClient)
+    if (blockFloor !== null) {
+        return true
     }
     return false
 }
@@ -196,7 +197,7 @@ function getroomCountByBlockFloorId(blockFloorId, mysqlClient) {
 }
 
 async function validateUpdateBlockFloor(req) {
-    const blockFloorId = req.params.roomId
+    const blockFloorId = req.params.blockfloorId
     const mysqlClient = req.app.mysqlClient
 
     if (req.body.isActive === 0) {
