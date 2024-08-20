@@ -6,7 +6,7 @@ async function readRooms(req, res) {
         const rooms = await mysqlQuery('select * from room where deletedAt is null', [], mysqlClient);
         res.status(200).send(rooms);
     } catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -16,12 +16,12 @@ async function readRoom(req, res) {
     try {
         const isValid = await validateRoomById(req)
         if (!isValid) {
-            res.status(404).send("roomId not valid")
+            return res.status(404).send("roomId not valid")
         }
         const room = await mysqlQuery('select * from room where roomId = ?', [roomId], mysqlClient)
         res.status(200).send(room[0])
     } catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -33,7 +33,7 @@ async function createRoom(req, res) {
         roomCapacity,
         isActive,
         isAc,
-        createdBy = 6
+        createdBy = 8
     } = req.body
 
     const isValidInsert = await validateInsertItems(req);
@@ -44,7 +44,7 @@ async function createRoom(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
-        const newRoom = await mysqlQuery(`insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)`,
+        const newRoom = await mysqlQuery('insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(?,?,?,?,?,?,?)',
             [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc, createdBy],
             mysqlClient)
         if (newRoom.affectedRows === 0) {
@@ -53,13 +53,12 @@ async function createRoom(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
 async function updateRoom(req, res) {
     const roomId = req.params.roomId;
-
     const {
         blockFloorId = null,
         blockId = null,
@@ -67,7 +66,7 @@ async function updateRoom(req, res) {
         roomCapacity = null,
         isActive = null,
         isAc = null,
-        updatedBy = null
+        updatedBy = 8
     } = req.body;
 
     const values = []
@@ -103,16 +102,14 @@ async function updateRoom(req, res) {
         updates.push(' isAc = ?')
     }
 
-    if (updatedBy) {
-        values.push(updatedBy)
-        updates.push(' updatedBy = ?')
-    }
+    values.push(8)
+    updates.push(' updatedBy = ?')
 
     values.push(roomId)
     const mysqlClient = req.app.mysqlClient
 
     try {
-        const room = await getRoomById(roomId, mysqlClient);
+        const room = await validateRoomById(roomId, mysqlClient);
         if (!room || room.deletedAt !== null) {
             return res.status(404).send("Room not found or already deleted");
         }
@@ -121,7 +118,7 @@ async function updateRoom(req, res) {
         if (!isValid) {
             return res.status(409).send("students in room shift to another room than try");
         }
-
+        // console.log('update room set'  + updates.join(',') +  'where roomId = ? ')
         const isUpdate = await mysqlQuery('update room set ' + updates.join(',') + ' where roomId = ? and deletedAt is null',
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
@@ -135,7 +132,7 @@ async function updateRoom(req, res) {
         })
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -149,9 +146,10 @@ async function deleteRoom(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const deletedRoom = await mysqlQuery('update room set deletedAt = now() where roomId = ? and deletedAt is null', [roomId], mysqlClient)
+        const deletedRoom = await mysqlQuery('update room set deletedAt = now(), deletedBy = 8 where roomId = ? and deletedAt is null', [roomId], mysqlClient)
         if (deletedRoom.affectedRows === 0) {
             return res.status(404).send("Room not found or already deleted")
+
         }
 
         const getDeletedRoom = await mysqlQuery('select * from room where roomId = ?', [roomId], mysqlClient)
@@ -161,7 +159,7 @@ async function deleteRoom(req, res) {
         });
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -179,11 +177,9 @@ function getRoomById(roomId, mysqlClient) {
 async function validateRoomById(req) {
     const roomId = req.params.roomId
     const mysqlClient = req.app.mysqlClient
-    if (req.body.roomId === undefined) {
-        var deleteRoom = await getRoomById(roomId, mysqlClient)
-        if (deleteRoom !== null) {
-            return true
-        }
+    var room = await getRoomById(roomId, mysqlClient)
+    if (room !== null) {
+        return true
     }
     return false
 }
