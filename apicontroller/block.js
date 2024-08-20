@@ -32,7 +32,7 @@ async function createBlock(req, res) {
         blockCode,
         location,
         isActive,
-        createdBy = 6
+        createdBy = 8
     } = req.body
 
     const isValidInsert = await validateInsertItems(req);
@@ -51,7 +51,7 @@ async function createBlock(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
-        res.status(500).send(error)
+        res.status(500).send(error.message)
     }
 }
 
@@ -62,7 +62,7 @@ async function updateBlock(req, res) {
         blockCode = null,
         location = null,
         isActive = null,
-        updatedBy = null
+        updatedBy = 8
     } = req.body;
 
     const values = []
@@ -79,7 +79,7 @@ async function updateBlock(req, res) {
     }
 
     if (isActive !== undefined) {
-        values.push(isActive)
+        values.push(isActive !== undefined)
         updates.push(' isActive = ?')
     }
 
@@ -92,7 +92,7 @@ async function updateBlock(req, res) {
     const mysqlClient = req.app.mysqlClient
 
     try {
-        const block = await getBlockById(blockId, mysqlClient);
+        const block = await validateBlockById(blockId, mysqlClient);
         if (!block || block.deletedAt !== null) {
             return res.status(404).send("Block not found or already deleted");
         }
@@ -128,7 +128,7 @@ async function deleteBlock(req, res) {
             return res.status(404).send("blockId is not defined")
         }
 
-        const deletedBlock = await mysqlQuery('update block set deletedAt = now() where blockId = ?', [blockId], mysqlClient)
+        const deletedBlock = await mysqlQuery('update block set deletedAt = now(), deletedBy = 8 where blockId = ? and deletedAt is null', [blockId], mysqlClient)
         if (deletedBlock.affectedRows === 0) {
             return res.status(404).send("Block not found or already deleted")
         }
@@ -158,13 +158,10 @@ function getBlockById(blockId, mysqlClient) {
 async function validateBlockById(req) {
     const blockId = req.params.blockId
     const mysqlClient = req.app.mysqlClient
-
-    if (req.body.blockId === undefined) {
-        var deleteBlock = await getBlockById(blockId, mysqlClient)
-        if (deleteBlock !== null) {
+        var block = await getBlockById(blockId, mysqlClient)
+        if (block !== null) {
             return true
         }
-    }
     return false
 }
 
@@ -175,13 +172,13 @@ async function validateInsertItems(req) {
         isActive
     } = req.body
 
-    if (blockCode === undefined || location === undefined || isActive === undefined) {
+    if (blockCode === '' || location === '' || isActive === undefined) {
         return false
     }
     return true
 }
 
-function getBlockCountByBlockId(blockId, mysqlClient) {
+function getBlockFloorCountByBlockId(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
         mysqlClient.query('select count(*) as count from blockfloor where blockId = ? and deletedAt is null',
             [blockId],
@@ -199,8 +196,8 @@ async function validateUpdateBlock(req) {
     const mysqlClient = req.app.mysqlClient
 
     if (req.body.isActive === 0) {
-        var [block] = await getBlockCountByBlockId(blockId, mysqlClient)
-        if (block.count > 0) {
+        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
+        if (blockFloorBlock.count > 0) {
             return false
         }
     }
