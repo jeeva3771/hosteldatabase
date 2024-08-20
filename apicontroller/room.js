@@ -193,7 +193,9 @@ async function validateInsertItems(req) {
         isActive,
         isAc
     } = req.body;
-    if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAc === undefined) {
+    console.log({ blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAc });
+
+    if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAc === '') {
         return false;
     }
     return true;
