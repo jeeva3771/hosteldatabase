@@ -7,7 +7,7 @@ async function readBlocks(req, res) {
         res.status(200).send(blocks)
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -15,7 +15,7 @@ async function readBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
-        const isValid = await validateBlockById(req)
+        const isValid = await validateBlockById(blockId, mysqlClient)
         if (!isValid) {
             return res.status(404).send("blockId is not defined")
         }
@@ -62,7 +62,6 @@ async function updateBlock(req, res) {
         blockCode = null,
         location = null,
         isActive = null,
-        updatedBy = 8
     } = req.body;
 
     const values = []
@@ -82,11 +81,8 @@ async function updateBlock(req, res) {
         values.push(isActive)
         updates.push(' isActive = ?')
     }
-
-    if (updatedBy) {
-        values.push(updatedBy)
-        updates.push(' updatedBy = ?')
-    }
+    
+    updates.push(' updatedBy = 8')
 
     values.push(blockId)
     const mysqlClient = req.app.mysqlClient
@@ -97,7 +93,7 @@ async function updateBlock(req, res) {
             return res.status(404).send("Block not found or already deleted");
         }
 
-        const isValid = await validateUpdateBlock(req)
+        const isValid = await validateUpdateBlock(body, blockId, mysqlClient)
         if (!isValid) {
             return res.status(409).send("students in block shift to another block");
         }
@@ -114,7 +110,8 @@ async function updateBlock(req, res) {
         })
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        console.log(error)
+        res.status(500).send(error.message)
     }
 }
 
@@ -123,7 +120,7 @@ async function deleteBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const isValid = await validateBlockById(req)
+        const isValid = await validateBlockById(blockId, mysqlClient)
         if (!isValid) {
             return res.status(404).send("blockId is not defined")
         }
@@ -140,7 +137,7 @@ async function deleteBlock(req, res) {
         });
     }
     catch (error) {
-        res.status(500).send(error.Message)
+        res.status(500).send(error.message)
     }
 }
 
@@ -150,18 +147,18 @@ function getBlockById(blockId, mysqlClient) {
             if (err) {
                 return reject(err)
             }
+            console.log(block[0])
             resolve(block.length ? block[0] : null)
+            
         })
     })
 }
 
-async function validateBlockById(req) {
-    const blockId = req.params.blockId
-    const mysqlClient = req.app.mysqlClient
-        var block = await getBlockById(blockId, mysqlClient)
-        if (block !== null) {
-            return true
-        }
+async function validateBlockById(blockId, mysqlClient) {
+    var block = await getBlockById(blockId, mysqlClient)
+    if (block !== null) {
+        return true
+    }
     return false
 }
 
@@ -191,11 +188,8 @@ function getBlockFloorCountByBlockId(blockId, mysqlClient) {
     })
 }
 
-async function validateUpdateBlock(req) {
-    const blockId = req.params.blockId
-    const mysqlClient = req.app.mysqlClient
-
-    if (req.body.isActive === 0) {
+async function validateUpdateBlock(body, blockId, mysqlClient) {
+    if (body.isActive === 0) {
         var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
         if (blockFloorBlock.count > 0) {
             return false
