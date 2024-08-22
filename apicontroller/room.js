@@ -196,9 +196,9 @@ async function validateInsertItems(body) {
         isActive,
         isAirConditioner
     } = body;
-
     const undefinedFeilds = []
-    console.log(undefinedFeilds)
+    const notValidInputs = []
+
     if (blockFloorId === undefined) {
         undefinedFeilds.push("blockFloorId")
     }
@@ -223,47 +223,36 @@ async function validateInsertItems(body) {
         undefinedFeilds.push("isAirConditioner")
     }
 
-
-    if (undefinedFeilds.length > 0) {
-        return `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined`
+    if ((typeof blockFloorId !== 'number' || blockFloorId <= 0) && blockFloorId !== undefined) {
+        notValidInputs.push("blockFloorId is not a number or negative value")
     }
 
-    if (
-        typeof blockFloorId !== 'number' || blockFloorId <= 0 ||
-        typeof blockId !== 'number' || blockId <= 0 ||
-        typeof roomNumber !== 'number' || roomNumber <= 0 ||
-        typeof roomCapacity !== 'number' || roomCapacity <= 0 ||
-        ![0, 1].includes(isActive) ||
-        ![0, 1].includes(isAirConditioner)
-    ) {
-        if (typeof blockFloorId !== 'number' || blockFloorId <= 0) {
-            return "blockFloorId is not a number or negative value"
-        }
+    if ((typeof blockId !== 'number' || blockId <= 0) && blockId !== undefined) {
+        notValidInputs.push("blockId is not a number or negative value")
+    }
 
-        if (typeof blockId !== 'number' || blockId <= 0) {
-            return "blockId is not a number or negative value"
-        }
+    if ((typeof roomCapacity !== 'number' || roomCapacity <= 0) && roomCapacity !== undefined) {
+        notValidInputs.push("roomCapacity is not a number or negative value")
+    }
 
-        if (typeof roomCapacity !== 'number' || roomCapacity <= 0) {
-            return "roomCapacity is not a number or negative value"
-        }
+    if ((typeof roomNumber !== 'number' || roomNumber <= 0) && roomNumber !== undefined) {
+        notValidInputs.push("roomNumber is not a number or negative value")
+    }
 
-        if (typeof roomNumber !== 'number' || roomNumber <= 0) {
-            return "roomNumber is not a number or negative value"
-        }
+    if (![0, 1].includes(isActive) && isActive !== undefined) {
+        notValidInputs.push("isActive must be 0 or 1")
+    }
 
-        if (![0, 1].includes(isActive)) {
-            return "isActive must be 0 or 1"
-        }
-
-        if (![0, 1].includes(isAirConditioner)) {
-            return "isAirConditioner must be 0 or 1"
-        }
-        
+    if (![0, 1].includes(isAirConditioner) && isAirConditioner !== undefined) {
+        notValidInputs.push("isAirConditioner must be 0 or 1")
+    }
+    console.log(notValidInputs)
+    if (undefinedFeilds.length > 0 || notValidInputs.length > 0) {
+        return `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined` + " and " +
+            `${notValidInputs.join(', ')} ${notValidInputs.length === 1 ? 'is' : 'are'} not valid number`
     }
     return null
 }
-
 
 function getStudentCountByRoomId(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
