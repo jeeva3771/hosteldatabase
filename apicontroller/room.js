@@ -59,10 +59,6 @@ async function createRoom(req, res) {
 
     // const isValidInsert = await validateInsertItems(ALLOWED_CREATE_KEYS);
     const isValidInsert = await validateInsertItems(req.body);
-
-    // if (!isValidInsert) {
-    //     return res.status(400).send("Invalid input data for room creation");
-    // }
     if (isValidInsert) {
         return res.status(400).send(isValidInsert);
     }
@@ -201,8 +197,35 @@ async function validateInsertItems(body) {
         isAirConditioner
     } = body;
 
-    if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAirConditioner === '') {
-        return false;
+    const undefinedFeilds = []
+    console.log(undefinedFeilds)
+    if (blockFloorId === undefined) {
+        undefinedFeilds.push("blockFloorId")
+    }
+
+    if (blockId === undefined) {
+        undefinedFeilds.push("blockId")
+    }
+
+    if (roomNumber === undefined) {
+        undefinedFeilds.push("roomNumber")
+    }
+
+    if (roomCapacity === undefined) {
+        undefinedFeilds.push("roomCapacity")
+    }
+
+    if (isActive === undefined) {
+        undefinedFeilds.push("isActive")
+    }
+
+    if (isAirConditioner === undefined) {
+        undefinedFeilds.push("isAirConditioner")
+    }
+
+
+    if (undefinedFeilds.length > 0) {
+        return `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined`
     }
 
     if (
@@ -210,35 +233,35 @@ async function validateInsertItems(body) {
         typeof blockId !== 'number' || blockId <= 0 ||
         typeof roomNumber !== 'number' || roomNumber <= 0 ||
         typeof roomCapacity !== 'number' || roomCapacity <= 0 ||
-        typeof isActive !== 'boolean' ||
-        typeof isAirConditioner !== 'boolean'
+        ![0, 1].includes(isActive) ||
+        ![0, 1].includes(isAirConditioner)
     ) {
-        if(blockFloorId !== 'number' || blockFloorId <= 0) {
+        if (typeof blockFloorId !== 'number' || blockFloorId <= 0) {
             return "blockFloorId is not a number or negative value"
         }
 
-        if(blockId !== 'number' || blockId <= 0) {
+        if (typeof blockId !== 'number' || blockId <= 0) {
             return "blockId is not a number or negative value"
         }
 
-        if(roomCapacity !== 'number' || roomCapacity <= 0) {
+        if (typeof roomCapacity !== 'number' || roomCapacity <= 0) {
             return "roomCapacity is not a number or negative value"
         }
 
-        if(roomNumber !== 'number' || roomNumber <= 0) {
+        if (typeof roomNumber !== 'number' || roomNumber <= 0) {
             return "roomNumber is not a number or negative value"
         }
 
-        if(isActive !== 'boolean') {
-            return "blockFloorId is not a boolean"
+        if (![0, 1].includes(isActive)) {
+            return "isActive must be 0 or 1"
         }
 
-        if(isAirConditioner !== 'boolean') {
-            return "isActive is not a boolean"
+        if (![0, 1].includes(isAirConditioner)) {
+            return "isAirConditioner must be 0 or 1"
         }
-    
+        
     }
-    return true
+    return null
 }
 
 
