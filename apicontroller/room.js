@@ -136,8 +136,8 @@ async function deleteRoom(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(),' + + 'WHERE roomId = ? AND deletedAt IS NULL`, [roomId], mysqlClient)
-        if (deletedRoom.affectedRows === 0) {
+        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE roomId = ? AND deletedAt IS NULL`, [roomId], mysqlClient)
+        if (deletedRoom.affectedRows === 0 || deletedRoom.deletedAt !== undefined) {
             return res.status(404).send("Room not found or already deleted")
         }
 
@@ -181,11 +181,6 @@ async function validateRoomById(roomId, mysqlClient) {
 //         isAc
 //     } = ALLOWED_CREATE_KEYS;
 
-//     if (blockFloorId === '' || blockId === '' || roomNumber === '' || roomCapacity === '' || isActive === undefined || isAc === '') {
-//         return false;
-//     }
-//     return true;
-// }
 
 async function validateInsertItems(body) {
     const {
@@ -197,7 +192,9 @@ async function validateInsertItems(body) {
         isAirConditioner
     } = body;
     const undefinedFeilds = []
-    const notValidInputs = []
+    const invalidNumberFields = []
+    const invalidBooleanFields = [];
+
 
     if (blockFloorId === undefined) {
         undefinedFeilds.push("blockFloorId")
@@ -224,34 +221,48 @@ async function validateInsertItems(body) {
     }
 
     if ((typeof blockFloorId !== 'number' || blockFloorId <= 0) && blockFloorId !== undefined) {
-        notValidInputs.push("blockFloorId is not a number or negative value")
+        invalidNumberFields.push("blockFloorId")
     }
 
     if ((typeof blockId !== 'number' || blockId <= 0) && blockId !== undefined) {
-        notValidInputs.push("blockId is not a number or negative value")
+        invalidNumberFields.push("blockId")
     }
 
     if ((typeof roomCapacity !== 'number' || roomCapacity <= 0) && roomCapacity !== undefined) {
-        notValidInputs.push("roomCapacity is not a number or negative value")
+        invalidNumberFields.push("roomCapacity")
     }
 
     if ((typeof roomNumber !== 'number' || roomNumber <= 0) && roomNumber !== undefined) {
-        notValidInputs.push("roomNumber is not a number or negative value")
+        invalidNumberFields.push("roomNumber")
     }
 
     if (![0, 1].includes(isActive) && isActive !== undefined) {
-        notValidInputs.push("isActive must be 0 or 1")
+        invalidBooleanFields.push("isActive")
     }
 
     if (![0, 1].includes(isAirConditioner) && isAirConditioner !== undefined) {
-        notValidInputs.push("isAirConditioner must be 0 or 1")
+        invalidBooleanFields.push("isAirConditioner")
     }
-    console.log(notValidInputs)
-    if (undefinedFeilds.length > 0 || notValidInputs.length > 0) {
-        return `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined` + " and " +
-            `${notValidInputs.join(', ')} ${notValidInputs.length === 1 ? 'is' : 'are'} not valid number`
+
+    let errorMessage = ''
+    if (undefinedFeilds.length > 0) {
+        errorMessage += `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined`
     }
-    return null
+
+    if (invalidNumberFields.length > 0) {
+        if (errorMessage) {
+            errorMessage += " and "
+        }
+        errorMessage += `${invalidNumberFields.join(', ')} ${invalidNumberFields.length === 1 ? 'is' : 'are'} not a number or negative value not valid`
+    }
+
+    if (invalidBooleanFields.length > 0) {
+        if (errorMessage) {
+            errorMessage += " and "
+        }
+        errorMessage += `${invalidBooleanFields.join(', ')} ${invalidBooleanFields.length === 1 ? 'is' : 'are'} must be 0 or 1`
+    }
+    return errorMessage || null
 }
 
 function getStudentCountByRoomId(roomId, mysqlClient) {
