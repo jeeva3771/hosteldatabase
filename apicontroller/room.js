@@ -33,16 +33,8 @@ async function readRoom(req, res) {
     }
 }
 
-// const ALLOWED_CREATE_KEYS = [
-//     "blockFloorId",
-//     "blockId",
-//     "roomNumber",
-//     "roomCapacity",
-//     "isActive",
-//     "isAirConditioner",
-//     `createdBy = ${insertedBy}`
-// ]
 async function createRoom(req, res) {
+    const mysqlClient = req.app.mysqlClient
     const {
         blockFloorId,
         blockId,
@@ -50,20 +42,14 @@ async function createRoom(req, res) {
         roomCapacity,
         isActive,
         isAirConditioner,
-        createdBy = insertedBy
+        createdBy = `${insertedBy}`
     } = req.body
 
-    // ALLOWED_CREATE_KEYS.forEach(key => {
-    //     const keyValue = req.body[key]
-    // })
-
-    // const isValidInsert = await validateInsertItems(ALLOWED_CREATE_KEYS);
-    const isValidInsert = await validateInsertItems(req.body);
-    if (isValidInsert) {
+    const isValidInsert = validateInsertItems(req.body);
+    if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert);
     }
 
-    const mysqlClient = req.app.mysqlClient
     try {
         const newRoom = await mysqlQuery(/*sql*/`INSERT INTO 
             room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAirConditioner,createdBy) VALUES(?,?,?,?,?,?,?)`,
@@ -137,7 +123,7 @@ async function deleteRoom(req, res) {
         }
 
         const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE roomId = ? AND deletedAt IS NULL`, [roomId], mysqlClient)
-        if (deletedRoom.affectedRows === 0 || deletedRoom.deletedAt !== undefined) {
+        if (deletedRoom.affectedRows === 0) {
             return res.status(404).send("Room not found or already deleted")
         }
 
@@ -154,7 +140,7 @@ async function deleteRoom(req, res) {
 
 function getRoomById(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM ROOM WHERE ROOMID = ?`, [roomId], (err, room) => {
+        mysqlClient.query(/*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
             }
@@ -171,7 +157,7 @@ async function validateRoomById(roomId, mysqlClient) {
     return false
 }
 
-// async function validateInsertItems(ALLOWED_CREATE_KEYS) {
+// async function validateInsertItems(keyValue) {
 //     const {
 //         blockFloorId,
 //         blockId,
@@ -179,10 +165,22 @@ async function validateRoomById(roomId, mysqlClient) {
 //         roomCapacity,
 //         isActive,
 //         isAc
-//     } = ALLOWED_CREATE_KEYS;
+//     } = keyValue;
+async function isBlockFloorIdDeleted(blockFloorId, mysqlClient) {
+    return new Promise((resolve, reject)=> {
+        mysqlClient.query(/*sql*/`SELECT * FROM blockfloor WHERE blockFloorId = ? AND deletedAt IS NULL`,
+        [blockFloorId], (err, blockFloor)=> {
+            if (err) {
+                return reject(err)
+            }
+            resolve()
+        })
 
+    })
+    return isBlockFloor.length === 0
+}
 
-async function validateInsertItems(body) {
+function validateInsertItems(body) {
     const {
         blockFloorId,
         blockId,
@@ -191,78 +189,64 @@ async function validateInsertItems(body) {
         isActive,
         isAirConditioner
     } = body;
-    const undefinedFeilds = []
-    const invalidNumberFields = []
-    const invalidBooleanFields = [];
 
+    const errors = []
 
-    if (blockFloorId === undefined) {
-        undefinedFeilds.push("blockFloorId")
+    if (blockFloorId !== undefined) {
+        if (isNaN(blockFloorId) || blockFloorId <= 0) {
+            errors.push('blockFloorId is invalid')
+         } 
+        // else {
+        //     const BlockFloorDeleted = await isBlockFloorIdDeleted(blockFloorId, mysqlClient)
+        //     if (BlockFloorDeleted) {
+        //         errors.push('blockFloorId is deleted or does not exist')
+        //     }
+        // }
+    } else {
+        errors.push('blockFloorId is missing')
     }
 
-    if (blockId === undefined) {
-        undefinedFeilds.push("blockId")
-    }
-
-    if (roomNumber === undefined) {
-        undefinedFeilds.push("roomNumber")
-    }
-
-    if (roomCapacity === undefined) {
-        undefinedFeilds.push("roomCapacity")
-    }
-
-    if (isActive === undefined) {
-        undefinedFeilds.push("isActive")
-    }
-
-    if (isAirConditioner === undefined) {
-        undefinedFeilds.push("isAirConditioner")
-    }
-
-    if ((typeof blockFloorId !== 'number' || blockFloorId <= 0) && blockFloorId !== undefined) {
-        invalidNumberFields.push("blockFloorId")
-    }
-
-    if ((typeof blockId !== 'number' || blockId <= 0) && blockId !== undefined) {
-        invalidNumberFields.push("blockId")
-    }
-
-    if ((typeof roomCapacity !== 'number' || roomCapacity <= 0) && roomCapacity !== undefined) {
-        invalidNumberFields.push("roomCapacity")
-    }
-
-    if ((typeof roomNumber !== 'number' || roomNumber <= 0) && roomNumber !== undefined) {
-        invalidNumberFields.push("roomNumber")
-    }
-
-    if (![0, 1].includes(isActive) && isActive !== undefined) {
-        invalidBooleanFields.push("isActive")
-    }
-
-    if (![0, 1].includes(isAirConditioner) && isAirConditioner !== undefined) {
-        invalidBooleanFields.push("isAirConditioner")
-    }
-
-    let errorMessage = ''
-    if (undefinedFeilds.length > 0) {
-        errorMessage += `${undefinedFeilds.join(', ')} ${undefinedFeilds.length === 1 ? 'is' : 'are'} not defined`
-    }
-
-    if (invalidNumberFields.length > 0) {
-        if (errorMessage) {
-            errorMessage += " and "
+    if (blockId !== undefined) {
+        if (isNaN(blockId) || blockId <= 0) {
+            errors.push('blockId is invalid')
         }
-        errorMessage += `${invalidNumberFields.join(', ')} ${invalidNumberFields.length === 1 ? 'is' : 'are'} not a number or negative value not valid`
+    } else {
+        errors.push('blockId is missing')
     }
 
-    if (invalidBooleanFields.length > 0) {
-        if (errorMessage) {
-            errorMessage += " and "
+    if (roomCapacity !== undefined) {
+        if (isNaN(roomCapacity) || roomCapacity <= 0) {
+            errors.push('roomCapacity is invalid')
         }
-        errorMessage += `${invalidBooleanFields.join(', ')} ${invalidBooleanFields.length === 1 ? 'is' : 'are'} must be 0 or 1`
+    } else {
+        errors.push('roomCapacity is missing')
     }
-    return errorMessage || null
+
+    if (roomNumber !== undefined) {
+        if (isNaN(roomNumber) || roomNumber <= 0) {
+            errors.push('roomNumber is invalid')
+        }
+    } else {
+        errors.push('roomNumber is missing')
+    }
+
+    if (isActive !== undefined) {
+        if (![0, 1].includes(isActive)) {
+            errors.push('isActive is invalid')
+        }
+    } else {
+        errors.push('isActive is missing')
+    }
+
+    if (isAirConditioner !== undefined) {
+        if (![0, 1].includes(isAirConditioner)) {
+            errors.push('isAirConditioner is invalid')
+        }
+    } else {
+        errors.push('isAirConditioner is missing')
+    }
+
+    return errors
 }
 
 function getStudentCountByRoomId(roomId, mysqlClient) {
