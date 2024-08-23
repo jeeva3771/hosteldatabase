@@ -1,4 +1,9 @@
 const { mysqlQuery } = require('../utilityclient.js')
+const ALLOWED_UPDATE_KEYS = [
+    "blockCode",
+    "location",
+    "isActive"
+]
 
 async function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient
@@ -58,6 +63,12 @@ async function createBlock(req, res) {
 async function updateBlock(req, res) {
     const blockId = req.params.blockId;
 
+    ALLOWED_UPDATE_KEYS.forEach((key)=> {
+        const keyValue = req.body[key]
+        if(keyValue !== undefined) {
+            
+        }
+    })
     const {
         blockCode = null,
         location = null,
@@ -81,7 +92,7 @@ async function updateBlock(req, res) {
         values.push(isActive)
         updates.push(' isActive = ?')
     }
-    
+
     updates.push(' updatedBy = 8')
 
     values.push(blockId)
@@ -149,7 +160,7 @@ function getBlockById(blockId, mysqlClient) {
             }
             console.log(block[0])
             resolve(block.length ? block[0] : null)
-            
+
         })
     })
 }
