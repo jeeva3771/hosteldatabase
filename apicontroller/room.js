@@ -7,7 +7,7 @@ const ALLOWED_UPDATE_KEYS = [
     'isActive',
     'isAirConditioner'
 ]
-
+var isDeletedAtNull = false
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
@@ -21,8 +21,9 @@ async function readRooms(req, res) {
 async function readRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
+    var isDeletedAtNull = true
     try {
-        const isValid = await validateRoomById(roomId, mysqlClient)
+        const isValid = await validateRoomById(roomId, mysqlClient, isDeletedAtNull)
         if (!isValid) {
             return res.status(404).send("roomId not valid")
         }
@@ -138,9 +139,18 @@ async function deleteRoom(req, res) {
     }
 }
 
-function getRoomById(roomId, mysqlClient) {
+function getRoomById(roomId, mysqlClient, isDeletedAtNull) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`, [roomId], (err, room) => {
+        var query = isDeletedAtNull ? /*sql*/`SELECT * FROM room WHERE roomId = ?` :
+         /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
+
+        // if(isDeletedAtNull) {
+        //     query += /*sql*/`SELECT * FROM room WHERE roomId = ?`
+        // } else {
+        //     query += /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
+        // }
+        // console.log(query)
+        mysqlClient.query(query, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
             }
@@ -149,35 +159,12 @@ function getRoomById(roomId, mysqlClient) {
     })
 }
 
-async function validateRoomById(roomId, mysqlClient) {
-    var room = await getRoomById(roomId, mysqlClient)
+async function validateRoomById(roomId, mysqlClient, isDeletedAtNull) {
+    var room = await getRoomById(roomId, mysqlClient, isDeletedAtNull)
     if (room !== null) {
         return true
     }
     return false
-}
-
-// async function validateInsertItems(keyValue) {
-//     const {
-//         blockFloorId,
-//         blockId,
-//         roomNumber,
-//         roomCapacity,
-//         isActive,
-//         isAc
-//     } = keyValue;
-async function isBlockFloorIdDeleted(blockFloorId, mysqlClient) {
-    return new Promise((resolve, reject)=> {
-        mysqlClient.query(/*sql*/`SELECT * FROM blockfloor WHERE blockFloorId = ? AND deletedAt IS NULL`,
-        [blockFloorId], (err, blockFloor)=> {
-            if (err) {
-                return reject(err)
-            }
-            resolve()
-        })
-
-    })
-    return isBlockFloor.length === 0
 }
 
 function validateInsertItems(body) {
@@ -195,13 +182,7 @@ function validateInsertItems(body) {
     if (blockFloorId !== undefined) {
         if (isNaN(blockFloorId) || blockFloorId <= 0) {
             errors.push('blockFloorId is invalid')
-         } 
-        // else {
-        //     const BlockFloorDeleted = await isBlockFloorIdDeleted(blockFloorId, mysqlClient)
-        //     if (BlockFloorDeleted) {
-        //         errors.push('blockFloorId is deleted or does not exist')
-        //     }
-        // }
+        }
     } else {
         errors.push('blockFloorId is missing')
     }
