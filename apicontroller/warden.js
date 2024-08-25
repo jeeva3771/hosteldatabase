@@ -63,15 +63,15 @@ async function createWarden(req, res) {
     }
 }
 
-function updateWarden(req, res) {
+async function updateWarden(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient
     const values = []
     const updates = []
 
-    ALLOWED_UPDATE_KEYS.forEach((key)=> {
+    ALLOWED_UPDATE_KEYS.forEach((key) => {
         keyValue = req.body[key]
-        if(keyValue !== undefined) {
+        if (keyValue !== undefined) {
             values.push(keyValue)
             updates.push(` ${key} = ?`)
         }
@@ -81,50 +81,52 @@ function updateWarden(req, res) {
     values.push(wardenId)
 
     try {
-        mysqlClient.query('update warden set ' + updates.join(',') + ' where wardenId = ?', values, (err, result) => {
-            if (err) {
-                return res.status(409).send(err.sqlMessage)
-            } else {
-                mysqlClient.query('select * from warden where wardenId = ?', [wardenId], (err2, result2) => {
-                    if (err2) {
-                        res.status(409).send(err2.sqlMessage)
-                    } else {
-                        res.status(200).send({
-                            status: 'successfull',
-                            data: result2[0]
-                        })
-                    }
-                })
-            }
+        const warden = await validateWardenById(wardenId, mysqlClient)
+        if (!warden) {
+            return res.status(404).send("warden not found or already deleted");
+        }
+
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ? AND deletedAt IS NULL`,
+            values, mysqlClient)
+        if (isUpdate.affectedRows === 0) {
+            res.status(204).send("warden not found or no changes made")
+        }
+
+        const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        res.status(200).send({
+            status: 'successfull',
+            data: getUpdatedWarden[0]
         })
     } catch (error) {
-        res.status(500).send(error)
+        res.status(500).send(error.message)
     }
 }
 
-function deleteWarden(req, res) {
+async function deleteWarden(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        mysqlClient.query('select * from warden where wardenId = ?', [wardenId], (err, result) => {
-            if (err) {
-                return res.status(400).send(err.sqlMessage)
-            } else {
-                mysqlClient.query('update warden set deletedAt = now() where wardenId = ?', [wardenId], (err2, result2) => {
-                    if (err2) {
-                        res.status(400).send(err.sqlMessage)
-                    } else {
-                        res.status(200).send({
-                            status: 'deleted',
-                            data: result[0]
-                        })
-                    }
-                })
-            }
-        })
+        const isValid = await validateWardenById(wardenId, mysqlClient)
+        if (!isValid) {
+            return res.status(404).send("wardenId is not defined")
+        }
+
+        const deletedWarden = await mysqlQuery(/*sql*/`UPDATE warden SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE wardenId = ? AND deletedAt IS NULL`,
+            [wardenId],
+            mysqlClient)
+        if (deletedWarden.affectedRows === 0) {
+            return res.status(404).send("warden not found or already deleted")
+        }
+
+        const getDeletedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        res.status(200).send({
+            status: 'deleted',
+            data: getDeletedWarden[0]
+        });
     } catch (error) {
-        res.status(500).send(error)
+        console.log(error)
+        res.status(500).send(error.message)
     }
 }
 
@@ -175,6 +177,26 @@ function validateInsertItems(body) {
         errors.push('password is missing')
     }
     return errors
+}
+
+function getWardenById(wardenId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
+        mysqlClient.query(query, [wardenId], (err, warden) => {
+            if (err) {
+                return reject(err)
+            }
+            resolve(warden.length ? warden[0] : null)
+        })
+    })
+}
+
+async function validateWardenById(wardenId, mysqlClient) {
+    var warden = await getWardenById(wardenId, mysqlClient)
+    if (warden !== null) {
+        return true
+    }
+    return false
 }
 
 module.exports = (app) => {
