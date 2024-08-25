@@ -10,8 +10,7 @@ async function readBlocks(req, res) {
     try {
         const blocks = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE deletedAt IS NULL`, [], mysqlClient)
         res.status(200).send(blocks)
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
@@ -41,8 +40,10 @@ async function createBlock(req, res) {
     } = req.body
 
     const isValidInsert = validateInsertItems(req.body);
+    console.log(isValidInsert)
+    console.log(typeof isValidInsert)
     if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert);
+        return res.status(400).send(isValidInsert)
     }
 
     try {
@@ -62,20 +63,19 @@ async function createBlock(req, res) {
 async function updateBlock(req, res) {
     const blockId = req.params.blockId;
 
+    const values = []
+    const updates = []
+
     ALLOWED_UPDATE_KEYS.forEach((key)=> {
         const keyValue = req.body[key]
         if(keyValue !== undefined) {
-            
+            values.push(keyValue)
+            updates.push(` ${key}`)
         }
     })
-    const {
-        blockCode = null,
-        location = null,
-        isActive = null,
-    } = req.body;
 
-    const values = []
-    const updates = []
+    updates.push(`updatedBy = ${insertedBy}`)
+    values.push(blockId)
 
     if (blockCode) {
         values.push(blockCode)
@@ -172,7 +172,7 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body) {
+function validateInsertItems(body) {
     const {
         blockCode,
         location,
@@ -183,7 +183,7 @@ async function validateInsertItems(body) {
 
     if (blockCode !== undefined) {
         if (blockCode <= 0) {
-            errors.push('blockCode is invalid')
+            errors.push("blockCode is invalid")
         }
     } else {
         errors.push("blockCode is missing")
@@ -191,7 +191,7 @@ async function validateInsertItems(body) {
 
     if (location !== undefined) {
         if (location <= 0) {
-            errors.push('location is invalid')
+            errors.push("location is invalid")
         }
     } else {
         errors.push("location is missing")
@@ -199,12 +199,11 @@ async function validateInsertItems(body) {
 
     if (isActive !== undefined) {
         if (![0,1].includes(isActive)) {
-            errors.push('isActive is invalid')
+            errors.push("isActive is invalid")
         }
     } else {
         errors.push("isActive is missing")
     }
-    console.log(errors)
     return errors
 }
 
