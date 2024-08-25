@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
     "location",
@@ -8,7 +8,7 @@ const ALLOWED_UPDATE_KEYS = [
 async function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        const blocks = await mysqlQuery('select * from block where deletedAt is Null', [], mysqlClient)
+        const blocks = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE deletedAt IS NULL`, [], mysqlClient)
         res.status(200).send(blocks)
     }
     catch (error) {
@@ -24,8 +24,7 @@ async function readBlock(req, res) {
         if (!isValid) {
             return res.status(404).send("blockId is not defined")
         }
-
-        const block = await mysqlQuery('select * from block where blockId = ?', [blockId], mysqlClient)
+        const block = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE blockId = ?`, [blockId], mysqlClient)
         res.status(200).send(block[0])
     } catch (error) {
         res.status(500).send(error.Message)
@@ -33,22 +32,21 @@ async function readBlock(req, res) {
 }
 
 async function createBlock(req, res) {
+    const mysqlClient = req.app.mysqlClient
     const {
         blockCode,
         location,
         isActive,
-        createdBy = 8
+        createdBy = `${insertedBy}`
     } = req.body
 
-    const isValidInsert = await validateInsertItems(req);
-    if (!isValidInsert) {
-        return res.status(400).send("Invalid input data for block creation");
+    const isValidInsert = validateInsertItems(req.body);
+    if (isValidInsert.length > 0) {
+        return res.status(400).send(isValidInsert);
     }
 
-    const mysqlClient = req.app.mysqlClient
-
     try {
-        const newBlock = await mysqlQuery('insert into block (blockCode,location,isActive,createdBy) values(?,?,?,?)',
+        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK (blockCode,location,isActive,createdBy) VALUES(?,?,?,?)`,
             [blockCode, location, isActive, createdBy], mysqlClient)
         if (newBlock.affectedRows === 0) {
             res.status(400).send("no insert was made")
@@ -56,6 +54,7 @@ async function createBlock(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -100,7 +99,7 @@ async function updateBlock(req, res) {
 
     try {
         const block = await validateBlockById(blockId, mysqlClient);
-        if (!block || block.deletedAt !== null) {
+        if (!block) {
             return res.status(404).send("Block not found or already deleted");
         }
 
@@ -173,17 +172,40 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(req) {
+async function validateInsertItems(body) {
     const {
         blockCode,
         location,
         isActive
-    } = req.body
+    } = body
 
-    if (blockCode === '' || location === '' || isActive === undefined) {
-        return false
+    const errors = []
+
+    if (blockCode !== undefined) {
+        if (blockCode <= 0) {
+            errors.push('blockCode is invalid')
+        }
+    } else {
+        errors.push("blockCode is missing")
     }
-    return true
+
+    if (location !== undefined) {
+        if (location <= 0) {
+            errors.push('location is invalid')
+        }
+    } else {
+        errors.push("location is missing")
+    }
+
+    if (isActive !== undefined) {
+        if (![0,1].includes(isActive)) {
+            errors.push('isActive is invalid')
+        }
+    } else {
+        errors.push("isActive is missing")
+    }
+    console.log(errors)
+    return errors
 }
 
 function getBlockFloorCountByBlockId(blockId, mysqlClient) {

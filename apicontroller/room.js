@@ -7,7 +7,7 @@ const ALLOWED_UPDATE_KEYS = [
     'isActive',
     'isAirConditioner'
 ]
-var isDeletedAtNull = false
+
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
@@ -21,13 +21,11 @@ async function readRooms(req, res) {
 async function readRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
-    var isDeletedAtNull = true
     try {
-        const isValid = await validateRoomById(roomId, mysqlClient, isDeletedAtNull)
-        if (!isValid) {
-            return res.status(404).send("roomId not valid")
-        }
         const room = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
+        if (room.length === 0) {
+            return res.status(404).send("roomId not valid");
+        }
         res.status(200).send(room[0])
     } catch (error) {
         res.status(500).send(error.message)
@@ -53,14 +51,15 @@ async function createRoom(req, res) {
 
     try {
         const newRoom = await mysqlQuery(/*sql*/`INSERT INTO 
-            room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAirConditioner,createdBy) VALUES(?,?,?,?,?,?,?)`,
+            room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAirConditioner,createdBy) 
+            VALUES(?,?,?,?,?,?,?)`,
             [blockFloorId, blockId, roomNumber, roomCapacity, isActive, isAirConditioner, createdBy],
             mysqlClient
         )
         if (newRoom.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
-            res.status(201).send('insert successfully')
+            res.status(201).send('insert successfull')
         }
     } catch (error) {
         console.log(error)
@@ -70,6 +69,7 @@ async function createRoom(req, res) {
 
 async function updateRoom(req, res) {
     const roomId = req.params.roomId;
+    const mysqlClient = req.app.mysqlClient;
 
     const values = []
     const updates = []
@@ -84,7 +84,6 @@ async function updateRoom(req, res) {
 
     updates.push(`updatedBy = ${insertedBy}`)
     values.push(roomId)
-    const mysqlClient = req.app.mysqlClient
 
     try {
         const room = await validateRoomById(roomId, mysqlClient)
@@ -92,23 +91,23 @@ async function updateRoom(req, res) {
             return res.status(404).send("Room not found or already deleted");
         }
 
-        const isValid = await validateUpdateRoom(roomId, ALLOWED_UPDATE_KEYS, mysqlClient)
+        const isValid = await validateUpdateRoom(roomId, mysqlClient, req.body)
         if (!isValid) {
             return res.status(409).send("students in room shift to another room than try");
         }
-        const isUpdate = await mysqlQuery('update room set ' + updates.join(',') + ' where roomId = ? and deletedAt is null',
+
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
             res.status(204).send("Room not found or no changes made")
         }
 
-        const getUpdatedRoom = await mysqlQuery('select * from room where roomId = ?', [roomId], mysqlClient)
+        const getUpdatedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
         res.status(200).send({
             status: 'successfull',
             data: getUpdatedRoom[0]
         })
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
@@ -133,23 +132,14 @@ async function deleteRoom(req, res) {
             status: 'deleted',
             data: getDeletedRoom[0]
         });
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-function getRoomById(roomId, mysqlClient, isDeletedAtNull) {
+function getRoomById(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        var query = isDeletedAtNull ? /*sql*/`SELECT * FROM room WHERE roomId = ?` :
-         /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
-
-        // if(isDeletedAtNull) {
-        //     query += /*sql*/`SELECT * FROM room WHERE roomId = ?`
-        // } else {
-        //     query += /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
-        // }
-        // console.log(query)
+        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL` 
         mysqlClient.query(query, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
@@ -159,8 +149,8 @@ function getRoomById(roomId, mysqlClient, isDeletedAtNull) {
     })
 }
 
-async function validateRoomById(roomId, mysqlClient, isDeletedAtNull) {
-    var room = await getRoomById(roomId, mysqlClient, isDeletedAtNull)
+async function validateRoomById(roomId, mysqlClient) {
+    var room = await getRoomById(roomId, mysqlClient)
     if (room !== null) {
         return true
     }
@@ -226,13 +216,12 @@ function validateInsertItems(body) {
     } else {
         errors.push('isAirConditioner is missing')
     }
-
     return errors
 }
 
 function getStudentCountByRoomId(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query('select count(*) as count from student where roomId = ? and deletedAt is null',
+        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM student WHERE roomId = ? AND deletedAt IS NULL`,
             [roomId],
             (err, roomIdCount) => {
                 if (err) {
@@ -243,9 +232,9 @@ function getStudentCountByRoomId(roomId, mysqlClient) {
     })
 }
 
-async function validateUpdateRoom(roomId, ALLOWED_UPDATE_KEYS, mysqlClient) {
+async function validateUpdateRoom(roomId, mysqlClient, body) {
     // validate isActive
-    if (ALLOWED_UPDATE_KEYS.isActive === 0) {
+    if (body.isActive === 0) {
         var [studentRoom] = await getStudentCountByRoomId(roomId, mysqlClient)
         if (studentRoom.count > 0) {
             return false
@@ -253,6 +242,7 @@ async function validateUpdateRoom(roomId, ALLOWED_UPDATE_KEYS, mysqlClient) {
     }
     return true
 }
+
 
 module.exports = (app) => {
     app.get('/api/room', readRooms)
