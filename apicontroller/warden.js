@@ -1,101 +1,84 @@
-function readWarden(req, res) {
+const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const ALLOWED_UPDATE_KEYS = [
+    "name",
+    "dob",
+    "username",
+    "password"
+]
+
+async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from warden where deletedAt is null', (err, wardens) => {
-            if (err) {
-                res.status(500).send(err.sqlMessage)
-            } else {
-                res.status(200).send(wardens)
-            }
-        })
-    } catch (error){
-        res.status(500).send(error)
+        const wardens = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE deletedAt IS NULL`, [], mysqlClient)
+        res.status(200).send(wardens)
+    } catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
-function readOneWarden(req, res) {
+async function readWarden(req, res) {
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
-        mysqlClient.query('select * from warden where wardenId = ?', [wardenId], (err, warden) => {
-            if (err) {
-                res.status(500).send(err.sqlMessage)
-            } else {
-                res.status(200).send(warden[0])
-            }
-        })
-    } catch (error){
-        res.status(500).send(error)
+        const warden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        if (warden.length === 0) {
+            return res.status(404).send("wardenId not valid");
+        }
+        res.status(200).send(warden[0])
+    } catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
-function createWarden(req, res) {
-    const { name,
-            dob,
-            username,
-            password,
-            createdBy = 6
-        } = req.body
+async function createWarden(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const {
+        name,
+        dob,
+        username,
+        password,
+        createdBy = `${insertedBy}`
+    } = req.body
 
-    if (name === '' || dob === '' || username === '' || password === '') {
-        res.status(400).send(err.sqlMessage)
+    const isValidInsert = validateInsertItems(req.body);
+    if (isValidInsert.length > 0) {
+        return res.status(400).send(isValidInsert);
     }
 
-    const mysqlClient = req.app.mysqlClient
-
     try {
-        mysqlClient.query('insert into warden (name,dob,username,password,createdBy) values(?,?,?,?,?)', [name, dob, username, password, createdBy], (err, result) => {
-            if (err) {
-                res.status(409).send(err.sqlMessage)
-            } else {
-                res.status(201).send('insert successfully')
-            }
-        })
-    } catch (error) {
-        res.status(500).send(error)
+        const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
+            warden (name,dob,username,password,createdBy)
+            VALUES(?,?,?,?,?)`,
+            [name, dob, username, password, createdBy],
+            mysqlClient
+        )
+        if (newWarden.affectedRows === 0) {
+            res.status(400).send("no insert was made")
+        } else {
+            res.status(201).send('insert successfully')
+        }
+    }
+    catch (error) {
+        res.status(500).send(error.message)
     }
 }
 
 function updateWarden(req, res) {
     const wardenId = req.params.wardenId;
-
-    const { name = null,
-            dob = null,
-            username = null,
-            password = null,
-            updatedBy = null
-        } = req.body;
-
+    const mysqlClient = req.app.mysqlClient
     const values = []
     const updates = []
 
-    if (name) {
-        values.push(name)
-        updates.push(' name = ?')
-    }
+    ALLOWED_UPDATE_KEYS.forEach((key)=> {
+        keyValue = req.body[key]
+        if(keyValue !== undefined) {
+            values.push(keyValue)
+            updates.push(` ${key} = ?`)
+        }
+    })
 
-    if (dob) {
-        values.push(dob)
-        updates.push(' dob = ?')
-    }
-
-    if (username) {
-        values.push(username)
-        updates.push(' username = ?')
-    }
-
-    if (password) {
-        values.push(password)
-        updates.push(' password = ?')
-    }
-
-    if (updatedBy) {
-        values.push(updatedBy)
-        updates.push(' updatedBy = ?')
-    }
-
+    updates.push(`updatedBy = ${insertedBy}`)
     values.push(wardenId)
-    const mysqlClient = req.app.mysqlClient
 
     try {
         mysqlClient.query('update warden set ' + updates.join(',') + ' where wardenId = ?', values, (err, result) => {
@@ -145,12 +128,58 @@ function deleteWarden(req, res) {
     }
 }
 
+function validateInsertItems(body) {
+    const {
+        name,
+        dob,
+        username,
+        password
+    } = body
 
+    const errors = []
+    if (name !== undefined) {
+        if (name <= 0) {
+            errors.push('name is invalid')
+        }
+    } else {
+        errors.push('name is missing')
+    }
 
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('dob is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('dob cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('dob is missing')
+    }
+
+    if (username !== undefined) {
+        if (username <= 0) {
+            errors.push('username is invalid')
+        }
+    } else {
+        errors.push('username is missing')
+    }
+
+    if (password !== undefined) {
+        if (password <= 0) {
+            errors.push('password is invalid')
+        }
+    } else {
+        errors.push('password is missing')
+    }
+    return errors
+}
 
 module.exports = (app) => {
-    app.get('/api/warden', readWarden)
-    app.get('/api/warden/:wardenId', readOneWarden)
+    app.get('/api/warden', readWardens)
+    app.get('/api/warden/:wardenId', readWarden)
     app.post('/api/warden', createWarden)
     app.put('/api/warden/:wardenId', updateWarden)
     app.delete('/api/warden/:wardenId', deleteWarden)
