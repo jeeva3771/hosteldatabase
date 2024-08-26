@@ -1,0 +1,68 @@
+<html>
+<head>
+  <title>Hostel</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+  <style>
+
+    .submition {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <a href="signup">Signup</a>
+    <form>
+      <div class="form-group">
+        <label for="user">Username</label>
+        <input type="text" class="form-control" id="user">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password">
+      </div>
+      <div class="submition">
+        <a href="#">Forget Password</a>
+        <button onclick="loginUser()" class="btn btn-success">Login</button>
+      </div>
+    </form>
+  </div>
+
+
+
+  <script>
+    function loginUser() {
+      const user = document.getElementById('user').value;
+      const password = document.getElementById('password').value;
+
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+
+      const raw = JSON.stringify({
+        "username": user,
+        "password": password
+      });
+
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
+
+      const request = fetch("http://localhost:1000/login", requestOptions)
+      request.then(async (response) => {
+        if (response.status == 200) {
+          window.location.replace('http://localhost:1000/home')
+        } else {
+          alert(await response.text())
+        }
+      })
+    }
+  </script>
+</body>
+
+</html>
