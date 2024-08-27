@@ -9,7 +9,7 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      margin-top: 100px;
+      margin-top: 50px;
     }
 
     .topLabel {
@@ -46,6 +46,10 @@
       font-weight: 400px;
     }
 
+    .fontStyle-2 {
+      font-size: 16px;
+    }
+
     .log {
       width: 100px;
     }
@@ -57,8 +61,8 @@
     }
 
     .check {
-      margin-left: 124px;
-      margin-bottom: 4px;
+      margin-left: 140px;
+      margin-bottom: 6px;
     }
   </style>
 </head>
@@ -80,7 +84,7 @@
         <div class="secure">
           <a href="">Forget Password?</a>
           <input type="checkbox" onclick="secure()" class="check">
-          <label for="password" class="fontStyle">Show Password</label>
+          <label for="password" class="fontStyle-2">Show Password</label>
         </div>
         <div class="alterLabel">
           <a href="/signup" class="btn btn-primary fontStyle">Signup</a>
@@ -116,8 +120,8 @@
       if (response.status === 200) {
         window.location.replace("http://localhost:1000/home")
       } else {
-        alert(await response.text())
-      }
+        alert(response.text())
+     }
     })
   }
 

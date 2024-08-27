@@ -5,17 +5,34 @@
     <title>Hostel-SignUp</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
+        .container1 {
+            margin-bottom: 30px;
+        }
+
         .container {
             display: flex;
             justify-content: center;
-            margin-top: 100px;
+            margin-top: 30px;
             border-radius: 8px;
             padding: 30px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            width: 450px;
+            width: 400px;
+        }
+
+        .label {
+            margin-bottom: 22px;
+        }
+
+        .fontStyle {
+            font-size: 14px;
+        }
+
+        .secure {
+            margin-top: 4px;
         }
 
         .submission {
+            margin-top: 30px;
             display: flex;
             justify-content: space-around;
             align-items: center;
@@ -24,27 +41,42 @@
 </head>
 
 <body>
-    <div class="container">
-        <div>
-            <h2>Sign Up</h2>
-            <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" class="form-control" id="name">
-            </div>
-            <div class="form-group">
-                <label for="dob">DOB</label>
-                <input type="date" class="form-control" id="dob">
-            </div>
-            <div class="form-group">
-                <label for="userId">Username</label>
-                <input type="text" class="form-control" id="username">
-            </div>
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" class="form-control" id="password">
-            </div>
-            <div class="submission">
-                <button onclick="authenticationSignUp()" class="btn btn-success">Signup</button>
+    <div class="container1">
+        <div class="container">
+            <div>
+                <h2 class="label">Sign Up</h2>
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" onkeyup="toggleLoginButton()">
+                </div>
+                <div class="form-group">
+                    <label for="dob">DOB</label>
+                    <input type="date" class="form-control" id="dob" onkeyup="toggleLoginButton()">
+                </div>
+                <div class="form-group">
+                    <label for="userId">Username</label>
+                    <input type="text" class="form-control" id="username" onkeyup="toggleLoginButton()">
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" onkeyup="toggleLoginButton()">
+                    <div class="secure">
+                        <input type="checkbox" onclick="secure()">
+                        <label for="password" class="fontStyle">Show Password</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Confirm Password</label>
+                    <input type="password" class="form-control" id="confirm" onkeyup="toggleLoginButton()">
+                    <div class="secure">
+                        <input type="checkbox" onclick="confirmSecure()">
+                        <label for="confirm" class="fontStyle">Show Confirm</label>
+                    </div>
+                </div>
+                <div class="submission">
+                    <button onclick="authenticationSignUp()" class="btn btn-success" id="signUpButton"
+                        disabled>Signup</button>
+                </div>
             </div>
         </div>
     </div>
@@ -83,6 +115,33 @@
                 alert("Signup failed! Please try signing up again")
             }
         })
+    }
+
+    function toggleLoginButton() {
+        const name = document.getElementById('name').value;
+        const dob = document.getElementById('dob').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const confirm = document.getElementById('confirm').value
+        signUpButton.disabled = !(name.length > 0 && dob.length > 0 && username.length > 0 && password.length > 0 && confirm.length > 0 && password === confirm)
+    }
+
+    function secure() {
+        var password = document.getElementById("password");
+        if (password.type === "password") {
+            password.type = "text"
+        } else {
+            password.type = "password"
+        }
+    }
+
+    function confirmSecure() {
+        var confirm = document.getElementById("confirm");
+        if (confirm.type === "password") {
+            confirm.type = "text"
+        } else {
+            confirm.type = "password"
+        }
     }
 </script>
 
