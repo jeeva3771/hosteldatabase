@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Hostel-SignUp</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            margin-top: 100px;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            width: 450px;
+        }
+
+        .submission {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div>
+            <h2>Sign Up</h2>
+            <div class="form-group">
+                <label for="name">Name</label>
+                <input type="text" class="form-control" id="name">
+            </div>
+            <div class="form-group">
+                <label for="dob">DOB</label>
+                <input type="date" class="form-control" id="dob">
+            </div>
+            <div class="form-group">
+                <label for="userId">Username</label>
+                <input type="text" class="form-control" id="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password">
+            </div>
+            <div class="submission">
+                <button onclick="authenticationSignUp()" class="btn btn-success">Signup</button>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    function authenticationSignUp() {
+        const myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        const name = document.getElementById('name').value;
+        const dob = document.getElementById('dob').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        // console.log(name,dob,username,password)
+
+        const raw = JSON.stringify({
+            "name": name,
+            "dob": dob,
+            "username": username,
+            "password": password
+        });
+
+        const requestOptions = {
+            method: "POST",
+            headers: myHeaders,
+            body: raw,
+            redirect: "follow"
+        };
+
+        const request = fetch("http://localhost:1000/api/warden", requestOptions)
+        request.then((response) => {
+            // console.log(response)
+            if (response.status === 201) {
+                window.location.replace("http://localhost:1000/login")
+            } else {
+                alert("Signup failed! Please try signing up again")
+            }
+        })
+    }
+</script>
+
+</html>

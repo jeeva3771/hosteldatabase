@@ -2,25 +2,39 @@
 <html>
 
 <head>
-  <title>Hostel</title>
+  <title>Hostel-Attendance</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
+    .container1 {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 100px;
+    }
+
+    .topLabel {
+      display: flex;
+      justify-content: center;
+      color: #1877f2;
+      font-weight: bold;
+    }
+
     .container {
       display: flex;
       justify-content: center;
-      margin-top: 100px;
       border-radius: 8px;
       padding: 30px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
       width: 450px;
+      margin-bottom: 10px;
     }
 
     .alterLabel {
+      margin-top: 20px;
       display: flex;
       justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      gap: 20px;
+      display: flex;
+      gap: 30px;
     }
 
     .label {
@@ -38,38 +52,50 @@
 
     .secure {
       display: flex;
-      flex-direction: column;
-      gap: 5px;
+      flex-direction: row;
+      justify-content: space-between;
+    }
+
+    .check {
+      margin-left: 124px;
+      margin-bottom: 4px;
     }
   </style>
 </head>
 
 <body>
-  <div class="container">
-    <form>
-      <p class="font-weight-bold">Hostel-Attendance-Login</p>
-      <div class="form-group">
-        <label for="user" class="fontStyle">Username</label>
-        <input type="text" class="form-control label" id="user">
-      </div>
-      <div class="form-group">
-        <label for="password" class="fontStyle">Password</label>
-        <input type="password" class="form-control label" id="password">
-      </div>
-        <input type="checkbox" onclick="secure()">   Show Password
-        <div class="alterLabel">
-          <a href="">Forget Password?</a>
-          <a href="">Signup</a>
-          <button onclick="loginUser()" class="btn btn-success log fontStyle">Login</button>
+  <div class="container1">
+    <h2 class="topLabel">Attendance</h2>
+    <div class="container">
+      <form id="loginForm">
+        <p class="font-weight-bold">Hostel-Attendance</p>
+        <div class="form-group">
+          <label for="user" class="fontStyle">Username</label>
+          <input type="text" class="form-control label" id="user" onkeyup="toggleLoginButton()">
         </div>
-    </form>
+        <div class="form-group">
+          <label for="password" class="fontStyle">Password</label>
+          <input type="password" class="form-control label" id="password" onkeyup="toggleLoginButton()">
+        </div>
+        <div class="secure">
+          <a href="">Forget Password?</a>
+          <input type="checkbox" onclick="secure()" class="check">
+          <label for="password" class="fontStyle">Show Password</label>
+        </div>
+        <div class="alterLabel">
+          <a href="/signup" class="btn btn-primary fontStyle">Signup</a>
+          <button onclick="loginUser()" class="btn btn-success log fontStyle" id="loginButton" disabled>Login</button>
+        </div>
+      </form>
+    </div>
   </div>
 </body>
 <script>
-  function loginUser() {
-    const user = document.getElementById('user').value;
-    const password = document.getElementById('password').value;
+  const loginButton = document.getElementById('loginButton')
 
+  function loginUser() {
+    const user = document.getElementById('user').value
+    const password = document.getElementById('password').value
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
@@ -85,9 +111,9 @@
       redirect: "follow"
     };
 
-    const request = fetch("http://localhost:1000/login", requestOptions)
+    const request = fetch("http://localhost:1000/api/login", requestOptions)
     request.then(async (response) => {
-      if (response.status == 200) {
+      if (response.status === 200) {
         window.location.replace("http://localhost:1000/home")
       } else {
         alert(await response.text())
@@ -103,6 +129,13 @@
       password.type = "password"
     }
   }
+
+  function toggleLoginButton() {
+    const user = document.getElementById('user').value;
+    const password = document.getElementById('password').value
+    loginButton.disabled = !(user.length > 0 && password.length > 0)
+  }
+
 </script>
 
 </html>

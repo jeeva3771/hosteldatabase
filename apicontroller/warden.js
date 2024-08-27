@@ -130,79 +130,102 @@ async function deleteWarden(req, res) {
     }
 }
 
-function validateInsertItems(body) {
+async function authentication(req, res) {
+    const mysqlClient = req.app.mysqlClient
     const {
-        name,
-        dob,
         username,
         password
-    } = body
-
-    const errors = []
-    if (name !== undefined) {
-        if (name <= 0) {
-            errors.push('name is invalid')
-        }
-    } else {
-        errors.push('name is missing')
-    }
-
-    if (dob !== undefined) {
-        const date = new Date(dob);
-        if (isNaN(date.getTime())) {
-            errors.push('dob is invalid');
+    } = req.body
+    try {
+        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE username = ? AND password = ?`, [username, password], mysqlClient)
+        if(user.length > 0) {
+            req.session.isLogged = true
+            req.session.data = user[0]
+            res.status(200).send('success')
         } else {
-            const today = new Date();
-            if (date > today) {
-                errors.push('dob cannot be in the future');
-            }
+            req.session.isLogged = false
+            req.session.data = null
+            res.status(409).send('Invalid Username or password !')
         }
-    } else {
-        errors.push('dob is missing')
+    } catch (error) {
+        res.status(500).send(error.message)
     }
-
-    if (username !== undefined) {
-        if (username <= 0) {
-            errors.push('username is invalid')
-        }
-    } else {
-        errors.push('username is missing')
-    }
-
-    if (password !== undefined) {
-        if (password <= 0) {
-            errors.push('password is invalid')
-        }
-    } else {
-        errors.push('password is missing')
-    }
-    return errors
 }
 
-function getWardenById(wardenId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
-        mysqlClient.query(query, [wardenId], (err, warden) => {
-            if (err) {
-                return reject(err)
+    function validateInsertItems(body) {
+        const {
+            name,
+            dob,
+            username,
+            password
+        } = body
+
+        const errors = []
+        if (name !== undefined) {
+            if (typeof name !== 'string' || name.trim().length === 0) {
+                errors.push('name is invalid')
             }
-            resolve(warden.length ? warden[0] : null)
+        } else {
+            errors.push('name is missing')
+        }
+
+        if (dob !== undefined) {
+            const date = new Date(dob);
+            if (isNaN(date.getTime())) {
+                errors.push('dob is invalid');
+            } else {
+                const today = new Date();
+                if (date > today) {
+                    errors.push('dob cannot be in the future');
+                }
+            }
+        } else {
+            errors.push('dob is missing')
+        }
+
+        if (username !== undefined) {
+            if (typeof username !== 'string' || username.trim().length === 0) {
+                errors.push('username is invalid')
+            }
+        } else {
+            errors.push('username is missing')
+        }
+
+        if (password !== undefined) {
+            if (password <= 0) {
+                errors.push('password is invalid')
+            }
+        } else {
+            errors.push('password is missing')
+        }
+        return errors
+    }
+
+    function getWardenById(wardenId, mysqlClient) {
+        return new Promise((resolve, reject) => {
+            var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
+            mysqlClient.query(query, [wardenId], (err, warden) => {
+                if (err) {
+                    return reject(err)
+                }
+                resolve(warden.length ? warden[0] : null)
+            })
         })
-    })
-}
-
-async function validateWardenById(wardenId, mysqlClient) {
-    var warden = await getWardenById(wardenId, mysqlClient)
-    if (warden !== null) {
-        return true
     }
-    return false
-}
 
-module.exports = (app) => {
-    app.get('/api/warden', readWardens)
-    app.get('/api/warden/:wardenId', readWarden)
-    app.post('/api/warden', createWarden)
-    app.put('/api/warden/:wardenId', updateWarden)
-    app.delete('/api/warden/:wardenId', deleteWarden)
-}
+    async function validateWardenById(wardenId, mysqlClient) {
+        var warden = await getWardenById(wardenId, mysqlClient)
+        if (warden !== null) {
+            return true
+        }
+        return false
+    }
+
+    module.exports = (app) => {
+        app.get('/api/warden', readWardens)
+        app.get('/api/warden/:wardenId', readWarden)
+        app.post('/api/warden', createWarden)
+        app.put('/api/warden/:wardenId', updateWarden)
+        app.delete('/api/warden/:wardenId', deleteWarden)
+        app.post('/api/login', authentication)
+    }

@@ -1,43 +1,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
   <title>Document</title>
   <style>
       .nav-bar {
-          height: 4cm;
+          height: 4.5cm;
           display: flex;
           align-content: space-between;
           flex-direction: column;
           justify-content: center;
+          font-size: 16px;
       }
 
       body {
           font-family: 'Times New Roman', Times, serif;
       }
 
-      .font-size {
-          font-size: larger;
+      .fontSize {
+          font-size: x-large;
+      }
+
+      .link {
+        font-size: larger;
+      }
+
+      .linkTag-2 {
+        margin: 16px;
+      }
+
+      .linkTag-1 {
+        margin: 6px;
       }
   </style>
 </head>
-
 <body>
   <nav class="navbar navbar-light nav-bar" style="background-color: #e3f2fd;">
       <div class="right-head">
-          <h2>Hostel</h2>
-          <p>College Name</p>
-          <p>Place</p>
+          <h1>Hostel</h1>
+          <h2>College Name</h2>
       </div>
       <div class="left-head">
-          <p class="font-size">Welcome <%=name.username%></p>
-          <a href="">Logout</a>
-      </div>
+          <p class="fontSize">Welcome <%=name.username %> !</p>
+          <a href="/logout" class="link linkTag-1">Logout</a>
+      </div> 
   </nav>
   <div class="attendance-btn">
-      <a href="">Take Attendance</a>
+      <a href="" class="link linkTag-2">Take Attendance</a>
   </div>
 </body>
 

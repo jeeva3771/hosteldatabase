@@ -13,7 +13,6 @@ function mysqlQuery(sql, options, mysqlClient) {
     })
 }
 
-
 module.exports = {
     mysqlQuery,
     insertedBy: 8

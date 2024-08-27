@@ -1,4 +1,11 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+        var query = isDeletedAtNull ? /*sql*/`SELECT * FROM room WHERE roomId = ?` :
+         /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
+
+
+        var query = 
+         /*sql*/`SELECT * FROM room WHERE roomId = ? ${isDeletedAtNull && AND deletedAt IS NULL}`
+
+         const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     'blockFloorId',
     'blockId',
@@ -7,6 +14,7 @@ const ALLOWED_UPDATE_KEYS = [
     'isActive',
     'isAirConditioner'
 ]
+var isDeletedAtNull = false
 
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient
@@ -22,10 +30,11 @@ async function readRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
     try {
-        const room = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
-        if (room.length === 0) {
-            return res.status(404).send("roomId not valid");
+        const isValid = await validateRoomById(roomId, mysqlClient, true)
+        if (!isValid) {
+            return res.status(404).send("roomId not valid")
         }
+        const room = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
         res.status(200).send(room[0])
     } catch (error) {
         res.status(500).send(error.message)
@@ -45,6 +54,7 @@ async function createRoom(req, res) {
     } = req.body
 
     const isValidInsert = validateInsertItems(req.body);
+    console.log(isValidInsert)
     if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert);
     }
@@ -59,7 +69,7 @@ async function createRoom(req, res) {
         if (newRoom.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
-            res.status(201).send('insert successfull')
+            res.status(201).send('insert successfully')
         }
     } catch (error) {
         console.log(error)
@@ -91,7 +101,7 @@ async function updateRoom(req, res) {
             return res.status(404).send("Room not found or already deleted");
         }
 
-        const isValid = await validateUpdateRoom(roomId, mysqlClient, req.body)
+        const isValid = await validateUpdateRoom(roomId, mysqlClient, req.body,)
         if (!isValid) {
             return res.status(409).send("students in room shift to another room than try");
         }
@@ -137,9 +147,12 @@ async function deleteRoom(req, res) {
     }
 }
 
-function getRoomById(roomId, mysqlClient) {
+function getRoomById(roomId, mysqlClient, isDeletedAtNull) {
     return new Promise((resolve, reject) => {
-        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL` 
+        // var query = isDeletedAtNull ? /*sql*/`SELECT * FROM room WHERE roomId = ?` :
+        //  /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
+        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? ${isDeletedAtNull} AND deletedAt IS NULL`
+         console.log(query)
         mysqlClient.query(query, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
@@ -149,8 +162,8 @@ function getRoomById(roomId, mysqlClient) {
     })
 }
 
-async function validateRoomById(roomId, mysqlClient) {
-    var room = await getRoomById(roomId, mysqlClient)
+async function validateRoomById(roomId, mysqlClient, isDeletedAtNull) {
+    var room = await getRoomById(roomId, mysqlClient, isDeletedAtNull)
     if (room !== null) {
         return true
     }
@@ -239,9 +252,10 @@ async function validateUpdateRoom(roomId, mysqlClient, body) {
         if (studentRoom.count > 0) {
             return false
         }
+        return true
     }
-    return true
 }
+
 
 module.exports = (app) => {
     app.get('/api/room', readRooms)
