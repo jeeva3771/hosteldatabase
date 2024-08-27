@@ -1,68 +1,108 @@
+<!DOCTYPE html>
 <html>
+
 <head>
   <title>Hostel</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
   <style>
-
-    .submition {
+    .container {
       display: flex;
-      justify-content: space-around;
+      justify-content: center;
+      margin-top: 100px;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+      width: 450px;
+    }
+
+    .alterLabel {
+      display: flex;
+      justify-content: center;
       align-items: center;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .label {
+      width: 400px;
+    }
+
+    .fontStyle {
+      font-size: 18px;
+      font-weight: 400px;
+    }
+
+    .log {
+      width: 100px;
+    }
+
+    .secure {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
   </style>
 </head>
 
 <body>
   <div class="container">
-    <a href="signup">Signup</a>
     <form>
+      <p class="font-weight-bold">Hostel-Attendance-Login</p>
       <div class="form-group">
-        <label for="user">Username</label>
-        <input type="text" class="form-control" id="user">
+        <label for="user" class="fontStyle">Username</label>
+        <input type="text" class="form-control label" id="user">
       </div>
       <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password">
+        <label for="password" class="fontStyle">Password</label>
+        <input type="password" class="form-control label" id="password">
       </div>
-      <div class="submition">
-        <a href="#">Forget Password</a>
-        <button onclick="loginUser()" class="btn btn-success">Login</button>
-      </div>
+        <input type="checkbox" onclick="secure()">   Show Password
+        <div class="alterLabel">
+          <a href="">Forget Password?</a>
+          <a href="">Signup</a>
+          <button onclick="loginUser()" class="btn btn-success log fontStyle">Login</button>
+        </div>
     </form>
   </div>
-
-
-
-  <script>
-    function loginUser() {
-      const user = document.getElementById('user').value;
-      const password = document.getElementById('password').value;
-
-      const myHeaders = new Headers();
-      myHeaders.append("Content-Type", "application/json");
-
-      const raw = JSON.stringify({
-        "username": user,
-        "password": password
-      });
-
-      const requestOptions = {
-        method: "POST",
-        headers: myHeaders,
-        body: raw,
-        redirect: "follow"
-      };
-
-      const request = fetch("http://localhost:1000/login", requestOptions)
-      request.then(async (response) => {
-        if (response.status == 200) {
-          window.location.replace('http://localhost:1000/home')
-        } else {
-          alert(await response.text())
-        }
-      })
-    }
-  </script>
 </body>
+<script>
+  function loginUser() {
+    const user = document.getElementById('user').value;
+    const password = document.getElementById('password').value;
+
+    const myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    const raw = JSON.stringify({
+      "username": user,
+      "password": password
+    });
+
+    const requestOptions = {
+      method: "POST",
+      headers: myHeaders,
+      body: raw,
+      redirect: "follow"
+    };
+
+    const request = fetch("http://localhost:1000/login", requestOptions)
+    request.then(async (response) => {
+      if (response.status == 200) {
+        window.location.replace("http://localhost:1000/home")
+      } else {
+        alert(await response.text())
+      }
+    })
+  }
+
+  function secure() {
+    var password = document.getElementById("password");
+    if (password.type === "password") {
+      password.type = "text"
+    } else {
+      password.type = "password"
+    }
+  }
+</script>
 
 </html>
