@@ -40,8 +40,6 @@ async function createBlock(req, res) {
     } = req.body
 
     const isValidInsert = validateInsertItems(req.body);
-    console.log(isValidInsert)
-    console.log(typeof isValidInsert)
     if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert)
     }

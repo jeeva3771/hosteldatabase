@@ -61,7 +61,6 @@ async function createAttendance(req, res) {
             res.status(201).send('insert successfull')
         }
     } catch (error) {
-        console.log(message)
         res.status(500).send(error.message)
     }
 }
@@ -107,8 +106,29 @@ async function updateAttendance(req, res) {
             data: getUpdatedAttendance[0]
         })
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
+    }
+}
+
+async function studentList(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const attendanceId = req.params.attendanceId;
+    try {
+        const getStudentAttendanceCount = await mysqlQuery(/*sql*/`SELECT studentId FROM attendance WHERE attendanceId = ?`,
+            [attendanceId],
+            mysqlClient)
+        if (getStudentAttendanceCount.length === 0) {
+            return res.status(404).send('attendanceId not found')
+        }
+        // var retrievedStudentId = getStudentAttendanceCount[0].studentId
+
+        const getStudent = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
+            [getStudentAttendanceCount[0].studentId],
+            mysqlClient
+        )
+        res.status(200).send(getStudent[0])
+    } catch (error) {
+        return res.status(500).send(error.message)
     }
 }
 
@@ -179,4 +199,5 @@ module.exports = (app) => {
     app.get('/api/attendance/:attendanceId', readAttendance)
     app.post('/api/attendance', createAttendance)
     app.put('/api/attendance/:attendanceId', updateAttendance)
+    app.get('/api/stud/:attendanceId', studentList)
 }

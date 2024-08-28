@@ -191,7 +191,7 @@ function validateInsertItems(body) {
     }
 
     if (emailId !== undefined) {
-        if (emailId.length === 0 || !emailId.includes('@') || !emailId.includes('.com')) {
+        if (emailId.length === 0 || !emailId.includes('@gmail.com')) {
             errors.push('emailId is invalid');
         } 
     } else {
