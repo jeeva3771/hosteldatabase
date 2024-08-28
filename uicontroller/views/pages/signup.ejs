@@ -23,14 +23,6 @@
             margin-bottom: 22px;
         }
 
-        .fontStyle {
-            font-size: 14px;
-        }
-
-        .secure {
-            margin-top: 4px;
-        }
-
         .submission {
             margin-top: 30px;
             display: flex;
@@ -54,26 +46,20 @@
                     <input type="date" class="form-control" id="dob" onkeyup="toggleLoginButton()">
                 </div>
                 <div class="form-group">
-                    <label for="userId">Username</label>
-                    <input type="text" class="form-control" id="username" onkeyup="toggleLoginButton()">
+                    <label for="emailId">EmailId</label>
+                    <input type="text" class="form-control" id="emailId" onkeyup="toggleLoginButton()">
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" class="form-control" id="password" onkeyup="toggleLoginButton()">
-                    <div class="secure">
-                        <input type="checkbox" onclick="secure()">
-                        <label for="password" class="fontStyle">Show Password</label>
-                    </div>
                 </div>
                 <div class="form-group">
                     <label for="password">Confirm Password</label>
-                    <input type="password" class="form-control" id="confirm" onkeyup="toggleLoginButton()">
-                    <div class="secure">
-                        <input type="checkbox" onclick="confirmSecure()">
-                        <label for="confirm" class="fontStyle">Show Confirm</label>
-                    </div>
+                    <input type="password" class="form-control" id="conform" onkeyup="toggleLoginButton()">
+
                 </div>
                 <div class="submission">
+                    <button onclick="cancel()" class="btn btn-primary" id="cancel">Cancel</button>
                     <button onclick="authenticationSignUp()" class="btn btn-success" id="signUpButton"
                         disabled>Signup</button>
                 </div>
@@ -82,23 +68,24 @@
     </div>
 </body>
 <script>
+    const name = document.getElementById('name');
+    const dob = document.getElementById('dob');
+    const emailId = document.getElementById('emailId');
+    const password = document.getElementById('password');
+    const signUpButton = document.getElementById('signUpButton');
+    const conform = document.getElementById('conform');
+
+
     function authenticationSignUp() {
         const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-
-        const name = document.getElementById('name').value;
-        const dob = document.getElementById('dob').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        // console.log(name,dob,username,password)
-
         const raw = JSON.stringify({
-            "name": name,
-            "dob": dob,
-            "username": username,
-            "password": password
+            "name": name.value,
+            "dob": dob.value,
+            "emailId": emailId.value,
+            "password": password.value
         });
-
+        console.log(raw)
         const requestOptions = {
             method: "POST",
             headers: myHeaders,
@@ -107,42 +94,32 @@
         };
 
         const request = fetch("http://localhost:1000/api/warden", requestOptions)
-        request.then((response) => {
-            // console.log(response)
+        request.then(async (response) => {
             if (response.status === 201) {
                 window.location.replace("http://localhost:1000/login")
             } else {
-                alert("Signup failed! Please try signing up again")
+                alert(await response.text())
             }
         })
     }
 
+    function cancel() {
+        name.value = ''
+        dob.value = ''
+        emailId.value = ''
+        password.value = ''
+        conform.value = ''
+    }
+
     function toggleLoginButton() {
-        const name = document.getElementById('name').value;
-        const dob = document.getElementById('dob').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const confirm = document.getElementById('confirm').value
-        signUpButton.disabled = !(name.length > 0 && dob.length > 0 && username.length > 0 && password.length > 0 && confirm.length > 0 && password === confirm)
+        signUpButton.disabled = !(name.value.length > 0 &&
+            dob.value.length > 0 &&
+            emailId.value.length > 0 &&
+            password.value.length > 0 &&
+            conform.value.length > 0 &&
+            password.value === conform.value);
     }
 
-    function secure() {
-        var password = document.getElementById("password");
-        if (password.type === "password") {
-            password.type = "text"
-        } else {
-            password.type = "password"
-        }
-    }
-
-    function confirmSecure() {
-        var confirm = document.getElementById("confirm");
-        if (confirm.type === "password") {
-            confirm.type = "text"
-        } else {
-            confirm.type = "password"
-        }
-    }
 </script>
 
 </html>

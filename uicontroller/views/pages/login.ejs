@@ -17,6 +17,7 @@
       justify-content: center;
       color: #1877f2;
       font-weight: bold;
+      font-size: 30px;
     }
 
     .container {
@@ -25,7 +26,7 @@
       border-radius: 8px;
       padding: 30px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-      width: 450px;
+      width: 400px;
       margin-bottom: 10px;
     }
 
@@ -38,7 +39,7 @@
     }
 
     .label {
-      width: 400px;
+      width: 350px;
     }
 
     .fontStyle {
@@ -57,11 +58,12 @@
     .secure {
       display: flex;
       flex-direction: row;
+      gap: 2px;
       justify-content: space-between;
     }
 
     .check {
-      margin-left: 140px;
+      margin-left: auto;
       margin-bottom: 6px;
     }
   </style>
@@ -69,13 +71,13 @@
 
 <body>
   <div class="container1">
-    <h2 class="topLabel">Attendance</h2>
+    <h2 class="topLabel">Hostel-Attendance</h2>
     <div class="container">
       <form id="loginForm">
-        <p class="font-weight-bold">Hostel-Attendance</p>
+        <p class="font-weight-bold">Login</p>
         <div class="form-group">
-          <label for="user" class="fontStyle">Username</label>
-          <input type="text" class="form-control label" id="user" onkeyup="toggleLoginButton()">
+          <label for="emailId" class="fontStyle">EmailId</label>
+          <input type="text" class="form-control label" id="emailId" onkeyup="toggleLoginButton()">
         </div>
         <div class="form-group">
           <label for="password" class="fontStyle">Password</label>
@@ -88,7 +90,8 @@
         </div>
         <div class="alterLabel">
           <a href="/signup" class="btn btn-primary fontStyle">Signup</a>
-          <button onclick="loginUser()" class="btn btn-success log fontStyle" id="loginButton" disabled>Login</button>
+          <button type="button" onclick="loginUser()" class="btn btn-success log fontStyle" id="loginButton"
+            disabled>Login</button>
         </div>
       </form>
     </div>
@@ -96,16 +99,16 @@
 </body>
 <script>
   const loginButton = document.getElementById('loginButton')
+  const emailId = document.getElementById('emailId')
+  const password = document.getElementById('password')
 
   function loginUser() {
-    const user = document.getElementById('user').value
-    const password = document.getElementById('password').value
     const myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
     const raw = JSON.stringify({
-      "username": user,
-      "password": password
+      "emailId": emailId.value,
+      "password": password.value
     });
 
     const requestOptions = {
@@ -120,8 +123,8 @@
       if (response.status === 200) {
         window.location.replace("http://localhost:1000/home")
       } else {
-        alert(response.text())
-     }
+        alert(await response.text())
+      }
     })
   }
 
@@ -135,9 +138,7 @@
   }
 
   function toggleLoginButton() {
-    const user = document.getElementById('user').value;
-    const password = document.getElementById('password').value
-    loginButton.disabled = !(user.length > 0 && password.length > 0)
+    loginButton.disabled = !(emailId.value.length > 0 && password.value.length > 0)
   }
 
 </script>

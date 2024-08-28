@@ -23,7 +23,6 @@ app.use(logger('dev'))
 app.use(express.json())
 app.use(cookieParser());
 app.use(session({
-    store: new FileStore(fileStoreOptions),
     secret: 'dhoni',
     resave: true,
     saveUninitialized: true,

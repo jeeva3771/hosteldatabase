@@ -2,7 +2,7 @@ const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "name",
     "dob",
-    "username",
+    "emailId",
     "password"
 ]
 
@@ -35,7 +35,7 @@ async function createWarden(req, res) {
     const {
         name,
         dob,
-        username,
+        emailId,
         password,
         createdBy = `${insertedBy}`
     } = req.body
@@ -46,10 +46,15 @@ async function createWarden(req, res) {
     }
 
     try {
+        const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ?`, [emailId], mysqlClient);
+        if (existingWarden.length > 0) {
+            return res.status(409).send("emailId already exists");
+        }
+
         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
-            warden (name,dob,username,password,createdBy)
+            warden (name,dob,emailId,password,createdBy)
             VALUES(?,?,?,?,?)`,
-            [name, dob, username, password, createdBy],
+            [name, dob, emailId, password, createdBy],
             mysqlClient
         )
         if (newWarden.affectedRows === 0) {
@@ -125,7 +130,6 @@ async function deleteWarden(req, res) {
             data: getDeletedWarden[0]
         });
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -133,99 +137,102 @@ async function deleteWarden(req, res) {
 async function authentication(req, res) {
     const mysqlClient = req.app.mysqlClient
     const {
-        username,
+        emailId,
         password
     } = req.body
     try {
-        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE username = ? AND password = ?`, [username, password], mysqlClient)
-        if(user.length > 0) {
+        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ?`,
+            [emailId, password],
+            mysqlClient)
+        if (user.length > 0) {
             req.session.isLogged = true
             req.session.data = user[0]
+            console.log(req.session)
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
             req.session.data = null
-            res.status(409).send('Invalid Username or password !')
+            res.status(409).send('Invalid emailId or password !')
         }
     } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-    function validateInsertItems(body) {
-        const {
-            name,
-            dob,
-            username,
-            password
-        } = body
+function validateInsertItems(body) {
+    const {
+        name,
+        dob,
+        emailId,
+        password
+    } = body
 
-        const errors = []
-        if (name !== undefined) {
-            if (typeof name !== 'string' || name.trim().length === 0) {
-                errors.push('name is invalid')
-            }
-        } else {
-            errors.push('name is missing')
+    const errors = []
+    if (name !== undefined) {
+        if (name.length < 2) {
+            errors.push('name is invalid')
         }
-
-        if (dob !== undefined) {
-            const date = new Date(dob);
-            if (isNaN(date.getTime())) {
-                errors.push('dob is invalid');
-            } else {
-                const today = new Date();
-                if (date > today) {
-                    errors.push('dob cannot be in the future');
-                }
-            }
-        } else {
-            errors.push('dob is missing')
-        }
-
-        if (username !== undefined) {
-            if (typeof username !== 'string' || username.trim().length === 0) {
-                errors.push('username is invalid')
-            }
-        } else {
-            errors.push('username is missing')
-        }
-
-        if (password !== undefined) {
-            if (password <= 0) {
-                errors.push('password is invalid')
-            }
-        } else {
-            errors.push('password is missing')
-        }
-        return errors
+    } else {
+        errors.push('name is missing')
     }
 
-    function getWardenById(wardenId, mysqlClient) {
-        return new Promise((resolve, reject) => {
-            var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
-            mysqlClient.query(query, [wardenId], (err, warden) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(warden.length ? warden[0] : null)
-            })
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('dob is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('dob cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('dob is missing')
+    }
+
+    if (emailId !== undefined) {
+        if (emailId.length === 0 || !emailId.includes('@') || !emailId.includes('.com')) {
+            errors.push('emailId is invalid');
+        } 
+    } else {
+        errors.push('emailId is missing');
+    }
+
+    if (password !== undefined) {
+        if (password.length < 6) {
+            errors.push('password is invalid')
+        }
+    } else {
+        errors.push('password is missing')
+    }
+    return errors
+}
+
+function getWardenById(wardenId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
+        mysqlClient.query(query, [wardenId], (err, warden) => {
+            if (err) {
+                return reject(err)
+            }
+            resolve(warden.length ? warden[0] : null)
         })
-    }
+    })
+}
 
-    async function validateWardenById(wardenId, mysqlClient) {
-        var warden = await getWardenById(wardenId, mysqlClient)
-        if (warden !== null) {
-            return true
-        }
-        return false
+async function validateWardenById(wardenId, mysqlClient) {
+    var warden = await getWardenById(wardenId, mysqlClient)
+    if (warden !== null) {
+        return true
     }
+    return false
+}
 
-    module.exports = (app) => {
-        app.get('/api/warden', readWardens)
-        app.get('/api/warden/:wardenId', readWarden)
-        app.post('/api/warden', createWarden)
-        app.put('/api/warden/:wardenId', updateWarden)
-        app.delete('/api/warden/:wardenId', deleteWarden)
-        app.post('/api/login', authentication)
-    }
+module.exports = (app) => {
+    app.get('/api/warden', readWardens)
+    app.get('/api/warden/:wardenId', readWarden)
+    app.post('/api/warden', createWarden)
+    app.put('/api/warden/:wardenId', updateWarden)
+    app.delete('/api/warden/:wardenId', deleteWarden)
+    app.post('/api/login', authentication)
+}
