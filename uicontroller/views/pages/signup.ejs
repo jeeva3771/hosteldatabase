@@ -47,7 +47,7 @@
                 </div>
                 <div class="form-group">
                     <label for="emailId">EmailId</label>
-                    <input type="text" class="form-control" id="emailId" onkeyup="toggleLoginButton()">
+                    <input type="email" class="form-control" id="emailId" onkeyup="toggleLoginButton()" required>
                 </div>
                 <div class="form-group">
                     <label for="password">Password</label>
@@ -74,7 +74,6 @@
     const password = document.getElementById('password');
     const signUpButton = document.getElementById('signUpButton');
     const conform = document.getElementById('conform');
-
 
     function authenticationSignUp() {
         const myHeaders = new Headers();
@@ -104,11 +103,8 @@
     }
 
     function cancel() {
-        name.value = ''
-        dob.value = ''
-        emailId.value = ''
-        password.value = ''
-        conform.value = ''
+        document.querySelectorAll('input').forEach(input => input.value = '')
+        toggleLoginButton()
     }
 
     function toggleLoginButton() {
