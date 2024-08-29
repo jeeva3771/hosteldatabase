@@ -7,6 +7,7 @@ var session = require('express-session');
 var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
+const { parse, startOfMonth, endOfMonth, format } = require('date-fns');
 
 //apicontroller
 const course = require('./apicontroller/course.js')
@@ -31,6 +32,9 @@ app.use(session({
    } 
  }));
  app.use(bodyParser.urlencoded({ extended: true }));
+//  const startOfTheMonthFormatted = format(startOfTheMonth, 'yyyy-MM-dd');
+//  const endOfTheMonthFormatted = format(endOfTheMonth, 'yyyy-MM-dd');
+
 
 
 
@@ -49,6 +53,18 @@ app.mysqlClient.connect(function (err) {
         console.error(err)
     } else {
         console.log('mysql connected')
+
+        const now = new Date();
+        const startOfTheMonth = startOfMonth(now);
+        const endOfTheMonth = endOfMonth(now);
+        const startOfTheMonthFormatted = format(startOfTheMonth, 'yyyy-MM-dd');
+        const endOfTheMonthFormatted = format(endOfTheMonth, 'yyyy-MM-dd');
+
+        app.use((req, res, next) => {
+            req.startOfTheMonth = startOfTheMonthFormatted;
+            req.endOfTheMonth = endOfTheMonthFormatted;
+            next();
+        });
 
         course(app)
         block(app)
