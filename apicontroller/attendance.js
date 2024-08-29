@@ -38,7 +38,7 @@ async function createAttendance(req, res) {
         roomId,
         blockFloorId,
         blockId,
-        date,
+        date = new Date().toISOString().slice(0, 10),
         isPresent,
         wardenId = `${insertedBy}`
     } = req.body
@@ -110,23 +110,23 @@ async function updateAttendance(req, res) {
     }
 }
 
-async function studentList(req, res) {
+async function attendanceList(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const attendanceId = req.params.attendanceId;
-    try {
-        const getStudentAttendanceCount = await mysqlQuery(/*sql*/`SELECT studentId FROM attendance WHERE attendanceId = ?`,
-            [attendanceId],
-            mysqlClient)
-        if (getStudentAttendanceCount.length === 0) {
-            return res.status(404).send('attendanceId not found')
-        }
-        // var retrievedStudentId = getStudentAttendanceCount[0].studentId
+    const studentId = req.params.studentId;
 
-        const getStudent = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
-            [getStudentAttendanceCount[0].studentId],
+    try {
+        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
+            [studentId],
             mysqlClient
         )
-        res.status(200).send(getStudent[0])
+        if (student.length === 0) {
+            return res.status(404).send('studentId is invalid')
+        }
+
+        const studentCount = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE studentId = ? AND date >= ?  AND date <= ?`,
+            [studentId, req.startOfTheMonth, req.endOfTheMonth], mysqlClient
+        )
+        return res.status(200).send(studentCount)
     } catch (error) {
         return res.status(500).send(error.message)
     }
@@ -138,8 +138,7 @@ function validateInsertItems(body) {
         roomId,
         blockFloorId,
         blockId,
-        date,
-        isPresent,
+        isPresent
     } = body
 
     const errors = []
@@ -176,13 +175,13 @@ function validateInsertItems(body) {
         errors.push('blockId is missing')
     }
 
-    if (date !== undefined) {
-        if (isNaN(Date.parse(date))) {
-            errors.push('date is invalid')
-        }
-    } else {
-        errors.push('date is missing')
-    }
+    // if (date !== undefined) {
+    //     if (isNaN(Date.parse(date))) {
+    //         errors.push('date is invalid')
+    //     }
+    // } else {
+    //     errors.push('date is missing')
+    // }
 
     if (isPresent !== undefined) {
         if (![0, 1].includes(isPresent)) {
@@ -199,5 +198,5 @@ module.exports = (app) => {
     app.get('/api/attendance/:attendanceId', readAttendance)
     app.post('/api/attendance', createAttendance)
     app.put('/api/attendance/:attendanceId', updateAttendance)
-    app.get('/api/stud/:attendanceId', studentList)
+    app.get('/api/attendance/student/:studentId', attendanceList)
 }

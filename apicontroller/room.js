@@ -62,7 +62,6 @@ async function createRoom(req, res) {
             res.status(201).send('insert successfull')
         }
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -122,12 +121,18 @@ async function deleteRoom(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE roomId = ? AND deletedAt IS NULL`, [roomId], mysqlClient)
+        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE roomId = ? AND deletedAt IS NULL`,
+            [roomId],
+            mysqlClient
+        )
         if (deletedRoom.affectedRows === 0) {
             return res.status(404).send("Room not found or already deleted")
         }
 
-        const getDeletedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
+        const getDeletedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`,
+            [roomId],
+            mysqlClient
+        )
         res.status(200).send({
             status: 'deleted',
             data: getDeletedRoom[0]
@@ -139,7 +144,7 @@ async function deleteRoom(req, res) {
 
 function getRoomById(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL` 
+        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
         mysqlClient.query(query, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
