@@ -1,4 +1,6 @@
 const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { parse, startOfMonth, endOfMonth, format } = require('date-fns');
+
 const ALLOWED_UPDATE_KEYS = [
     "studentId",
     "roomId",
@@ -113,6 +115,14 @@ async function updateAttendance(req, res) {
 async function attendanceList(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.params.studentId;
+    const now = new Date();
+    const startOfTheMonth = startOfMonth(now);
+    const endOfTheMonth = endOfMonth(now);
+    const startOfTheMonthFormatted = format(startOfTheMonth, 'yyyy-MM-dd');
+    const endOfTheMonthFormatted = format(endOfTheMonth, 'yyyy-MM-dd');
+
+    req.query.startOfTheMonth = startOfTheMonthFormatted;
+    req.query.endOfTheMonth = endOfTheMonthFormatted;
 
     try {
         const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
@@ -124,7 +134,7 @@ async function attendanceList(req, res) {
         }
 
         const studentCount = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE studentId = ? AND date >= ?  AND date <= ?`,
-            [studentId, req.startOfTheMonth, req.endOfTheMonth], mysqlClient
+            [studentId, req.query.startOfTheMonth, req.query.endOfTheMonth], mysqlClient
         )
         return res.status(200).send(studentCount)
     } catch (error) {

@@ -59,7 +59,7 @@ async function createRoom(req, res) {
         if (newRoom.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
-            res.status(201).send('insert successfull')
+            res.status(201).send("insert successfull")
         }
     } catch (error) {
         res.status(500).send(error.message)

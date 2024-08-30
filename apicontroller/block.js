@@ -89,9 +89,14 @@ async function updateBlock(req, res) {
             return res.status(404).send("Block not found or already deleted");
         }
 
-        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body,)
+        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
         if (!isValid) {
             return res.status(409).send("students in block shift to another block");
+        }
+
+        const isValidInsert = validateInsertItems(req.body, true);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
         }
 
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
@@ -159,7 +164,7 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-function validateInsertItems(body) {
+function validateInsertItems(body, isUpdate = false) {
     const {
         blockCode,
         location,
@@ -172,7 +177,7 @@ function validateInsertItems(body) {
         if (blockCode <= 0) {
             errors.push("blockCode is invalid")
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push("blockCode is missing")
     }
 
@@ -180,7 +185,7 @@ function validateInsertItems(body) {
         if (location <= 0) {
             errors.push("location is invalid")
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push("location is missing")
     }
 
@@ -188,7 +193,7 @@ function validateInsertItems(body) {
         if (![0, 1].includes(isActive)) {
             errors.push("isActive is invalid")
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push("isActive is missing")
     }
     return errors
