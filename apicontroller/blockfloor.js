@@ -67,6 +67,7 @@ async function createBlockFloor(req, res) {
 
 async function updateBlockFloor(req, res) {
     const blockFloorId = req.params.blockfloorId;
+    const mysqlClient = req.app.mysqlClient;
     const values = []
     const updates = []
 
@@ -80,7 +81,6 @@ async function updateBlockFloor(req, res) {
 
     values.push(blockFloorId)
     updates.push(`updatedBy = ${insertedBy}`)
-    const mysqlClient = req.app.mysqlClient
 
     try {
         const blockFloor = await validateBlockFloorById(blockFloorId, mysqlClient);
@@ -88,9 +88,14 @@ async function updateBlockFloor(req, res) {
             return res.status(404).send("Block not found or already deleted");
         }
 
-        const isValid = await validateUpdateBlockFloor(req)
+        const isValid = await validateUpdateBlockFloor(blockFloorId, mysqlClient, req.body)
         if (!isValid) {
             return res.status(409).send("students in blockfloor shift to another blockfloor");
+        }
+
+        const isValidInsert = await validateInsertItems(req.body, true);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert);
         }
 
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE blockfloor SET ${updates.join(', ')} WHERE blockfloorId = ?`,
@@ -111,6 +116,7 @@ async function updateBlockFloor(req, res) {
         })
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -147,7 +153,7 @@ async function deleteBlockFloor(req, res) {
     }
 }
 
-async function validateInsertItems(body) {
+async function validateInsertItems(body, isUpdate = false) {
     const {
         blockId,
         floorNumber,
@@ -158,15 +164,15 @@ async function validateInsertItems(body) {
 
     if (blockId !== undefined) {
         if (isNaN(blockId) || blockId <= 0)
-            errors.push('blockid is invalid')
-    } else {
+            errors.push('blockId is invalid')
+    } else if (!isUpdate) {
         errors.push('blockId is missing')
     }
 
     if (floorNumber !== undefined) {
         if (isNaN(floorNumber) || floorNumber <= 0)
             errors.push('floorNumber is invalid')
-    } else {
+    } else if (!isUpdate) {
         errors.push('floorNumber is missing')
     }
 
@@ -174,7 +180,7 @@ async function validateInsertItems(body) {
         if (![0, 1].includes(isActive)) {
             errors.push('isActive is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('isActive is missing')
     }
     return errors
@@ -212,11 +218,8 @@ function getRoomCountByBlockFloorId(blockFloorId, mysqlClient) {
     })
 }
 
-async function validateUpdateBlockFloor(req) {
-    const blockFloorId = req.params.blockfloorId
-    const mysqlClient = req.app.mysqlClient
-
-    if (req.body.isActive === 0) {
+async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
+    if (body.isActive === 0) {
         var [roomBlockFloor] = await getRoomCountByBlockFloorId(blockFloorId, mysqlClient)
         if (roomBlockFloor.count > 0) {
             return false

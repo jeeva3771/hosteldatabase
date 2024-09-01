@@ -95,6 +95,11 @@ async function updateRoom(req, res) {
             return res.status(409).send("students in room shift to another room than try");
         }
 
+        const isValidInsert = validateInsertItems(req.body, true);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
@@ -162,7 +167,7 @@ async function validateRoomById(roomId, mysqlClient) {
     return false
 }
 
-function validateInsertItems(body) {
+function validateInsertItems(body, isUpdate = false) {
     const {
         blockFloorId,
         blockId,
@@ -178,7 +183,7 @@ function validateInsertItems(body) {
         if (isNaN(blockFloorId) || blockFloorId <= 0) {
             errors.push('blockFloorId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('blockFloorId is missing')
     }
 
@@ -186,7 +191,7 @@ function validateInsertItems(body) {
         if (isNaN(blockId) || blockId <= 0) {
             errors.push('blockId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('blockId is missing')
     }
 
@@ -194,7 +199,7 @@ function validateInsertItems(body) {
         if (isNaN(roomCapacity) || roomCapacity <= 0) {
             errors.push('roomCapacity is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('roomCapacity is missing')
     }
 
@@ -202,7 +207,7 @@ function validateInsertItems(body) {
         if (isNaN(roomNumber) || roomNumber <= 0) {
             errors.push('roomNumber is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('roomNumber is missing')
     }
 
@@ -210,7 +215,7 @@ function validateInsertItems(body) {
         if (![0, 1].includes(isActive)) {
             errors.push('isActive is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('isActive is missing')
     }
 
@@ -218,7 +223,7 @@ function validateInsertItems(body) {
         if (![0, 1].includes(isAirConditioner)) {
             errors.push('isAirConditioner is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('isAirConditioner is missing')
     }
     return errors

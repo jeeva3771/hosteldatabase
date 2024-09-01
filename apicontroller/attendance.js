@@ -1,12 +1,11 @@
 const { mysqlQuery, insertedBy } = require('../utilityclient.js')
-const { parse, startOfMonth, endOfMonth, format } = require('date-fns');
 
 const ALLOWED_UPDATE_KEYS = [
     "studentId",
     "roomId",
     "blockFloorId",
     "blockId",
-    "date",
+    "checkInDate",
     "isPresent"
 ]
 async function readAttendances(req, res) {
@@ -40,7 +39,7 @@ async function createAttendance(req, res) {
         roomId,
         blockFloorId,
         blockId,
-        date = new Date().toISOString().slice(0, 10),
+        checkInDate = new Date().toISOString().slice(0, 10),
         isPresent,
         wardenId = `${insertedBy}`
     } = req.body
@@ -52,9 +51,9 @@ async function createAttendance(req, res) {
 
     try {
         const dayAttendance = await mysqlQuery(/*sql*/`INSERT INTO 
-            attendance(studentId,roomId,blockFloorId,blockId,date,isPresent,wardenId)
+            attendance(studentId,roomId,blockFloorId,blockId,checkInDate,isPresent,wardenId)
             VALUES(?,?,?,?,?,?,?)`,
-            [studentId, roomId, blockFloorId, blockId, date, isPresent, wardenId],
+            [studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId],
             mysqlClient
         )
         if (dayAttendance.affectedRows === 0) {
@@ -94,6 +93,11 @@ async function updateAttendance(req, res) {
             return res.status(404).send('attendanceId not found')
         }
 
+        const isValidInsert = validateInsertItems(req.body, true);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE attendance SET ${updates.join(', ')} WHERE attendanceId = ?`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
@@ -115,14 +119,7 @@ async function updateAttendance(req, res) {
 async function attendanceList(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.params.studentId;
-    const now = new Date();
-    const startOfTheMonth = startOfMonth(now);
-    const endOfTheMonth = endOfMonth(now);
-    const startOfTheMonthFormatted = format(startOfTheMonth, 'yyyy-MM-dd');
-    const endOfTheMonthFormatted = format(endOfTheMonth, 'yyyy-MM-dd');
-
-    req.query.startOfTheMonth = startOfTheMonthFormatted;
-    req.query.endOfTheMonth = endOfTheMonthFormatted;
+    const { startDate, endDate } = req.query
 
     try {
         const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
@@ -133,16 +130,18 @@ async function attendanceList(req, res) {
             return res.status(404).send('studentId is invalid')
         }
 
-        const studentCount = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE studentId = ? AND date >= ?  AND date <= ?`,
-            [studentId, req.query.startOfTheMonth, req.query.endOfTheMonth], mysqlClient
+        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE DATE >= ? AND DATE <= ? AND studentId = ?`,
+            [startDate, endDate, studentId],
+            mysqlClient
         )
-        return res.status(200).send(studentCount)
+        return res.status(200).send(attendanceList)
     } catch (error) {
+        console.log(error)
         return res.status(500).send(error.message)
     }
 }
 
-function validateInsertItems(body) {
+function validateInsertItems(body, isUpdate = false) {
     const {
         studentId,
         roomId,
@@ -157,7 +156,7 @@ function validateInsertItems(body) {
         if (isNaN(studentId) || studentId <= 0) {
             errors.push('studentId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('studentId is missing')
     }
 
@@ -165,7 +164,7 @@ function validateInsertItems(body) {
         if (isNaN(roomId) || roomId <= 0) {
             errors.push('roomId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('roomId is missing')
     }
 
@@ -173,7 +172,7 @@ function validateInsertItems(body) {
         if (isNaN(blockFloorId) || blockFloorId <= 0) {
             errors.push('blockFloorId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('blockFloorId is missing')
     }
 
@@ -181,23 +180,15 @@ function validateInsertItems(body) {
         if (isNaN(blockId) || blockId <= 0) {
             errors.push('blockId is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('blockId is missing')
     }
-
-    // if (date !== undefined) {
-    //     if (isNaN(Date.parse(date))) {
-    //         errors.push('date is invalid')
-    //     }
-    // } else {
-    //     errors.push('date is missing')
-    // }
 
     if (isPresent !== undefined) {
         if (![0, 1].includes(isPresent)) {
             errors.push('isPresent is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('isPresent is missing')
     }
     return errors

@@ -1,9 +1,24 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const ALLOWED_UPDATE_KEYS = [
+    "roomId",
+    "blockFloorId",
+    "blockId",
+    "name",
+    "registerNumber",
+    "dob",
+    "courseId",
+    "joinedDate",
+    "phoneNumber",
+    "emailId",
+    "fatherName",
+    "fatherNumber",
+    "address"
+]
 
 async function readStudents(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
-        const students = await mysqlQuery('select * from student where deletedAt is null', [], mysqlClient);
+        const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE deletedAt IS NULL`, [], mysqlClient);
         res.status(200).send(students)
     }
     catch (error) {
@@ -15,14 +30,12 @@ async function readStudent(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.params.studentId;
     try {
-        const isValid = await validateStudentById(req)
-        if (!isValid) {
-            return res.status(404).send("StudentId not valid")
+        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`, [studentId], mysqlClient)
+        if (student.length === 0) {
+            return res.status(404).send("StudentId not valid");
         }
-        const student = await mysqlQuery('select * from student where studentId = ?', [studentId], mysqlClient)
         res.status(200).send(student[0])
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
@@ -42,18 +55,26 @@ async function createStudent(req, res) {
         fatherName,
         fatherNumber,
         address,
-        createdBy = 6
+        createdBy = `${insertedBy}`
     } = req.body
+    const mysqlClient = req.app.mysqlClient;
 
-    const isValidInsert = await validateInsertItems(req);
-    if (!isValidInsert) {
-        return res.status(400).send("Invalid input data for student creation");
+    const isValidInsert = validateInsertItems(req.body);
+    if (isValidInsert) {
+        return res.status(400).send(isValidInsert);
     }
 
-    const mysqlClient = req.app.mysqlClient
-
     try {
-        const newStudent = await mysqlQuery('insert into student (roomId,blockFloorId,blockId,name,registerNumber,dob,courseId,joinedDate,phoneNumber,emailId,fatherName,fatherNumber,address,createdBy) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?)',
+        const checkExisting = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE  phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
+            [phoneNumber, fatherNumber, emailId, registerNumber],
+            mysqlClient
+        )
+        if (checkExisting.length > 0) {
+            return res.status(409).send("phoneNumber or fatherNumber or emailId or registerNumber already exists");
+        }
+
+        const newStudent = await mysqlQuery(/*sql*/`INSERT INTO student (roomId,blockFloorId,blockId,name,registerNumber,dob,courseId,joinedDate,phoneNumber,emailId,fatherName,fatherNumber,address,createdBy)
+            VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber, emailId, fatherName, fatherNumber, address, createdBy],
             mysqlClient)
         if (newStudent.affectedRows === 0) {
@@ -63,6 +84,7 @@ async function createStudent(req, res) {
         }
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -239,7 +261,7 @@ async function validateStudentById(req) {
     return false
 }
 
-async function validateInsertItems(req) {
+function validateInsertItems(body, isUpdate = false) {
     const {
         roomId,
         blockFloorId,
@@ -254,15 +276,129 @@ async function validateInsertItems(req) {
         fatherName,
         fatherNumber,
         address
-    } = req.body
+    } = body
+    const phoneNumberPattern = /^(\d{10}|\(\d{3}\)\s?\d{3}-\d{4}|\d{3}-\d{3}-\d{4}|\d{3}\s\d{3}\s\d{4})$/;
+    const errors = []
 
-    if (roomId === '' || blockFloorId === '' || blockId === '' || name === '' || registerNumber === '' ||
-        dob === '' || courseId === '' || joinedDate === '' || phoneNumber === '' || emailId === '' ||
-        fatherName === '' || fatherNumber === '' || address === '') {
-        return false
+    if (roomId !== undefined) {
+        if (isNaN(roomId) || roomId <= 0)
+            errors.push('roomId is invalid')
+    } else if (!isUpdate) {
+        errors.push('roomId is missing')
     }
-    return true
+
+    if (blockFloorId !== undefined) {
+        if (isNaN(blockFloorId) || blockFloorId <= 0)
+            errors.push('blockFloorId is invalid')
+    } else if (!isUpdate) {
+        errors.push('blockFloorId is missing')
+    }
+
+    if (blockId !== undefined) {
+        if (isNaN(blockId) || blockId <= 0)
+            errors.push('blockId is invalid')
+    } else if (!isUpdate) {
+        errors.push('blockId is missing')
+    }
+
+    if (name !== undefined) {
+        if (name.length < 2) {
+            errors.push('name is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('name is missing')
+    }
+
+    if (registerNumber !== undefined) {
+        if (registerNumber.length < 2) {
+            errors.push('registerNumber is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('registerNumber is missing')
+    }
+
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('dob is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('dob cannot be in the future');
+            }
+        }
+    } else if (!isUpdate) {
+        errors.push('dob is missing')
+    }
+
+    if (courseId !== undefined) {
+        if (isNaN(courseId) || courseId <= 0)
+            errors.push('courseId is invalid')
+    } else if (!isUpdate) {
+        errors.push('courseId is missing')
+    }
+
+    if (joinedDate !== undefined) {
+        const date = new Date(joinedDate);
+        if (isNaN(date.getTime())) {
+            errors.push('joinedDate is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('joinedDate cannot be in the future');
+            }
+        }
+    } else if (!isUpdate) {
+        errors.push('dob is missing')
+    }
+
+    if (phoneNumber !== undefined) {
+        var phoneNumberCheck = phoneNumberPattern.test(phoneNumber)
+        if (phoneNumberCheck === false) {
+            errors.push('phoneNumber is invalid');
+        }
+    } else if (!isUpdate) {
+        errors.push('phoneNumber is missing');
+    }
+
+    if (emailId !== undefined) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var emailCheck = emailPattern.test(emailId)
+        if (emailCheck === false) {
+            errors.push('emailId is invalid');
+        }
+    } else if (!isUpdate) {
+        errors.push('emailId is missing');
+    }
+
+    if (fatherName !== undefined) {
+        if (fatherName.length < 2) {
+            errors.push('fatherName is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('fatherName is missing')
+    }
+
+    if (fatherNumber !== undefined) {
+        var phoneNumberCheck = phoneNumberPattern.test(fatherNumber)
+        if (phoneNumberCheck === false) {
+            errors.push('fatherNumber is invalid');
+        }
+    } else if (!isUpdate) {
+        errors.push('fatherNumber is missing');
+    }
+
+    if (address !== undefined) {
+        if (address.length < 2) {
+            errors.push('address is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('address is missing')
+    }
+
+    return errors
 }
+
 
 module.exports = (app) => {
     app.get('/api/student', readStudents)

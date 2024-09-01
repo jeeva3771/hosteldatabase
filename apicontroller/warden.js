@@ -91,6 +91,11 @@ async function updateWarden(req, res) {
             return res.status(404).send("warden not found or already deleted");
         }
 
+        const isValidInsert = validateInsertItems(req.body, true);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ? AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
@@ -159,7 +164,7 @@ async function authentication(req, res) {
     }
 }
 
-function validateInsertItems(body) {
+function validateInsertItems(body, isUpdate = false) {
     const {
         name,
         dob,
@@ -172,7 +177,7 @@ function validateInsertItems(body) {
         if (name.length < 2) {
             errors.push('name is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('name is missing')
     }
 
@@ -186,15 +191,17 @@ function validateInsertItems(body) {
                 errors.push('dob cannot be in the future');
             }
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('dob is missing')
     }
 
     if (emailId !== undefined) {
-        if (emailId.length === 0 || !emailId.includes('@gmail.com')) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var emailCheck = emailPattern.test(emailId)
+        if (emailCheck === false) {
             errors.push('emailId is invalid');
-        } 
-    } else {
+        }
+    } else if (!isUpdate) {
         errors.push('emailId is missing');
     }
 
@@ -202,7 +209,7 @@ function validateInsertItems(body) {
         if (password.length < 6) {
             errors.push('password is invalid')
         }
-    } else {
+    } else if (!isUpdate) {
         errors.push('password is missing')
     }
     return errors
