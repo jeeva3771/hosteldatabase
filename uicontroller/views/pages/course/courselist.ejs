@@ -1,0 +1,36 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"></th>
+                <th scope="col"> </th>
+                <th scope="col"> </th>
+            </tr>
+        </thead>
+        <tbody>
+          <% for (let i = 0; i < courses.length; i++) { %>
+            <tr>
+                <td scope="row">
+                    <%=courses[i].courseId %>
+                </td>
+                <td><%=courses[i].courseName %></td>
+                <td>nm</td>
+                <td>nm</td>
+            </tr>
+            <% } %>
+        </tbody>
+
+    </table>
+</body>
+
+</html>
