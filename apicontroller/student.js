@@ -57,6 +57,13 @@ async function createStudent(req, res) {
         address,
         createdBy = `${insertedBy}`
     } = req.body
+    const validateExistingItems = [
+        { name: 'phoneNumber', value: phoneNumber },
+        { name: 'fatherNumber', value: fatherNumber },
+        { name: 'emailId', value: emailId },
+        { name: 'registerNumber', value: registerNumber }
+    ]
+    const existErrors = []
     const mysqlClient = req.app.mysqlClient;
 
     const isValidInsert = validateInsertItems(req.body);
@@ -65,29 +72,37 @@ async function createStudent(req, res) {
     }
 
     try {
-        const checkExisting = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE  phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
-            [phoneNumber, fatherNumber, emailId, registerNumber],
-            mysqlClient
-        )
-        if (checkExisting.length > 0) {
-            return res.status(409).send("phoneNumber or fatherNumber or emailId or registerNumber already exists");
+        await Promise.all(validateExistingItems.map(async (item) => {
+            const checkExisting = await mysqlQuery(
+            /*sql*/`SELECT * FROM student WHERE phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
+                [item.value, item.value, item.value, item.value],
+                mysqlClient
+            );
+
+            if (checkExisting.length > 0) {
+                existErrors.push(`${item.name} already exists`);
+            }
+        }));
+
+        if (existErrors.length > 0) {
+            return res.status(409).send(existErrors);
         }
 
         const newStudent = await mysqlQuery(/*sql*/`INSERT INTO student (roomId,blockFloorId,blockId,name,registerNumber,dob,courseId,joinedDate,phoneNumber,emailId,fatherName,fatherNumber,address,createdBy)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber, emailId, fatherName, fatherNumber, address, createdBy],
             mysqlClient)
-            console.log(newStudent)
+        console.log(newStudent)
         if (newStudent.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
             res.status(201).send('insert successfully')
         }
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
+
 
 async function updateStudent(req, res) {
     const studentId = req.params.studentId;
@@ -314,7 +329,7 @@ function validateInsertItems(body, isUpdate = false) {
     }
 
     if (address !== undefined) {
-        if (address.length < 2) {
+        if (address.length < 5) {
             errors.push('address is invalid')
         }
     } else if (!isUpdate) {
@@ -324,12 +339,10 @@ function validateInsertItems(body, isUpdate = false) {
     return errors
 }
 
-
 module.exports = (app) => {
     app.get('/api/student', readStudents)
     app.get('/api/student/:studentId', readStudent)
     app.post('/api/student', createStudent)
     app.put('/api/student/:studentId', updateStudent)
     app.delete('/api/student/:studentId', deleteStudent)
-
 }
