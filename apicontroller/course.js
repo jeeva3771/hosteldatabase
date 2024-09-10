@@ -4,12 +4,34 @@ const ALLOWED_UPDATE_KEY = [
 ]
 
 async function readCourses(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
     try {
-        const courses = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE deletedAt IS NULL`, [], mysqlClient);
+        const courses = await mysqlQuery(/*sql*/`
+        SELECT 
+            c.*,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(c.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(c.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            (SELECT COUNT(*) FROM course) AS totalCourses
+        FROM 
+            course AS c 
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = c.updatedBy
+        WHERE 
+            c.deletedAt IS NULL
+        ORDER BY 
+            c.courseName ASC LIMIT ? OFFSET ?`,
+            [limit, offset],
+            mysqlClient
+        )
         res.status(200).send(courses)
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
@@ -18,7 +40,7 @@ async function readCourse(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const courseId = req.params.courseId;
     try {
-        const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE   courseId = ?`,
+        const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
             [courseId],
             mysqlClient
         )
@@ -127,7 +149,7 @@ async function deleteCourse(req, res) {
             [courseId],
             mysqlClient
         )
-        
+
         if (deleteCourse.affectedRows === 0) {
             return res.status(404).send("course not found or already deleted")
         }
