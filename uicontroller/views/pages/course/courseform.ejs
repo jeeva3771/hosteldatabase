@@ -1,0 +1,128 @@
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 100px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 14px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Courseform</h2>
+        <div class="form-group">
+            <label for="name">CourseName</label>
+            <input type="text" class="form-control" id="courseName">
+        </div>
+        <div class="form-group">
+            <label for="name">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+                <option value="" disabled selected>Select</option>
+            </select>
+        </div>
+        <div class="submission">
+            <button onclick="cancel()" class="btn btn-primary" id="cancel">Cancel</button>
+            <input type="hidden" id="courseId" value="<%=courseId %>" />
+            <button onclick="createCourse()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var courseName = document.getElementById('courseName');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    
+    function createCourse() {
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "courseName": courseName.value,
+            "createdBy": createdBy.value
+        });
+
+        var requestOptions = {
+            method: courseId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw,
+        };
+
+        let url = "http://localhost:1000/api/course"
+        if (courseId) {
+            url = url + '/' + courseId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(courses => window.location = '/course')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var select = document.getElementById('createdBy')
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList = optionsList + `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                select.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadCreatedBy()
+
+    function getCourse(courseId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedCourse) => {
+                courseName.value = getUpdatedCourse.courseName
+                createdBy.value = getUpdatedCourse.createdBy
+            })
+            .catch((error) => console.error(error));
+    }
+
+    var courseId = document.getElementById('courseId').value;
+    if (courseId) {
+        getCourse(courseId)
+    }
+
+    function cancel() {
+        courseName.value = ''
+        createdBy.value = ''
+        toggleSubmitButton()
+    }
+
+    function toggleSubmitButton() {
+        submitButton.disabled = !(courseName.value.length > 0 &&
+            createdBy.value.length > 0
+        )
+    }
+
+    courseName.addEventListener('input', toggleSubmitButton);
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>

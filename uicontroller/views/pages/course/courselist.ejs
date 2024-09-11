@@ -1,40 +1,42 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        .container {
-            width: 1000px;
-            margin-top: 60px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px
-        }
+    <%- include('../../partials/head.ejs') %>
+        <style>
+            .container {
+                margin-top: 60px;
+                margin-bottom: 20px;
+                padding-top: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px
+            }
 
-        .insertLabel {
-            height: 34px;
-            display: flex;
-            justify-content: space-between;
-        }
+            .insertLabel {
+                height: 34px;
+                display: flex;
+                justify-content: space-between;
+            }
 
-        .pageCount {
-            width: 56px;
-            height: 30px;
-        }
-    </style>
+            .pageCount {
+                width: 56px;
+                height: 30px;
+            }
+            
+        </style>
 </head>
 
 <body>
     <div class="container">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadCoursePage(1)">
+                onchange="loadCoursePage()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
-                <option value="20" href="#" >20</option>
-                <option value="40" href="#" >40</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
             </select>
-            <button type="button" class="btn btn-info">Add</button>
+            <a class="btn btn-info" href="/course/add">Add</a>
         </div>
         <table class="table table-striped table-hover table-bordered">
             <thead>
@@ -51,11 +53,13 @@
                 </tr>
             </thead>
             <tbody id="courseData">
-                <tr>
-                    <td>
-
-                    </td>
-                </tr>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden"></span>
+                        </div>
+                    </div>
+                </td>
             </tbody>
         </table>
         <nav aria-label="Page navigation example">
@@ -78,9 +82,7 @@
     var page = document.getElementById("pagination").value
     var currentPage = 1;
 
-
-
-    function loadCoursePage(page = 1) {
+    function loadCoursePage() {
         var limitSelect = document.getElementById("limit").value
 
         var requestOptions = {
@@ -102,13 +104,17 @@
                             <td>${course.updated}</td>
                             <td>${course.deletedAt}</td>
                             <td>${course.deletedBy}</td>
+                            <td>
+                                <a class="btn btn-secondary" href="/course/${course.courseId}">Edit</a>
+                                <a class="btn btn-secondary" onClick=deleteCourse(${course.courseId})>Delete</a>
+                            </td>
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
                 var totalPages = Math.ceil(course.totalCourses / limitSelect)
                 var paginationHtml = ''
                 var pagination = document.getElementById("pagination")
-                
+
                 for (var i = 1; i <= totalPages; i++) {
                     paginationHtml += `<div class="editAction size">
                                            <a href="select" onclick="loadSchoolPage(${i})">${i}</a>
@@ -117,10 +123,25 @@
                 pagination.innerHTML = paginationHtml;
             })
             .catch((error) => console.error(error));
-
     }
 
-    
+    function deleteCourse(courseId) {
+        var validateDelete = confirm ('are you sure you want to delete?')
+
+        if (!validateDelete) 
+            return
+
+        var requestOptions = {
+            method: 'DELETE',
+        };
+
+        fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+            .then(response => response.text())
+            .then(result => 
+                window.location = '/course'
+            )
+            .catch(error => console.log('error', error));
+    }
 
     window.addEventListener('load', () => {
         loadCoursePage()
