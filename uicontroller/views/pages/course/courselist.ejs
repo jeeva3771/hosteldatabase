@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html>
 
 <head>
@@ -106,7 +107,7 @@
                             <td>${course.deletedBy}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/course/${course.courseId}">Edit</a>
-                                <a class="btn btn-secondary" onClick=deleteCourse(${course.courseId})>Delete</a>
+                                <a class="btn btn-secondary" onClick="deleteCourse(${course.courseId})">Delete</a>
                             </td>
                         </tr>`
                 }
@@ -116,8 +117,8 @@
                 var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<div class="editAction size">
-                                           <a href="select" onclick="loadSchoolPage(${i})">${i}</a>
+                    paginationHtml += `<div>
+                                           <a href="select" onclick="loadBlockPage(${i})">${i}</a>
                                        </div>`;
                 }
                 pagination.innerHTML = paginationHtml;

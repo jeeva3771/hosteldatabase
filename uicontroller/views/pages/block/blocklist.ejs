@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('../../partials/head.ejs') %>
+        <style>
+            .container {
+                margin-top: 60px;
+                margin-bottom: 20px;
+                padding-top: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                box-shadow: none;
+
+            }
+
+            .insertLabel {
+                height: 34px;
+                display: flex;
+                gap: 117%;
+                justify-content: space-between;
+            }
+
+            .pageCount {
+                width: 56px;
+                height: 30px;
+            }
+
+            .table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            }
+
+            table {
+                min-width: 1400px;
+            }
+        </style>
+</head>
+
+<body>
+        <div class="container table-wrapper">
+            <div class="insertLabel">
+                <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example"
+                    id="limit" onchange="loadBlockPage()">
+                    <option value="5" href="#">5</option>
+                    <option value="10" href="#" selected>10</option>
+                    <option value="20" href="#">20</option>
+                    <option value="40" href="#">40</option>
+                </select>
+                <a class="btn btn-info" href="/block/add">Add</a>
+            </div>
+            <table class="table table-striped table-hover table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">Sno</th>
+                        <th scope="col">BlockCode</th>
+                        <th scope="col">Location</th>
+                        <th scope="col">IsActive</th>
+                        <th scope="col">CreatedAt</th>
+                        <th scope="col">CreatedBy</th>
+                        <th scope="col">UpdatedAt</th>
+                        <th scope="col">UpdatedBy</th>
+                        <th scope="col">DeletedAt</th>
+                        <th scope="col">DeletedBy</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="blockData">
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center" id="pagination">
+                    <li class="page-item disabled" id="previous-page">
+                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                    </li>
+                    <li class="page-item"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item" id="next-page">
+                        <a class="page-link" href="#">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+</body>
+<script>
+    var tableData = document.getElementById("blockData")
+    var page = document.getElementById("pagination").value
+    var currentPage = 1;
+
+    function loadBlockPage() {
+        var limitSelect = document.getElementById("limit").value
+
+        var requestOptions = {
+            method: 'GET'
+        };
+
+        fetch(`http://localhost:1000/api/block?limit=${limitSelect}&page=${page}`, requestOptions)
+            .then(response => response.json())
+            .then(blocks => {
+                var trHtml = ''
+                for (var i = 0; i < blocks.length; i++) {
+                    var block = blocks[i]
+                    trHtml = trHtml + `<tr>
+                            <td>${i + 1}</td>
+                            <td>${block.blockCode}</td>
+                            <td>${block.location}</td>
+                            <td>${block.isActive}</td>
+                            <td>${block.createdAt}</td>
+                            <td>${block.created}</td>
+                            <td>${block.updatedAt}</td>
+                            <td>${block.updated}</td>
+                            <td>${block.deletedAt}</td>
+                            <td>${block.deletedBy}</td>
+                            <td>
+                                <a class="btn btn-secondary" href="/block/${block.blockId}">Edit</a>
+                                <a class="btn btn-secondary" onClick="deleteBlock(${block.blockId})"">Delete</a>
+                            </td>
+                        </tr>`
+                }
+                tableData.innerHTML = trHtml
+                var totalPages = Math.ceil(block.totalblocks / limitSelect)
+                var paginationHtml = ''
+                var pagination = document.getElementById("pagination")
+
+                for (var i = 1; i <= totalPages; i++) {
+                    paginationHtml += `<div>
+                                           <a href="select" onclick="loadBlockPage(${i})">${i}</a>
+                                       </div>`;
+                }
+                pagination.innerHTML = paginationHtml;
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function deleteBlock(blockId) {
+        var validateDelete = confirm('are you sure you want to delete?')
+
+        if (!validateDelete)
+            return
+
+        var requestOptions = {
+            method: 'DELETE',
+        };
+
+        fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
+            .then(response => response.text())
+            .then(result =>
+                window.location = '/block'
+            )
+            .catch(error => console.log('error', error));
+    }
+
+    window.addEventListener('load', () => {
+        loadBlockPage()
+    })
+
+
+</script>
+
+</html>
