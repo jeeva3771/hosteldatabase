@@ -59,7 +59,7 @@ async function createCourse(req, res) {
     const { courseName, createdBy = `${insertedBy}` } = req.body
 
     const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
+    if (isValidInsert) {
         return res.status(400).send(isValidInsert);
     }
 
@@ -197,7 +197,7 @@ function validateInsertItems(body, isUpdate = false) {
     } else if (!isUpdate) {
         return "courseName is missing"
     }
-    return null
+    return 
 }
 
 module.exports = (app) => {
