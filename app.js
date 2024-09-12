@@ -19,6 +19,7 @@ const student = require('./apicontroller/student.js')
 const attendance = require('./apicontroller/attendance.js')
 const homeUi = require('./ui/homeui.js')
 const courseUi = require('./ui/courseui.js')
+const blockUi = require('./ui/blockui.js')
 
 
 const app = express()
@@ -61,6 +62,7 @@ app.mysqlClient.connect(function (err) {
         attendance(app)
         homeUi(app)
         courseUi(app)
+        blockUi(app)
 
         app.listen(1000, () => {
             console.log('listen 1000port')
