@@ -3,12 +3,12 @@ function loadBlockPage(req, res) {
 }
 
 function loadAddBlock(req, res) {
-    res.render('pages/course/courseform.ejs', { blockId: '' })
+    res.render('pages/block/blockform.ejs', { blockId: '' })
 }
 
 function loadEditBlock(req, res) {
     const blockId = req.params.blockId
-    res.render('pages/course/courseform.ejs', { blockId: blockId })
+    res.render('pages/block/blockform.ejs', { blockId: blockId })
 }
 
 module.exports = (app) => {
