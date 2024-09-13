@@ -1,0 +1,161 @@
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 100px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 14px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Blockform</h2>
+        <div class="form-group">
+            <label for="blockCode">BlockCode</label>
+            <input type="text" class="form-control" id="blockCode">
+        </div>
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input type="text" class="form-control" id="location">
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="isActive" value="option1">
+                <label class="form-check-label" for="isActive">Active</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="inActive" value="option2">
+                <label class="form-check-label" for="inActive">Inactive</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="createdBy">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+                <option selected>Select</option>
+            </select>
+        </div>
+        <div class="submission">
+            <button onclick="cancel()" class="btn btn-primary" id="cancel">Cancel</button>
+            <input type="hidden" id="blockId" value="<%=blockId %>" />
+            <button onclick="createBlock()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var blockCode = document.getElementById('blockCode');
+    var location = document.getElementById('location');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    var blockId = document.getElementById('blockId').value;
+
+    function createBlock() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "blockCode": blockCode.value,
+            "location": location.value,
+            "isActive": selectedStatus ? selectedStatus.value : '',
+            "createdBy": createdBy.value
+        });
+
+        var requestOptions = {
+            method: blockId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/block";
+        if (blockId) {
+            url = url + '/' + blockId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(blocks => window.location = '/block')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                createdBy.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadCreatedBy()
+
+    if (blockId) {
+        getBlock(blockId)
+    }
+
+    function getBlock(blockId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedBlock) => {
+                blockCode.value = getUpdatedBlock.blockName
+                location.value = getUpdatedBlock.location
+                if (getUpdatedBlock.isActive) {
+                    document.getElementById('isActive').checked = true;
+                } else {
+                    document.getElementById('inActive').checked = true;
+                }
+                createdBy.value = getUpdatedBlock.createdBy
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function cancel() {
+        blockCode.value = ''
+        location.value = ''
+        document.querySelector('input[name="status"]:checked').checked = false;
+        createdBy.value = ''
+        toggleSubmitButton()
+    }
+
+    function toggleSubmitButton() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+
+        submitButton.disabled = !(
+            blockCode.value.length > 0 &&
+            location.value.length > 0 &&
+            selectedStatus &&
+            createdBy.value !== 'Select'
+        )
+    }
+
+    blockCode.addEventListener('input', toggleSubmitButton);
+    location.addEventListener('input', toggleSubmitButton);
+    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>

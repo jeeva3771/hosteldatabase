@@ -27,11 +27,11 @@
     <div class="container">
         <h2 class="label">Courseform</h2>
         <div class="form-group">
-            <label for="name">CourseName</label>
+            <label for="courseName">CourseName</label>
             <input type="text" class="form-control" id="courseName">
         </div>
         <div class="form-group">
-            <label for="name">CreatedBy</label>
+            <label for="createdBy">CreatedBy</label>
             <select class="form-control" id="createdBy">
                 <option value="" disabled selected>Select</option>
             </select>
@@ -78,17 +78,21 @@
         fetch("http://localhost:1000/api/warden")
             .then(response => response.json())
             .then(wardens => {
-                var select = document.getElementById('createdBy')
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < wardens.length; i++) {
                     var opt = wardens[i]
-                    optionsList = optionsList + `<option value="${opt.wardenId}">${opt.name}</option>`
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
                 }
-                select.innerHTML = optionsList
+                createdBy.innerHTML = optionsList
             })
             .catch(error => console.log('error', error));
     }
     loadCreatedBy()
+
+    var courseId = document.getElementById('courseId').value;
+    if (courseId) {
+        getCourse(courseId)
+    }
 
     function getCourse(courseId) {
         const requestOptions = {
@@ -104,10 +108,6 @@
             .catch((error) => console.error(error));
     }
 
-    var courseId = document.getElementById('courseId').value;
-    if (courseId) {
-        getCourse(courseId)
-    }
 
     function cancel() {
         courseName.value = ''
