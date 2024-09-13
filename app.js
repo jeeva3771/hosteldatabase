@@ -17,9 +17,14 @@ const blockFloor = require('./apicontroller/blockfloor.js')
 const room = require('./apicontroller/room.js')
 const student = require('./apicontroller/student.js')
 const attendance = require('./apicontroller/attendance.js')
+
+//uicontroller
 const homeUi = require('./ui/homeui.js')
 const courseUi = require('./ui/courseui.js')
 const blockUi = require('./ui/blockui.js')
+const blockFloorUi = require('./ui/blockfloorui.js')
+const roomUi = require('./ui/roomui.js')
+
 
 
 const app = express()
@@ -63,6 +68,8 @@ app.mysqlClient.connect(function (err) {
         homeUi(app)
         courseUi(app)
         blockUi(app)
+        blockFloorUi(app)
+        roomUi(app)
 
         app.listen(1000, () => {
             console.log('listen 1000port')
