@@ -1,0 +1,178 @@
+<html></html>
+
+<head>
+    <%- include('../../partials/head') %>
+
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 100px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 14px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Blockfloorform</h2>
+        <div class="form-group">
+            <label for="blockCode">BlockCode</label>
+            <select class="form-control" id="blockCode">
+                <option selected>Select</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="floorNumber">FloorNumber</label>
+            <input type="number" class="form-control" id="floorNumber">
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="isActive" value="1">
+                <label class="form-check-label" for="isActive">Active</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="inActive" value="0">
+                <label class="form-check-label" for="inActive">Inactive</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="createdBy">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+                <option selected>Select</option>
+            </select>
+        </div>
+        <div class="submission">
+            <button onclick="cancel()" class="btn btn-primary" id="cancel">Cancel</button>
+            <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
+            <button onclick="createBlockFloorId()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var blockCode = document.getElementById('blockCode');
+    var floorNumber = document.getElementById('floorNumber');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    var blockFloorId = document.getElementById('blockFloorId').value;
+
+    function createBlockFloorId() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "blockId": blockCode.value,
+            "floorNumber": floorNumber.value,
+            "isActive": parseInt(selectedStatus.value),
+            "createdBy": createdBy.value
+        });
+
+        var requestOptions = {
+            method: blockFloorId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/blockfloor";
+        if (blockFloorId) {
+            url = url + '/' + blockFloorId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(blockFloors => window.location = '/blockfloor')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadBlockCode() {
+        fetch("http://localhost:1000/api/block")
+            .then(response => response.json())
+            .then(blocks => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blocks.length; i++) {
+                    var opt = blocks[i]
+                    optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
+                }
+                blockCode.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadBlockCode()
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                createdBy.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadCreatedBy()
+
+    if (blockFloorId) {
+        getBlockFloor(blockFloorId)
+    }
+
+    function getBlockFloor(blockFloorId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedBlockFloor) => {
+                blockCode.value = getUpdatedBlockFloor.blockId
+                floorNumber.value = getUpdatedBlockFloor.floorNumber
+                if (getUpdatedBlockFloor.isActive) {
+                    document.getElementById('isActive').checked = true;
+                } else {
+                    document.getElementById('inActive').checked = true;
+                }
+                createdBy.value = getUpdatedBlockFloor.createdBy
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function cancel() {
+        blockCode.value = ''
+        floorNumber.value = ''
+        document.querySelector('input[name="status"]:checked').checked = false;
+        createdBy.value = ''
+        toggleSubmitButton()
+    }
+
+    function toggleSubmitButton() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+
+        submitButton.disabled = !(
+            blockCode.value.length > 0 &&
+            floorNumber.value.length > 0 &&
+            selectedStatus &&
+            createdBy.value !== 'Select'
+        )
+    }
+
+    blockCode.addEventListener('input', toggleSubmitButton);
+    floorNumber.addEventListener('input', toggleSubmitButton);
+    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>

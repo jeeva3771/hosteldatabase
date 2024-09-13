@@ -37,11 +37,11 @@
         <div class="form-group">
             <label for="status">Status</label><br>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="status" id="isActive" value="option1">
+                <input class="form-check-input" type="radio" name="status" id="isActive" value="1">
                 <label class="form-check-label" for="isActive">Active</label>
             </div>
             <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="status" id="inActive" value="option2">
+                <input class="form-check-input" type="radio" name="status" id="inActive" value="0">
                 <label class="form-check-label" for="inActive">Inactive</label>
             </div>
         </div>
@@ -73,7 +73,7 @@
         var raw = JSON.stringify({
             "blockCode": blockCode.value,
             "location": location.value,
-            "isActive": selectedStatus ? selectedStatus.value : '',
+            "isActive": parseInt(selectedStatus.value),
             "createdBy": createdBy.value
         });
 

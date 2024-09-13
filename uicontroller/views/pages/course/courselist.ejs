@@ -19,11 +19,6 @@
                 justify-content: space-between;
             }
 
-            .pageCount {
-                width: 56px;
-                height: 30px;
-            }
-            
         </style>
 </head>
 
@@ -54,13 +49,15 @@
                 </tr>
             </thead>
             <tbody id="courseData">
-                <td>
-                    <div class="d-flex justify-content-center">
-                        <div class="spinner-border" role="status">
-                            <span class="visually-hidden"></span>
+                <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
                         </div>
-                    </div>
-                </td>
+                    </td>
+                </tr>
             </tbody>
         </table>
         <nav aria-label="Page navigation example">
@@ -117,9 +114,9 @@
                 var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<div>
-                                           <a href="select" onclick="loadBlockPage(${i})">${i}</a>
-                                       </div>`;
+                    paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="loadCoursePage(${i})">${i}</a>
+                       </li>`;
                 }
                 pagination.innerHTML = paginationHtml;
             })
@@ -127,9 +124,9 @@
     }
 
     function deleteCourse(courseId) {
-        var validateDelete = confirm ('are you sure you want to delete?')
+        var validateDelete = confirm('are you sure you want to delete?')
 
-        if (!validateDelete) 
+        if (!validateDelete)
             return
 
         var requestOptions = {
@@ -138,7 +135,7 @@
 
         fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
             .then(response => response.text())
-            .then(result => 
+            .then(Deleted =>
                 window.location = '/course'
             )
             .catch(error => console.log('error', error));

@@ -22,11 +22,6 @@
                 justify-content: space-between;
             }
 
-            .pageCount {
-                width: 56px;
-                height: 30px;
-            }
-
             .table-wrapper {
                 width: 100%;
                 overflow-x: auto;
@@ -40,34 +35,35 @@
 </head>
 
 <body>
-        <div class="container table-wrapper">
-            <div class="insertLabel">
-                <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example"
-                    id="limit" onchange="loadBlockPage()">
-                    <option value="5" href="#">5</option>
-                    <option value="10" href="#" selected>10</option>
-                    <option value="20" href="#">20</option>
-                    <option value="40" href="#">40</option>
-                </select>
-                <a class="btn btn-info" href="/block/add">Add</a>
-            </div>
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th scope="col">Sno</th>
-                        <th scope="col">BlockCode</th>
-                        <th scope="col">Location</th>
-                        <th scope="col">IsActive</th>
-                        <th scope="col">CreatedAt</th>
-                        <th scope="col">CreatedBy</th>
-                        <th scope="col">UpdatedAt</th>
-                        <th scope="col">UpdatedBy</th>
-                        <th scope="col">DeletedAt</th>
-                        <th scope="col">DeletedBy</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="blockData">
+    <div class="container table-wrapper">
+        <div class="insertLabel">
+            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+                onchange="loadBlockPage()">
+                <option value="5" href="#">5</option>
+                <option value="10" href="#" selected>10</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
+            </select>
+            <a class="btn btn-info" href="/block/add">Add</a>
+        </div>
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Sno</th>
+                    <th scope="col">BlockCode</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">IsActive</th>
+                    <th scope="col">CreatedAt</th>
+                    <th scope="col">CreatedBy</th>
+                    <th scope="col">UpdatedAt</th>
+                    <th scope="col">UpdatedBy</th>
+                    <th scope="col">DeletedAt</th>
+                    <th scope="col">DeletedBy</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="blockData">
+                <tr>
                     <td>
                         <div class="d-flex justify-content-center">
                             <div class="spinner-border" role="status">
@@ -75,22 +71,23 @@
                             </div>
                         </div>
                     </td>
-                </tbody>
-            </table>
-            <nav aria-label="Page navigation example">
-                <ul class="pagination justify-content-center" id="pagination">
-                    <li class="page-item disabled" id="previous-page">
-                        <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                    </li>
-                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item" id="next-page">
-                        <a class="page-link" href="#">Next</a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
+                </tr>
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+                <li class="page-item disabled" id="previous-page">
+                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+                </li>
+                <li class="page-item"><a class="page-link" href="#">1</a></li>
+                <li class="page-item"><a class="page-link" href="#">2</a></li>
+                <li class="page-item"><a class="page-link" href="#">3</a></li>
+                <li class="page-item" id="next-page">
+                    <a class="page-link" href="#">Next</a>
+                </li>
+            </ul>
+        </nav>
+    </div>
 </body>
 <script>
     var tableData = document.getElementById("blockData")
