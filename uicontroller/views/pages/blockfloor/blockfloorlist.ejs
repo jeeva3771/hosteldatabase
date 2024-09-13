@@ -60,7 +60,7 @@
                     <th scope="col">Action</th>
                 </tr>
             </thead>
-            <tbody id="blockFloorData">
+            <tbody id="blockFloorsData">
                 <tr>
                     <td>
                         <div class="d-flex justify-content-center">
@@ -88,11 +88,11 @@
     </div>
 </body>
 <script>
-    var tableData = document.getElementById("blockFloorData")
+    var tableData = document.getElementById("blockFloorsData")
     var page = document.getElementById("pagination").value
     var currentPage = 1
     
-    function loadBlockFloorPage(pageNumber) {
+    function loadBlockFloorPage() {
         var limitSelect = document.getElementById("limit").value
 
         var requestOptions = {

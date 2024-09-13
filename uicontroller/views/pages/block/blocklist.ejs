@@ -29,7 +29,7 @@
             }
 
             table {
-                min-width: 1400px;
+                min-width: 1800px;
             }
         </style>
 </head>
@@ -62,7 +62,7 @@
                     <th scope="col">Action</th>
                 </tr>
             </thead>
-            <tbody id="blockData">
+            <tbody id="blocksData">
                 <tr>
                     <td>
                         <div class="d-flex justify-content-center">
@@ -90,7 +90,7 @@
     </div>
 </body>
 <script>
-    var tableData = document.getElementById("blockData")
+    var tableData = document.getElementById("blocksData")
     var page = document.getElementById("pagination").value
     var currentPage = 1;
 
@@ -108,7 +108,7 @@
                 for (var i = 0; i < blocks.length; i++) {
                     var block = blocks[i]
                     trHtml = trHtml + `<tr>
-                            <td>${i + 1}</td>
+                            <td scope="row">${i + 1}</td>
                             <td>${block.blockCode}</td>
                             <td>${block.location}</td>
                             <td>${block.isActive}</td>
