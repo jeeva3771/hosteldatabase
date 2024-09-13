@@ -7,11 +7,36 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readBlockFloors(req, res) {
     const mysqlClient = req.app.mysqlClient
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
     try {
-        const blockFloors = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE deletedAt IS NULL`, [], mysqlClient)
+        const blockFloors = await mysqlQuery(/*sql*/`select 
+            b.*,
+            bk.blockCode As blockCode,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloor
+            FROM blockfloor AS b
+            LEFT JOIN 
+              block AS bk ON bk.blockId = b.blockId
+            LEFT JOIN 
+              warden AS w ON w.wardenId = b.createdBy
+            LEFT JOIN 
+              warden AS w2 ON w2.wardenId = b.updatedBy
+            WHERE 
+              b.deletedAt IS NULL
+            ORDER BY 
+              b.blockId ASC LIMIT ? OFFSET ?`,
+            [limit, offset],
+            mysqlClient)
         res.status(200).send(blockFloors)
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }

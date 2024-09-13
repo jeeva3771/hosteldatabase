@@ -9,9 +9,38 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readRooms(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
     try {
-        const rooms = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE deletedAt IS NULL`, [], mysqlClient);
+        const rooms = await mysqlQuery(/*sql*/`
+        SELECT 
+            r.*,
+            b.floorNumber AS floorNumber,
+            bk.blockCode AS blockCode,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(r.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(r.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            (SELECT COUNT(*) FROM room) AS totalRoom
+            FROM room AS r
+            LEFT JOIN 
+               blockfloor AS b ON b.blockFloorId = r.blockFloorId
+            LEFT JOIN 
+               block AS bk ON bk.blockId = r.blockId
+            LEFT JOIN 
+               warden AS w ON w.wardenId = r.createdBy
+            LEFT JOIN 
+             warden AS w2 ON w2.wardenId = b.updatedBy
+            WHERE 
+              r.deletedAt IS NULL 
+            ORDER BY 
+              r.blockId ASC LIMIT ? OFFSET ?`,
+              [limit, offset],
+              mysqlClient
+            );
         res.status(200).send(rooms);
     } catch (error) {
         res.status(500).send(error.message)

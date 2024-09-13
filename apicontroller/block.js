@@ -13,21 +13,21 @@ async function readBlocks(req, res) {
     try {
         const blocks = await mysqlQuery(/*sql*/`
         SELECT 
-            b.*,
+            bk.*,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(bk.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(bk.updatedAt, "%d-%m-%Y %T") AS updatedAt,
             (SELECT COUNT(*) FROM block) AS totalBlocks
-            FROM block AS b
+            FROM block AS bk
         LEFT JOIN 
-            warden AS w ON w.wardenId = b.createdBy
+            warden AS w ON w.wardenId = bk.createdBy
         LEFT JOIN 
-            warden AS w2 ON w2.wardenId = b.updatedBy
+            warden AS w2 ON w2.wardenId = bk.updatedBy
         WHERE 
-            b.deletedAt IS NULL 
+            bk.deletedAt IS NULL 
         ORDER BY 
-            b.blockCode ASC LIMIT ? OFFSET ?`,
+            bk.blockCode ASC LIMIT ? OFFSET ?`,
             [limit, offset],
             mysqlClient
         )
