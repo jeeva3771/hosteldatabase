@@ -24,7 +24,7 @@ async function readRooms(req, res) {
             w2.name AS updated,
             DATE_FORMAT(r.createdAt, "%d-%m-%Y %T") AS createdAt,
             DATE_FORMAT(r.updatedAt, "%d-%m-%Y %T") AS updatedAt,
-            (SELECT COUNT(*) FROM room) AS totalRoom
+            (SELECT COUNT(*) FROM room) AS totalRooms
             FROM room AS r
             LEFT JOIN 
                blockfloor AS b ON b.blockFloorId = r.blockFloorId

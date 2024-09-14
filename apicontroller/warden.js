@@ -7,9 +7,33 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readWardens(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
+
     try {
-        const wardens = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE deletedAt IS NULL`, [], mysqlClient)
+        const wardens = await mysqlQuery(/*sql*/`
+        SELECT 
+            w.*,
+            ww.name AS created,
+            ww2.name AS updated,
+            DATE_FORMAT(w.dob, "%d-%m-%Y") AS dob,
+            DATE_FORMAT(w.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(w.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            (SELECT COUNT(*) FROM warden) AS totalWardens
+            FROM warden AS w
+            LEFT JOIN
+              warden AS ww ON ww.wardenId = w.createdBy
+            LEFT JOIN 
+              warden AS ww2 ON ww2.wardenId = w.updatedBy
+            WHERE 
+              w.deletedAt IS NULL 
+            ORDER BY 
+              w.name ASC LIMIT ? OFFSET ?`,
+               [limit, offset],
+               mysqlClient
+            )
         res.status(200).send(wardens)
     } catch (error) {
         res.status(500).send(error.message)

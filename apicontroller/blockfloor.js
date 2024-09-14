@@ -19,7 +19,7 @@ async function readBlockFloors(req, res) {
             w2.name AS updated,
             DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
             DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
-            (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloor
+            (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloors
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
