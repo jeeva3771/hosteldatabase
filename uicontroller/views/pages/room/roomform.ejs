@@ -1,0 +1,222 @@
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 40px;
+                margin-bottom: 40px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 12px;
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Roomform</h2>
+        <div class="form-group">
+            <label for="blockCode">BlockCode</label>
+            <select class="form-control" id="blockCode">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="floorNumber">FloorNumber</label>
+            <select class="form-control" id="floorNumber">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="roomNumber">RoomNumber</label>
+            <input type="number" class="form-control" id="roomNumber">
+        </div>
+        <div class="form-group">
+            <label for="roomCapacity">RoomCapacity</label>
+            <input type="number" class="form-control" id="roomCapacity">
+        </div>
+        <div class="form-group">
+            <label for="status">Status</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="isActive" value="1">
+                <label class="form-check-label" for="isActive">Active</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="status" id="inActive" value="0">
+                <label class="form-check-label" for="inActive">Inactive</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="airConditioner">AirConditioner</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="isAirConditioner" id="isAir" value="1">
+                <label class="form-check-label" for="isAir">Active</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="isAirConditioner" id="notAir" value="0">
+                <label class="form-check-label" for="notAir">Inactive</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="createdBy">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+            </select>
+        </div>
+        <div class="submission">
+            <input type="hidden" id="roomId" value="<%=roomId %>" />
+            <button onclick="saveOrUpdateRoom()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var blockCode = document.getElementById('blockCode');
+    var floorNumber = document.getElementById('floorNumber');
+    var roomNumber = document.getElementById('roomNumber');
+    var roomCapacity = document.getElementById('roomCapacity');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    var roomId = document.getElementById('roomId').value;
+
+    function saveOrUpdateRoom() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+        var IsAirConditioner = document.querySelector('input[name="isAirConditioner"]:checked');
+
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "blockId": blockCode.value,
+            "blockFloorId": floorNumber.value,
+            "roomNumber": parseInt(roomNumber.value),
+            "roomCapacity": parseInt(roomCapacity.value),
+            "isActive": parseInt(selectedStatus.value),
+            "IsAirConditioner": parseInt(IsAirConditioner.value),
+            "createdBy": createdBy.value    
+        });
+
+        var requestOptions = {
+            method: roomId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/room";
+        if (roomId) {
+            url = url + '/' + roomId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(rooms => window.location = '/room')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadBlockCode() {
+        fetch("http://localhost:1000/api/block")
+            .then(response => response.json())
+            .then(blocks => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blocks.length; i++) {
+                    var opt = blocks[i]
+                    optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
+                }
+                blockCode.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadFloorNumber() {
+        fetch("http://localhost:1000/api/blockfloor")
+        .then(response => response.json())
+            .then(blockFloors => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blockFloors.length; i++) {
+                    var opt = blockFloors[i]
+                    optionsList += `<option value="${opt.blockFloorId}">${opt.floorNumber}</option>`
+                }
+                floorNumber.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                createdBy.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadBlockCode()
+    loadFloorNumber()
+    loadCreatedBy()
+
+    if (roomId) {
+        getRoom(roomId)
+    }
+
+    function getRoom(roomId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedRoom) => {
+                blockCode.value = getUpdatedRoom.blockId
+                floorNumber.value = getUpdatedRoom.blockFloorId
+                roomNumber.value = getUpdatedRoom.roomNumber
+                roomCapacity.value = getUpdatedRoom.roomCapacity
+
+                if (getUpdatedRoom.isActive) {
+                    document.getElementById('isActive').checked = true;
+                } else {
+                    document.getElementById('inActive').checked = true;
+                }
+
+                if (getUpdatedRoom.IsAirConditioner) {
+                    document.getElementById('isAir').checked = true;
+                } else {
+                    document.getElementById('notAir').checked = true;
+                }
+
+                createdBy.value = getUpdatedRoom.createdBy
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function toggleSubmitButton() {
+        submitButton.disabled = !(
+            blockCode.value !== 'Select' &&
+            floorNumber.value !== 'Select' &&
+            roomNumber.value.length > 0 &&
+            roomCapacity.value.length > 0 &&
+            selectedStatus &&
+            IsAirConditioner &&
+            createdBy.value !== 'Select'
+        )
+    }
+
+    blockCode.addEventListener('input', toggleSubmitButton);
+    floorNumber.addEventListener('input', toggleSubmitButton);
+    roomNumber.addEventListener('input', toggleSubmitButton);
+    roomCapacity.addEventListener('input', toggleSubmitButton);
+    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    document.querySelectorAll('input[name="IsAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>

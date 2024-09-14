@@ -17,7 +17,7 @@
                 height: 34px;
                 display: flex;
                 justify-content: space-between;
-                gap: 117%;
+                gap: 116%;
             }
 
             .table-wrapper {
@@ -123,7 +123,7 @@
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(blockFloor.totalBlockFloor / limitSelect)
+                var totalPages = Math.ceil(blockFloor.totalBlockFloors / limitSelect)
                 var paginationHtml = ''
                 var pagination = document.getElementById("pagination")
 

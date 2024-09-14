@@ -108,13 +108,6 @@
             .catch((error) => console.error(error));
     }
 
-
-    function cancel() {
-        courseName.value = ''
-        createdBy.value = ''
-        toggleSubmitButton()
-    }
-
     function toggleSubmitButton() {
         submitButton.disabled = !(courseName.value.length > 0 &&
             createdBy.value.length > 0

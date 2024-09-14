@@ -52,7 +52,6 @@
             </select>
         </div>
         <div class="submission">
-            <button onclick="cancel()" class="btn btn-primary" id="cancel">Cancel</button>
             <input type="hidden" id="blockId" value="<%=blockId %>" />
             <button onclick="createBlock()" class="btn btn-success" id="submitButton" disabled>Submit</button>
         </div>
@@ -133,17 +132,8 @@
             .catch((error) => console.error(error));
     }
 
-    function cancel() {
-        blockCode.value = ''
-        location.value = ''
-        document.querySelector('input[name="status"]:checked').checked = false;
-        createdBy.value = ''
-        toggleSubmitButton()
-    }
-
     function toggleSubmitButton() {
         var selectedStatus = document.querySelector('input[name="status"]:checked');
-
         submitButton.disabled = !(
             blockCode.value.length > 0 &&
             location.value.length > 0 &&

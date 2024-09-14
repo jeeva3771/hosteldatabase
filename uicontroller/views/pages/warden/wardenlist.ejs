@@ -17,7 +17,7 @@
                 height: 34px;
                 display: flex;
                 justify-content: space-between;
-                gap: 134%;
+                gap: 116%;
             }
 
             .table-wrapper {
@@ -27,13 +27,7 @@
             }
 
             table {
-                min-width: 1600px;
-            }
-
-            .action {
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
+                min-width: 1400px;
             }
         </style>
 </head>
@@ -42,24 +36,21 @@
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadRoomPage()">
+                onchange="loadWardenPage()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
                 <option value="20" href="#">20</option>
                 <option value="40" href="#">40</option>
             </select>
-            <a class="btn btn-info" href="/room/add">Add</a>
+            <a class="btn btn-info" href="/warden/add">Add</a>
         </div>
         <table class="table table-striped table-hover table-bordered">
             <thead>
                 <tr>
                     <th scope="col">Sno</th>
-                    <th scope="col">BlockCode</th>
-                    <th scope="col">FloorNumber</th>
-                    <th scope="col">RoomNumber</th>
-                    <th scope="col">RoomCapacity</th>
-                    <th scope="col">IsActive</th>
-                    <th scope="col">IsAirConditioner</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">DOB</th>
+                    <th scope="col">EmailId</th>
                     <th scope="col">CreatedAt</th>
                     <th scope="col">CreatedBy</th>
                     <th scope="col">UpdatedAt</th>
@@ -69,7 +60,7 @@
                     <th scope="col">Action</th>
                 </tr>
             </thead>
-            <tbody id="roomsData">
+            <tbody id="wardensData">
                 <tr>
                     <td>
                         <div class="d-flex justify-content-center">
@@ -97,51 +88,48 @@
     </div>
 </body>
 <script>
-    var tableData = document.getElementById("roomsData")
+    var tableData = document.getElementById("wardensData")
     var page = document.getElementById("pagination").value
     var currentPage = 1
     
-    function loadRoomPage(pageNumber) {
+    function loadWardenPage() {
         var limitSelect = document.getElementById("limit").value
 
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/room?limit=${limitSelect}&page=${page}`, requestOptions)
+        fetch(`http://localhost:1000/api/warden?limit=${limitSelect}&page=${page}`, requestOptions)
             .then(response => response.json())
-            .then(rooms => {
+            .then(wardens => {
                 var trHtml = ''
-                for (var i = 0; i < rooms.length; i++) {
-                    var room = rooms[i]
+                for (var i = 0; i < wardens.length; i++) {
+                    var warden = wardens[i]
                     trHtml = trHtml + `<tr>
                             <td>${i + 1}</td>
-                            <td>${room.blockCode}</td>
-                            <td>${room.floorNumber}</td>
-                            <td>${room.roomNumber}</td>
-                            <td>${room.roomCapacity}</td>
-                            <td>${room.isActive}</td>
-                            <td>${room.isAirConditioner}</td>
-                            <td>${room.createdAt}</td>
-                            <td>${room.created}</td>
-                            <td>${room.updatedAt}</td>
-                            <td>${room.updated}</td>
-                            <td>${room.deletedAt}</td>
-                            <td>${room.deletedBy}</td>
-                            <td class="action">
-                                <a class="btn btn-secondary" href="/room/${room.roomId}">Edit</a>
-                                <a class="btn btn-secondary" onClick="deleteRoom(${room.roomId})">Delete</a>
+                            <td>${warden.name}</td>
+                            <td>${warden.dob}</td>
+                            <td>${warden.emailId}</td>
+                            <td>${warden.createdAt}</td>
+                            <td>${warden.created}</td>
+                            <td>${warden.updatedAt}</td>
+                            <td>${warden.updated}</td>
+                            <td>${warden.deletedAt}</td>
+                            <td>${warden.deletedBy}</td>
+                            <td>
+                                <a class="btn btn-secondary" href="/warden/${warden.wardenId}">Edit</a>
+                                <a class="btn btn-secondary" onClick="deleteWarden(${warden.wardenId})">Delete</a>
                             </td>
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(room.totalRooms / limitSelect)
+                var totalPages = Math.ceil(warden.totalWardens / limitSelect)
                 var paginationHtml = ''
                 var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
                     paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="loadRoomPage(${i})">${i}</a>
+                          <a class="page-link" href="#" onclick="loadWardenPage(${i})">${i}</a>
                        </li>`;
                 }
                 pagination.innerHTML = paginationHtml;
@@ -149,7 +137,7 @@
             .catch((error) => console.error(error));
     }
 
-    function deleteRoom(roomId) {
+    function deleteWarden(wardenId) {
         var validateDelete = confirm('are you sure you want to delete?')
 
         if (!validateDelete)
@@ -159,16 +147,16 @@
             method: 'DELETE',
         };
 
-        fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
+        fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
             .then(response => response.text())
             .then(deleted =>
-                window.location = '/room'
+                window.location = '/warden'
             )
             .catch(error => console.log('error', error));
     }
 
     window.addEventListener('load', () => {
-        loadRoomPage()
+        loadWardenPage()
     })
 
 </script>
