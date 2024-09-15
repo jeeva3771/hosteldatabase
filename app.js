@@ -24,6 +24,8 @@ const courseUi = require('./ui/courseui.js')
 const blockUi = require('./ui/blockui.js')
 const blockFloorUi = require('./ui/blockfloorui.js')
 const roomUi = require('./ui/roomui.js')
+const wardenUi = require('./ui/wardenui.js')
+const studentUi = require('./ui/studentui.js')
 
 
 
@@ -70,6 +72,8 @@ app.mysqlClient.connect(function (err) {
         blockUi(app)
         blockFloorUi(app)
         roomUi(app)
+        wardenUi(app)
+        studentUi(app)
 
         app.listen(1000, () => {
             console.log('listen 1000port')
