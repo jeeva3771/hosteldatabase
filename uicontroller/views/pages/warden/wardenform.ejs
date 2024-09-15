@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 40px;
+                margin-bottom: 40px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 10px;
+                display: flex;
+                justify-content: center;
+                gap: 14px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">WardenForm</h2>
+        <div class="form-group">
+            <label for="wardenName">Name</label>
+            <input type="text" class="form-control" id="wardenName">
+        </div>
+        <div class="form-group">
+            <label for="dob">DOB</label>
+            <input type="date" class="form-control dateLabel" id="dob">
+        </div>
+        <div class="form-group">
+            <label for="email">EmailId</label>
+            <input type="email" class="form-control" id="email">
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" class="form-control" id="password">
+        </div>
+        <div class="form-group">
+            <label for="createdBy">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+            </select>
+        </div>
+        <div class="submission">
+            <input type="hidden" id="wardenId" value="<%=wardenId %>" />
+            <button onclick="saveOrUpdateWarden()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var wardenName = document.getElementById('wardenName');
+    var dob = document.getElementById('dob');
+    var emailId = document.getElementById('email');
+    var password = document.getElementById('password');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    var wardenId = document.getElementById('wardenId').value;
+
+    function saveOrUpdateWarden() {
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "name": wardenName.value,
+            "dob": dob.value,
+            "emailId": emailId.value,
+            "password": password.value,
+            "createdBy": createdBy.value
+        });
+
+        var requestOptions = {
+            method: wardenId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/warden";
+        if (wardenId) {
+            url = url + '/' + wardenId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(wardens => window.location = '/warden')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                createdBy.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+    loadCreatedBy()
+
+    if (wardenId) {
+        getWarden(wardenId)
+    }
+
+    function getWarden(wardenId) {
+        const requestOptions = {
+            method: "GET"
+        };
+
+        fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedWarden) => {
+                wardenName.value = getUpdatedWarden.name;
+                dob.value = getUpdatedWarden.dob.split('T')[0];
+                emailId.value = getUpdatedWarden.emailId;
+                password.value = getUpdatedWarden.password;
+                createdBy.value = getUpdatedWarden.createdBy;
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function toggleSubmitButton() {
+        submitButton.disabled = !(
+            wardenName.value.length > 0 &&
+            dob.value !== '' &&
+            emailId.value.length > 0 &&
+            password.value.length > 0 &&
+            createdBy.value !== 'Select'
+        )
+    }
+    
+    wardenName.addEventListener('input', toggleSubmitButton);
+    dob.addEventListener('input', toggleSubmitButton);
+    emailId.addEventListener('input', toggleSubmitButton);
+    password.addEventListener('input', toggleSubmitButton);
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>

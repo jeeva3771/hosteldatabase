@@ -1,0 +1,291 @@
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 40px;
+                margin-bottom: 40px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 12px;
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Studentform</h2>
+        <div class="form-group">
+            <label for="studentName">Name</label>
+            <input type="text" class="form-control" id="studentName">
+        </div>
+        <div class="form-group">
+            <label for="registerNum">RegisterNumber</label>
+            <input type="text" class="form-control" id="registerNum">
+        </div>
+        <div class="form-group">
+            <label for="dob">DOB</label>
+            <input type="date" class="form-control dateLabel" id="dob">
+        </div>
+        <div class="form-group">
+            <label for="course">CourseName</label>
+            <select class="form-control" id="course">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="email">EmailId</label>
+            <input type="email" class="form-control" id="email">
+        </div>
+        <div class="form-group">
+            <label for="studNum">PhoneNumber</label>
+            <input type="number" class="form-control" id="studNum">
+        </div>
+        <div class="form-group">
+            <label for="fatherName">FatherName</label>
+            <input type="text" class="form-control" id="fatherName">
+        </div>
+        <div class="form-group">
+            <label for="fatherNum">FatherNumber</label>
+            <input type="number" class="form-control" id="fatherNum">
+        </div>
+        <div class="form-group">
+            <label for="address">Address</label>
+            <input type="text" class="form-control" id="address">
+        </div>
+        <div class="form-group">
+            <label for="blockCode">BlockCode</label>
+            <select class="form-control" id="blockCode">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="floorNumber">FloorNumber</label>
+            <select class="form-control" id="floorNumber">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="roomNumber">RoomNumber</label>
+            <select class="form-control" id="roomNumber">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="joinedDate">JoinedDate</label>
+            <input type="date" class="form-control dateLabel" id="joinedDate">
+        </div>
+        <div class="form-group">
+            <label for="createdBy">CreatedBy</label>
+            <select class="form-control" id="createdBy">
+            </select>
+        </div>
+        <div class="submission">
+            <input type="hidden" id="studentId" value="<%=studentId %>" />
+            <button onclick="saveOrUpdateStudent()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var studentName = document.getElementById('studentName');
+    var registerNum = document.getElementById('registerNum');
+    var dob = document.getElementById('dob');
+    var course = document.getElementById('course');
+    var emailId = document.getElementById('email');
+    var studNum = document.getElementById('studNum');
+    var fatherName = document.getElementById('fatherName');
+    var fatherNum = document.getElementById('fatherNum');
+    var address = document.getElementById('address');
+    var blockCode = document.getElementById('blockCode');
+    var floorNumber = document.getElementById('floorNumber');
+    var roomNumber = document.getElementById('roomNumber');
+    var joinedDate = document.getElementById('joinedDate');
+    var createdBy = document.getElementById('createdBy');
+    var submitButton = document.getElementById('submitButton');
+    var studentId = document.getElementById('studentId').value;
+
+    function saveOrUpdateStudent() {
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "name": studentName,
+            "registerNumber": registerNum,
+            "dob": dob,
+            "courseId": course,
+            "emailId": emailId,
+            "phoneNumber": studNum,
+            "fatherName": fatherName,
+            "fatherNumber": fatherNum,
+            "address": address,
+            "blockId": blockCode.value,
+            "blockFloorId": floorNumber.value,
+            "roomId": roomNumber.value,
+            "joinedDate": joinedDate.value,
+            "createdBy": createdBy.value    
+        });
+
+        var requestOptions = {
+            method: studentId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/student";
+        if (studentId) {
+            url = url + '/' + studentId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(rooms => window.location = '/student')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadCourse() {
+        fetch("http://localhost:1000/api/course")
+            .then(response => response.json())
+            .then(courses => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < courses.length; i++) {
+                    var opt = courses[i]
+                    optionsList += `<option value="${opt.courseId}">${opt.courseName}</option>`
+                }
+                course.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadBlockCode() {
+        fetch("http://localhost:1000/api/block")
+            .then(response => response.json())
+            .then(blocks => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blocks.length; i++) {
+                    var opt = blocks[i]
+                    optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
+                }
+                blockCode.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadFloorNumber() {
+        fetch("http://localhost:1000/api/blockfloor")
+        .then(response => response.json())
+            .then(blockFloors => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blockFloors.length; i++) {
+                    var opt = blockFloors[i]
+                    optionsList += `<option value="${opt.blockFloorId}">${opt.floorNumber}</option>`
+                }
+                floorNumber.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadRoomNumber() {
+        fetch("http://localhost:1000/api/room")
+        .then(response => response.json())
+            .then(rooms => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < rooms.length; i++) {
+                    var opt = rooms[i]
+                    optionsList += `<option value="${opt.roomId}">${opt.roomNumber}</option>`
+                }
+                roomNumber.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadCreatedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                createdBy.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    loadCourse()
+    loadBlockCode()
+    loadFloorNumber()
+    loadRoomNumber()
+    loadCreatedBy()
+
+    if (studentId) {
+        getStudent(studentId)
+    }
+
+    function getStudent(studentId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
+            .then((response) => response.json())
+            .then((getUpdatedStudent) => {
+                studentName.value = getUpdatedStudent.name
+                registerNum.value = getUpdatedStudent.registerNumber
+                dob.value = getUpdatedStudent.dob
+                course.value = getUpdatedStudent.courseId
+                emailId.value = getUpdatedStudent.emailId
+                studNum.value = getUpdatedStudent.phoneNumber
+                fatherName.value = getUpdatedStudent.fatherName
+                fatherNum.value = getUpdatedStudent.fatherNumber
+                address.value = getUpdatedStudent.address
+                blockCode.value = getUpdatedStudent.blockId
+                floorNumber.value = getUpdatedStudent.blockFloorId
+                roomNumber.value = getUpdatedStudent.roomId
+                joinedDate.value = getUpdatedStudent.joinedDate
+                createdBy.value = getUpdatedStudent.createdBy
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function toggleSubmitButton() {
+        submitButton.disabled = !(
+            studentName.value.length > 0 &&
+            registerNumber.value.length > 0 &&
+            dob.value.length > 0 &&
+            course.value !== 'Select' &&
+            emailId.value.length > 0 &&
+            studNum.value.length > 0 &&
+            fatherName.value.length > 0 &&
+            fatherNum.value.length > 0 &&
+            address.value.length > 0 &&
+            blockCode.value !== 'Select' &&
+            floorNumber.value !== 'Select' &&
+            roomNumber.value  !== 'Select' &&
+            createdBy.value !== 'Select'
+        )
+    }
+
+    studentName.addEventListener('input', toggleSubmitButton);
+    registerNumber.addEventListener('input', toggleSubmitButton);
+    dob.addEventListener('input', toggleSubmitButton);
+    course.addEventListener('change', toggleSubmitButton);
+    emailId.addEventListener('input', toggleSubmitButton);
+    studNum.addEventListener('input', toggleSubmitButton);
+    fatherName.addEventListener('input', toggleSubmitButton);
+    fatherNum.addEventListener('change', toggleSubmitButton);
+    address.addEventListener('change', toggleSubmitButton);
+    blockCode.addEventListener('input', toggleSubmitButton);
+    floorNumber.addEventListener('input', toggleSubmitButton);
+    roomNumber.addEventListener('input', toggleSubmitButton);
+    roomCapacity.addEventListener('input', toggleSubmitButton);
+    createdBy.addEventListener('change', toggleSubmitButton);
+</script>
+
+</html>
