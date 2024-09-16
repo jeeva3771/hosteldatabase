@@ -175,25 +175,25 @@
 
         fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
             .then((response) => response.json())
-            .then((getUpdatedRoom) => {
-                blockCode.value = getUpdatedRoom.blockId
-                floorNumber.value = getUpdatedRoom.blockFloorId
-                roomNumber.value = getUpdatedRoom.roomNumber
-                roomCapacity.value = getUpdatedRoom.roomCapacity
+            .then((getRoom) => {
+                blockCode.value = getRoom.blockId
+                floorNumber.value = getRoom.blockFloorId
+                roomNumber.value = getRoom.roomNumber
+                roomCapacity.value = getRoom.roomCapacity
 
-                if (getUpdatedRoom.isActive) {
+                if (getRoom.isActive) {
                     document.getElementById('isActive').checked = true;
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
 
-                if (getUpdatedRoom.IsAirConditioner) {
+                if (getRoom.IsAirConditioner) {
                     document.getElementById('isAir').checked = true;
                 } else {
                     document.getElementById('notAir').checked = true;
                 }
 
-                createdBy.value = getUpdatedRoom.createdBy
+                createdBy.value = getRoom.createdBy
             })
             .catch((error) => console.error(error));
     }

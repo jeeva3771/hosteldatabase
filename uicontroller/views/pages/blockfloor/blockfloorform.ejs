@@ -129,20 +129,20 @@
 
     function getBlockFloor(blockFloorId) {
         const requestOptions = {
-            method: "GET",
+            method: "GET"
         };
 
         fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
             .then((response) => response.json())
-            .then((getUpdatedBlockFloor) => {
-                blockCode.value = getUpdatedBlockFloor.blockId
-                floorNumber.value = getUpdatedBlockFloor.floorNumber
-                if (getUpdatedBlockFloor.isActive) {
+            .then((getBlockFloor) => {
+                blockCode.value = getBlockFloor.blockId
+                floorNumber.value = getBlockFloor.floorNumber
+                if (getBlockFloor.isActive) {
                     document.getElementById('isActive').checked = true;
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
-                createdBy.value = getUpdatedBlockFloor.createdBy
+                createdBy.value = getBlockFloor.createdBy
             })
             .catch((error) => console.error(error));
     }

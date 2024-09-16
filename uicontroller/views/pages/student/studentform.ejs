@@ -115,15 +115,15 @@
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
-            "name": studentName,
-            "registerNumber": registerNum,
-            "dob": dob,
-            "courseId": course,
-            "emailId": emailId,
-            "phoneNumber": studNum,
-            "fatherName": fatherName,
-            "fatherNumber": fatherNum,
-            "address": address,
+            "name": studentName.value,
+            "registerNumber": registerNum.value,
+            "dob": dob.value,
+            "courseId": course.value,
+            "emailId": emailId.value,
+            "phoneNumber": studNum.value,
+            "fatherName": fatherName.value,
+            "fatherNumber": fatherNum.value,
+            "address": address.value,
             "blockId": blockCode.value,
             "blockFloorId": floorNumber.value,
             "roomId": roomNumber.value,
@@ -235,21 +235,21 @@
 
         fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
             .then((response) => response.json())
-            .then((getUpdatedStudent) => {
-                studentName.value = getUpdatedStudent.name
-                registerNum.value = getUpdatedStudent.registerNumber
-                dob.value = getUpdatedStudent.dob
-                course.value = getUpdatedStudent.courseId
-                emailId.value = getUpdatedStudent.emailId
-                studNum.value = getUpdatedStudent.phoneNumber
-                fatherName.value = getUpdatedStudent.fatherName
-                fatherNum.value = getUpdatedStudent.fatherNumber
-                address.value = getUpdatedStudent.address
-                blockCode.value = getUpdatedStudent.blockId
-                floorNumber.value = getUpdatedStudent.blockFloorId
-                roomNumber.value = getUpdatedStudent.roomId
-                joinedDate.value = getUpdatedStudent.joinedDate
-                createdBy.value = getUpdatedStudent.createdBy
+            .then((getStudent) => {
+                studentName.value = getStudent.name
+                registerNum.value = getStudent.registerNumber
+                dob.value = getStudent.dob.split('T')[0]
+                course.value = getStudent.courseId
+                emailId.value = getStudent.emailId
+                studNum.value = getStudent.phoneNumber
+                fatherName.value = getStudent.fatherName
+                fatherNum.value = getStudent.fatherNumber
+                address.value = getStudent.address
+                blockCode.value = getStudent.blockId
+                floorNumber.value = getStudent.blockFloorId
+                roomNumber.value = getStudent.roomId
+                joinedDate.value = getStudent.joinedDate.split('T')[0];
+                createdBy.value = getStudent.createdBy
             })
             .catch((error) => console.error(error));
     }
@@ -258,7 +258,7 @@
         submitButton.disabled = !(
             studentName.value.length > 0 &&
             registerNumber.value.length > 0 &&
-            dob.value.length > 0 &&
+            dob.value !== '' &&
             course.value !== 'Select' &&
             emailId.value.length > 0 &&
             studNum.value.length > 0 &&
@@ -268,6 +268,7 @@
             blockCode.value !== 'Select' &&
             floorNumber.value !== 'Select' &&
             roomNumber.value  !== 'Select' &&
+            joinedDate.value !== '' && 
             createdBy.value !== 'Select'
         )
     }
@@ -284,7 +285,7 @@
     blockCode.addEventListener('input', toggleSubmitButton);
     floorNumber.addEventListener('input', toggleSubmitButton);
     roomNumber.addEventListener('input', toggleSubmitButton);
-    roomCapacity.addEventListener('input', toggleSubmitButton);
+    joinedDate.addEventListener('input', toggleSubmitButton);
     createdBy.addEventListener('change', toggleSubmitButton);
 </script>
 

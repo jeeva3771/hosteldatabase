@@ -101,9 +101,9 @@
 
         fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
             .then((response) => response.json())
-            .then((getUpdatedCourse) => {
-                courseName.value = getUpdatedCourse.courseName
-                createdBy.value = getUpdatedCourse.createdBy
+            .then((getCourse) => {
+                courseName.value = getCourse.courseName
+                createdBy.value = getCourse.createdBy
             })
             .catch((error) => console.error(error));
     }

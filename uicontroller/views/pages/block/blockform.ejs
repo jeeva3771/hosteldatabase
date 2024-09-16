@@ -119,15 +119,15 @@
 
         fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
             .then((response) => response.json())
-            .then((getUpdatedBlock) => {
-                blockCode.value = getUpdatedBlock.blockName
-                location.value = getUpdatedBlock.location
-                if (getUpdatedBlock.isActive) {
+            .then((getBlock) => {
+                blockCode.value = getBlock.blockName
+                location.value = getBlock.location
+                if (getBlock.isActive) {
                     document.getElementById('isActive').checked = true;
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
-                createdBy.value = getUpdatedBlock.createdBy
+                createdBy.value = getBlock.createdBy
             })
             .catch((error) => console.error(error));
     }
