@@ -18,9 +18,9 @@ async function readWardens(req, res) {
             w.*,
             ww.name AS created,
             ww2.name AS updated,
-            DATE_FORMAT(w.dob, "%d-%m-%Y") AS dob,
-            DATE_FORMAT(w.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(w.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(w.dob, "%Y-%m-%d") AS dob,
+            DATE_FORMAT(w.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt,
             (SELECT COUNT(*) FROM warden) AS totalWardens
             FROM warden AS w
             LEFT JOIN

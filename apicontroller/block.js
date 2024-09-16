@@ -16,8 +16,8 @@ async function readBlocks(req, res) {
             bk.*,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(bk.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(bk.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(bk.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt,
             (SELECT COUNT(*) FROM block) AS totalBlocks
             FROM block AS bk
         LEFT JOIN 

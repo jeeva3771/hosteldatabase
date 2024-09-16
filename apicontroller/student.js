@@ -16,9 +16,45 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readStudents(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
     try {
-        const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE deletedAt IS NULL`, [], mysqlClient);
+        const students = await mysqlQuery(/*sql*/`
+        select 
+            s.*,
+            bk.blockCode,
+            b.floorNumber,
+            r.roomNumber,
+            c.courseName,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(s.dob, "%Y-%m-%d") AS dob,
+            DATE_FORMAT(s.joinedDate, "%Y-%m-%d") AS joinedDate,
+            DATE_FORMAT(s.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(s.updatedAt, "%Y-%m-%d %T") AS updatedAt,
+            (SELECT COUNT(*) FROM student) AS totalStudents
+            FROM student AS s
+            LEFT JOIN 
+            block AS bk ON bk.blockId = s.blockId
+            LEFT JOIN 
+            blockfloor AS b ON b.blockFloorId = s.blockFloorId
+            LEFT JOIN 
+            room AS r ON r.roomId = s.roomId
+            LEFT JOIN 
+            course AS c ON c.courseId = s.courseId
+            LEFT JOIN 
+            warden AS w ON w.wardenId = s.createdBy
+            LEFT JOIN 
+            warden AS w2 ON w2.wardenId = s.updatedBy
+            WHERE 
+            s.deletedAt IS NULL 
+            ORDER BY 
+            s.blockId ASC LIMIT ? OFFSET ?`,
+            [limit, offset],
+            mysqlClient
+            );
         res.status(200).send(students)
     }
     catch (error) {

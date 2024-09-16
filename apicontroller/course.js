@@ -14,8 +14,8 @@ async function readCourses(req, res) {
             c.*,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(c.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(c.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(c.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(c.updatedAt, "%Y-%m-%d %T") AS updatedAt,
             (SELECT COUNT(*) FROM course) AS totalCourses
         FROM 
             course AS c 

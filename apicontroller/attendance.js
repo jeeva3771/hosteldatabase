@@ -9,9 +9,41 @@ const ALLOWED_UPDATE_KEYS = [
     "isPresent"
 ]
 async function readAttendances(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page) || 1;
+    const offset = (page - 1) * limit;
     try {
-        const attendances = await mysqlQuery(/*sql*/`SELECT * FROM attendance`, [], mysqlClient)
+        const attendances = await mysqlQuery(/*sql*/`
+        select 
+            a.*,
+            s.name,
+            s2.roomId AS roomNumber,
+            s3.blockFloorId AS floorNumber,
+            s4.blockId AS blockCode,
+            ww.name AS created,
+            ww2.name AS updated,
+        DATE_FORMAT(a.createdAt, "%Y-%m-%d %T") AS created,
+        DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated,
+        (SELECT COUNT(*) FROM attendance) AS totalAttendances
+        FROM attendance AS a
+        LEFT JOIN
+            student AS s ON s.studentId = a.studentId
+        LEFT JOIN
+            student AS s2 ON s2.studentId = a.roomId
+        LEFT JOIN
+            student AS s3 ON s3.studentId = a.blockFloorId
+        LEFT JOIN
+            student AS s4 ON s4.studentId = a.blockId
+        LEFT JOIN
+            warden AS ww ON ww.wardenId = a.wardenId
+        LEFT JOIN 
+            warden AS ww2 ON ww2.wardenId = a.updatedBy
+        ORDER BY 
+            a.studentId ASC LIMIT ? OFFSET ?`,
+        [limit, offset],
+        mysqlClient
+        )
         res.status(200).send(attendances)
     } catch (error) {
         res.status(500).send(error.message)

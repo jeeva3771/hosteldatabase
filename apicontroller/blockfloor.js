@@ -14,11 +14,11 @@ async function readBlockFloors(req, res) {
     try {
         const blockFloors = await mysqlQuery(/*sql*/`select 
             b.*,
-            bk.blockCode As blockCode,
+            bk.blockCode,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(b.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(b.updatedAt, "%Y-%m-%d %T") AS updatedAt,
             (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloors
             FROM blockfloor AS b
             LEFT JOIN 

@@ -18,12 +18,12 @@ async function readRooms(req, res) {
         const rooms = await mysqlQuery(/*sql*/`
         SELECT 
             r.*,
-            b.floorNumber AS floorNumber,
-            bk.blockCode AS blockCode,
+            b.floorNumber,
+            bk.blockCode,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(r.createdAt, "%d-%m-%Y %T") AS createdAt,
-            DATE_FORMAT(r.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            DATE_FORMAT(r.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(r.updatedAt, "%Y-%m-%d %T") AS updatedAt,
             (SELECT COUNT(*) FROM room) AS totalRooms
             FROM room AS r
             LEFT JOIN 
