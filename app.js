@@ -26,7 +26,7 @@ const blockFloorUi = require('./ui/blockfloorui.js')
 const roomUi = require('./ui/roomui.js')
 const wardenUi = require('./ui/wardenui.js')
 const studentUi = require('./ui/studentui.js')
-
+const attendanceUi = require('./ui/attendanceui.js')
 
 
 const app = express()
@@ -74,6 +74,7 @@ app.mysqlClient.connect(function (err) {
         roomUi(app)
         wardenUi(app)
         studentUi(app)
+        attendanceUi(app)
 
         app.listen(1000, () => {
             console.log('listen 1000port')
