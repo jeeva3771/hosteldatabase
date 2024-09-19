@@ -7,19 +7,17 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readBlockFloors(req, res) {
     const mysqlClient = req.app.mysqlClient
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
 
-    try {
-        const blockFloors = await mysqlQuery(/*sql*/`select 
+    const blockFloorsQuery = /*sql*/`select 
             b.*,
             bk.blockCode,
             w.name AS created,
             w2.name AS updated,
             DATE_FORMAT(b.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(b.updatedAt, "%Y-%m-%d %T") AS updatedAt,
-            (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloors
+            DATE_FORMAT(b.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
@@ -30,14 +28,26 @@ async function readBlockFloors(req, res) {
             WHERE 
               b.deletedAt IS NULL
             ORDER BY 
-              b.blockId ASC LIMIT ? OFFSET ?`,
-            [limit, offset],
-            mysqlClient)
-        res.status(200).send(blockFloors)
-    }
-    catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
+              b.blockId ASC LIMIT ? OFFSET ?`;
+
+    const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalBlockFloorCount 
+        FROM blockfloor 
+        WHERE deletedAt IS NULL`;
+
+    try {
+        const [blockFloors, totalCount] = await Promise.all([
+            mysqlQuery(blockFloorsQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            blockFloors: blockFloors,
+            blockFloorCount: totalCount[0].totalBlockFloorCount
+        });
+
+    } catch (error) {
+        res.status(500).send(error.message);
     }
 }
 

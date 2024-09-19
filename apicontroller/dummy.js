@@ -9,6 +9,12 @@ async function readCourses(req, res) {
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
 
+    let orderBy = 'c.courseName ASC';
+
+    if (req.query.sort === 'createdAt') {
+        orderBy = 'c.createdAt DESC';
+    }
+
     const coursesQuery = /*sql*/ `
         SELECT 
             c.*,
@@ -25,7 +31,7 @@ async function readCourses(req, res) {
         WHERE 
             c.deletedAt IS NULL
         ORDER BY 
-            c.createdAt DESC, c.courseName ASC
+            ${orderBy}
         LIMIT ? 
         OFFSET ?`;
 
@@ -224,3 +230,84 @@ module.exports = (app) => {
     app.put('/api/course/:courseId', updateCourse)
     app.delete('/api/course/:courseId', deleteCourse)
 }
+.......................................
+
+function saveOrUpdateCourse() {
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+        "courseName": courseName.value
+    });
+
+    var requestOptions = {
+        method: courseId ? 'PUT' : 'POST',
+        headers: myHeaders,
+        body: raw
+    };
+
+    let url = "http://localhost:1000/api/course"
+    if (courseId) {
+        url = url + '/' + courseId
+    }
+
+    fetch(url, requestOptions)
+        .then(response => response.text())
+        .then(response => {
+        if (response.status === 201 || 200) {
+            window.location = "/course"
+        } else {
+            alert(response.text())
+        }
+})
+        .catch(error => console.error('error', error));
+}
+
+
+..........................
+
+
+const request = fetch(url, requestOptions)
+        request.then(async (response) => {
+            if (response.status === 201 || 200) {
+                window.location.replace("http://localhost:1000/course")
+            } else {
+                alert(await response.text())
+            }
+        })
+    }
+
+    ..................
+
+
+    function blockPageUi(req, res) {
+        if (req.session.isLogged) {
+            res.render('pages/block/blocklist.ejs')
+        } else {
+            res.status(401).redirect('http://localhost:1000/login');
+        }
+    }
+    
+    function addBlockUi(req, res) {
+        if (req.session.isLogged) {
+            res.render('pages/block/blockform.ejs', { blockId: '' })
+        } else {
+            res.status(401).redirect('http://localhost:1000/login');
+        }
+    }
+    
+    function editBlockUi(req, res) {
+        const blockId = req.params.blockId;
+        if (req.session.isLogged) {
+            res.render('pages/block/blockform.ejs', { blockId: blockId })
+        } else {
+            res.status(401).redirect('http://localhost:1000/block');
+        }
+    }
+    
+    module.exports = (app) => {
+        app.get('/block', blockPageUi)
+        app.get('/block/add', addBlockUi)
+        app.get('/block/:blockId', editBlockUi)
+    }
+    

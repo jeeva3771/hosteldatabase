@@ -8,20 +8,18 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
 
-    try {
-        const wardens = await mysqlQuery(/*sql*/`
+        const wardensQuery = /*sql*/`
         SELECT 
             w.*,
             ww.name AS created,
             ww2.name AS updated,
             DATE_FORMAT(w.dob, "%Y-%m-%d") AS dob,
             DATE_FORMAT(w.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt,
-            (SELECT COUNT(*) FROM warden) AS totalWardens
+            DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM warden AS w
             LEFT JOIN
               warden AS ww ON ww.wardenId = w.createdBy
@@ -30,13 +28,26 @@ async function readWardens(req, res) {
             WHERE 
               w.deletedAt IS NULL 
             ORDER BY 
-              w.name ASC LIMIT ? OFFSET ?`,
-               [limit, offset],
-               mysqlClient
-            )
-        res.status(200).send(wardens)
+              w.name ASC LIMIT ? OFFSET ?`
+       
+       const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalWardenCount 
+        FROM warden 
+        WHERE deletedAt IS NULL`;
+
+    try {
+        const [wardens, totalCount] = await Promise.all([
+            mysqlQuery(wardensQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            wardens: wardens,
+            wardenCount: totalCount[0].totalWardenCount
+        });
+
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
@@ -176,7 +187,6 @@ async function authentication(req, res) {
         if (user.length > 0) {
             req.session.isLogged = true
             req.session.data = user[0]
-            console.log(req.session)
             res.status(200).send('success')
         } else {
             req.session.isLogged = false

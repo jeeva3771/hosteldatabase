@@ -17,11 +17,11 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readStudents(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
-    try {
-        const students = await mysqlQuery(/*sql*/`
+
+        const studentsQuery = /*sql*/`
         select 
             s.*,
             bk.blockCode,
@@ -33,8 +33,7 @@ async function readStudents(req, res) {
             DATE_FORMAT(s.dob, "%Y-%m-%d") AS dob,
             DATE_FORMAT(s.joinedDate, "%Y-%m-%d") AS joinedDate,
             DATE_FORMAT(s.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(s.updatedAt, "%Y-%m-%d %T") AS updatedAt,
-            (SELECT COUNT(*) FROM student) AS totalStudents
+            DATE_FORMAT(s.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM student AS s
             LEFT JOIN 
             block AS bk ON bk.blockId = s.blockId
@@ -51,14 +50,26 @@ async function readStudents(req, res) {
             WHERE 
             s.deletedAt IS NULL 
             ORDER BY 
-            s.blockId ASC LIMIT ? OFFSET ?`,
-            [limit, offset],
-            mysqlClient
-            );
-        res.status(200).send(students)
-    }
-    catch (error) {
-        res.status(500).send(error.message)
+            s.blockId ASC LIMIT ? OFFSET ?`;
+        
+        const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalStudentCount 
+        FROM student 
+        WHERE deletedAt IS NULL`;
+
+    try {
+        const [students, totalCount] = await Promise.all([
+            mysqlQuery(studentsQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            students: students,
+            studentCount: totalCount[0].totalStudentCount
+        });
+
+    } catch (error) {
+        res.status(500).send(error.message);
     }
 }
 

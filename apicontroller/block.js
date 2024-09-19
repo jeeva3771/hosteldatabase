@@ -7,18 +7,17 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
-    try {
-        const blocks = await mysqlQuery(/*sql*/`
+
+    const blocksQuery = /*sql*/`
         SELECT 
             bk.*,
             w.name AS created,
             w2.name AS updated,
             DATE_FORMAT(bk.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt,
-            (SELECT COUNT(*) FROM block) AS totalBlocks
+            DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy
@@ -27,11 +26,24 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL 
         ORDER BY 
-            bk.blockCode ASC LIMIT ? OFFSET ?`,
-            [limit, offset],
-            mysqlClient
-        )
-        res.status(200).send(blocks)
+            bk.blockCode ASC LIMIT ? OFFSET ?`;
+
+    const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalBlockCount 
+        FROM block 
+        WHERE deletedAt IS NULL`;
+
+    try {
+        const [blocks, totalCount] = await Promise.all([
+            mysqlQuery(blocksQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            blocks: blocks,
+            blockCount: totalCount[0].totalBlockCount
+        });
+        
     } catch (error) {
         res.status(500).send(error.message)
     }

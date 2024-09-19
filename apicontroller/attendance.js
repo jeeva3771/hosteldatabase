@@ -10,51 +10,65 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 async function readAttendances(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
-    try {
-        const attendances = await mysqlQuery(/*sql*/`
+
+        const attendancesQuery = /*sql*/`
         select 
             a.*,
             s.name,
-            s2.roomId AS roomNumber,
-            s3.blockFloorId AS floorNumber,
-            s4.blockId AS blockCode,
-            ww.name AS created,
+            r.roomNumber,
+            b.floorNumber,
+            bk.blockCode,
+            ww.name AS reviewedWarden,
             ww2.name AS updated,
+        DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
         DATE_FORMAT(a.createdAt, "%Y-%m-%d %T") AS created,
         DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated,
-        (SELECT COUNT(*) FROM attendance) AS totalAttendances
         FROM attendance AS a
         LEFT JOIN
             student AS s ON s.studentId = a.studentId
-        LEFT JOIN
-            student AS s2 ON s2.studentId = a.roomId
-        LEFT JOIN
-            student AS s3 ON s3.studentId = a.blockFloorId
-        LEFT JOIN
-            student AS s4 ON s4.studentId = a.blockId
+        LEFT JOIN 
+            room AS r ON r.roomId = a.roomId  
+        LEFT JOIN 
+            blockfloor AS b ON b.blockFloorId = a.blockFloorId 
+        LEFT JOIN 
+            block AS bk ON bk.blockId = a.blockId
         LEFT JOIN
             warden AS ww ON ww.wardenId = a.wardenId
         LEFT JOIN 
             warden AS ww2 ON ww2.wardenId = a.updatedBy
         ORDER BY 
-            a.studentId ASC LIMIT ? OFFSET ?`,
-        [limit, offset],
-        mysqlClient
-        )
-        res.status(200).send(attendances)
+            a.studentId ASC 
+        LIMIT ? OFFSET ?`;
+
+        const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalAttendanceCount 
+        FROM attendance`;
+
+    try {
+        const [attendances, totalCount] = await Promise.all([
+            mysqlQuery(attendancesQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            attendances: attendances,
+            attendanceCount: totalCount[0].totalAttendanceCount
+        });
+
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
+
 
 async function readAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const attendanceId = req.params.attendanceId;
     try {
-        const attendance = await mysqlQuery(/*sql*/`select * from attendance where attendanceId = ?`, [attendanceId], mysqlClient)
+        const attendance = await mysqlQuery(/*sql*/`select * from attendance where attendanceId = ? `, [attendanceId], mysqlClient)
         if (attendance.length === 0) {
             return res.status(404).send("attendanceId not valid");
         }
@@ -83,7 +97,7 @@ async function createAttendance(req, res) {
 
     try {
         const dayAttendance = await mysqlQuery(/*sql*/`INSERT INTO 
-            attendance(studentId,roomId,blockFloorId,blockId,checkInDate,isPresent,wardenId)
+            attendance(studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId)
             VALUES(?,?,?,?,?,?,?)`,
             [studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId],
             mysqlClient
@@ -109,7 +123,7 @@ async function updateAttendance(req, res) {
         const keyValue = req.body[key]
         if (keyValue !== undefined) {
             values.push(keyValue)
-            updates.push(` ${key} = ?`)
+            updates.push(` ${key} = ? `)
         }
     })
 
@@ -117,7 +131,7 @@ async function updateAttendance(req, res) {
     values.push(attendanceId)
 
     try {
-        const attendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ?`,
+        const attendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ? `,
             [attendanceId],
             mysqlClient
         )
@@ -130,13 +144,13 @@ async function updateAttendance(req, res) {
             return res.status(400).send(isValidInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE attendance SET ${updates.join(', ')} WHERE attendanceId = ?`,
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE attendance SET ${updates.join(', ')} WHERE attendanceId = ? `,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
             res.status(204).send("attendanceId not found or no changes made")
         }
 
-        const getUpdatedAttendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ?`,
+        const getUpdatedAttendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ? `,
             [attendanceId],
             mysqlClient)
         res.status(200).send({
@@ -154,7 +168,7 @@ async function attendanceList(req, res) {
     const { startDate, endDate } = req.query
 
     try {
-        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
+        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ? `,
             [studentId],
             mysqlClient
         )
@@ -162,7 +176,7 @@ async function attendanceList(req, res) {
             return res.status(404).send('studentId is invalid')
         }
 
-        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE DATE >= ? AND DATE <= ? AND studentId = ?`,
+        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE DATE >= ? AND DATE <= ? AND studentId = ? `,
             [startDate, endDate, studentId],
             mysqlClient
         )

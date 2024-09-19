@@ -10,12 +10,11 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit) || 10;
-    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit);
+    const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
 
-    try {
-        const rooms = await mysqlQuery(/*sql*/`
+    const roomsQuery = /*sql*/`
         SELECT 
             r.*,
             b.floorNumber,
@@ -23,8 +22,7 @@ async function readRooms(req, res) {
             w.name AS created,
             w2.name AS updated,
             DATE_FORMAT(r.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(r.updatedAt, "%Y-%m-%d %T") AS updatedAt,
-            (SELECT COUNT(*) FROM room) AS totalRooms
+            DATE_FORMAT(r.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM room AS r
             LEFT JOIN 
                blockfloor AS b ON b.blockFloorId = r.blockFloorId
@@ -37,13 +35,26 @@ async function readRooms(req, res) {
             WHERE 
               r.deletedAt IS NULL 
             ORDER BY 
-              r.blockId ASC LIMIT ? OFFSET ?`,
-              [limit, offset],
-              mysqlClient
-            );
-        res.status(200).send(rooms);
+              r.blockId ASC LIMIT ? OFFSET ?`
+
+    const countQuery = /*sql*/ `
+    SELECT COUNT(*) AS totalRoomCount 
+    FROM room
+    WHERE deletedAt IS NULL`;
+
+    try {
+        const [rooms, totalCount] = await Promise.all([
+            mysqlQuery(roomsQuery, [limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            rooms: rooms,
+            roomCount: totalCount[0].totalRoomCount
+        });
+
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
