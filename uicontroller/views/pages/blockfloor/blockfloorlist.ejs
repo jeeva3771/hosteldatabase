@@ -36,7 +36,7 @@
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadBlockFloorPage()">
+                onchange="changeLimit()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
                 <option value="20" href="#">20</option>
@@ -74,39 +74,36 @@
         </table>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center" id="pagination">
-                <li class="page-item disabled" id="previous-page">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item" id="next-page">
-                    <a class="page-link" href="#">Next</a>
-                </li>
             </ul>
         </nav>
     </div>
 </body>
 <script>
     var tableData = document.getElementById("blockFloorsData")
-    var page = document.getElementById("pagination").value
-    var currentPage = 1
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
+
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadBlockFloorPage()
+    }
     
-    function loadBlockFloorPage() {
-        var limitSelect = document.getElementById("limit").value
+    function loadBlockFloorPage(pageNo = 1) {
 
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/blockfloor?limit=${limitSelect}&page=${page}`, requestOptions)
+        fetch(`http://localhost:1000/api/blockfloor?limit=${limit}&page=${pageNo}`, requestOptions)
             .then(response => response.json())
-            .then(blockFloors => {
+            .then(responseData => {
+                const { blockFloors, blockFloorCount } = responseData;
+
                 var trHtml = ''
                 for (var i = 0; i < blockFloors.length; i++) {
                     var blockFloor = blockFloors[i]
                     trHtml = trHtml + `<tr>
-                            <td>${i + 1}</td>
+                            <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${blockFloor.blockCode}</td>
                             <td>${blockFloor.floorNumber}</td>
                             <td>${blockFloor.isActive}</td>
@@ -123,16 +120,15 @@
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(blockFloor.totalBlockFloors / limitSelect)
+                var totalPages = Math.ceil(responseData.blockFloorCount / limit)
                 var paginationHtml = ''
-                var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
                     paginationHtml += `<li class="page-item">
                           <a class="page-link" href="#" onclick="loadBlockFloorPage(${i})">${i}</a>
                        </li>`;
                 }
-                pagination.innerHTML = paginationHtml;
+                paginationDom.innerHTML = paginationHtml;
             })
             .catch((error) => console.error(error));
     }

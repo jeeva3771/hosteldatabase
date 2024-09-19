@@ -36,7 +36,7 @@
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadWardenPage()">
+                onchange="changeLimit()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
                 <option value="20" href="#">20</option>
@@ -89,24 +89,29 @@
 </body>
 <script>
     var tableData = document.getElementById("wardensData")
-    var page = document.getElementById("pagination").value
-    var currentPage = 1
-    
-    function loadWardenPage() {
-        var limitSelect = document.getElementById("limit").value
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
 
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadWardenPage()
+    }
+
+    function loadWardenPage(pageNo = 1) {
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/warden?limit=${limitSelect}&page=${page}`, requestOptions)
+        fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}`, requestOptions)
             .then(response => response.json())
-            .then(wardens => {
+            .then(responseData => {
+                const { wardens, wardenCount } = responseData;
+
                 var trHtml = ''
                 for (var i = 0; i < wardens.length; i++) {
                     var warden = wardens[i]
                     trHtml = trHtml + `<tr>
-                            <td>${i + 1}</td>
+                            <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${warden.name}</td>
                             <td>${warden.dob}</td>
                             <td>${warden.emailId}</td>
@@ -123,16 +128,15 @@
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(warden.totalWardens / limitSelect)
+                var totalPages = Math.ceil(responseData.wardenCount / limit)
                 var paginationHtml = ''
-                var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
                     paginationHtml += `<li class="page-item">
                           <a class="page-link" href="#" onclick="loadWardenPage(${i})">${i}</a>
                        </li>`;
                 }
-                pagination.innerHTML = paginationHtml;
+                paginationDom.innerHTML = paginationHtml;
             })
             .catch((error) => console.error(error));
     }

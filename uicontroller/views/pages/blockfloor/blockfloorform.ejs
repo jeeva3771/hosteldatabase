@@ -25,7 +25,7 @@
 
 <body>
     <div class="container">
-        <h2 class="label">Blockfloorform</h2>
+        <h2 class="label">Blockfloor</h2>
         <div class="form-group">
             <label for="blockCode">BlockCode</label>
             <select class="form-control" id="blockCode">
@@ -47,13 +47,11 @@
             </div>
         </div>
         <div class="form-group">
-            <label for="createdBy">CreatedBy</label>
-            <select class="form-control" id="createdBy">
-            </select>
+            
         </div>
         <div class="submission">
             <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
-            <button onclick="createBlockFloor()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+            <button onclick="saveOrUpdateBlockFloor()" class="btn btn-success" id="submitButton" disabled>Submit</button>
         </div>
     </div>
 </body>
@@ -64,7 +62,7 @@
     var submitButton = document.getElementById('submitButton');
     var blockFloorId = document.getElementById('blockFloorId').value;
 
-    function createBlockFloor() {
+    function saveOrUpdateBlockFloor() {
         var selectedStatus = document.querySelector('input[name="status"]:checked');
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -134,15 +132,15 @@
 
         fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
             .then((response) => response.json())
-            .then((getBlockFloor) => {
-                blockCode.value = getBlockFloor.blockId
-                floorNumber.value = getBlockFloor.floorNumber
-                if (getBlockFloor.isActive) {
+            .then((blockFloor) => {
+                blockCode.value = blockFloor.blockId
+                floorNumber.value = blockFloor.floorNumber
+                if (blockFloor.isActive) {
                     document.getElementById('isActive').checked = true;
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
-                createdBy.value = getBlockFloor.createdBy
+                createdBy.value = blockFloor.createdBy
             })
             .catch((error) => console.error(error));
     }

@@ -119,12 +119,12 @@
 
         fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
             .then((response) => response.json())
-            .then((getWarden) => {
-                wardenName.value = getWarden.name;
-                dob.value = getWarden.dob.split('T')[0];
-                emailId.value = getWarden.emailId;
-                password.value = getWarden.password;
-                createdBy.value = getWarden.createdBy;
+            .then((warden) => {
+                wardenName.value = warden.name;
+                dob.value = warden.dob.split('T')[0];
+                emailId.value = warden.emailId;
+                password.value = warden.password;
+                createdBy.value = warden.createdBy;
             })
             .catch((error) => console.error(error));
     }

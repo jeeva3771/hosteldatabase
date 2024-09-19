@@ -147,22 +147,8 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadCreatedBy() {
-        fetch("http://localhost:1000/api/warden")
-            .then(response => response.json())
-            .then(wardens => {
-                var optionsList = '<option selected>Select</option>'
-                for (var i = 0; i < wardens.length; i++) {
-                    var opt = wardens[i]
-                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
-                }
-                createdBy.innerHTML = optionsList
-            })
-            .catch(error => console.log('error', error));
-    }
     loadBlockCode()
     loadFloorNumber()
-    loadCreatedBy()
 
     if (roomId) {
         getRoom(roomId)
@@ -175,11 +161,11 @@
 
         fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
             .then((response) => response.json())
-            .then((getRoom) => {
-                blockCode.value = getRoom.blockId
-                floorNumber.value = getRoom.blockFloorId
-                roomNumber.value = getRoom.roomNumber
-                roomCapacity.value = getRoom.roomCapacity
+            .then((room) => {
+                blockCode.value = room.blockId
+                floorNumber.value = room.blockFloorId
+                roomNumber.value = room.roomNumber
+                roomCapacity.value = room.roomCapacity
 
                 if (getRoom.isActive) {
                     document.getElementById('isActive').checked = true;

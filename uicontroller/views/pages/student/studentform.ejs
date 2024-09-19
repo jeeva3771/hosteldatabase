@@ -144,7 +144,7 @@
 
         fetch(url, requestOptions)
             .then(response => response.text())
-            .then(rooms => window.location = '/student')
+            .then(students => window.location = '/student')
             .catch(error => console.error('error', error));
     }
 
@@ -235,21 +235,21 @@
 
         fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
             .then((response) => response.json())
-            .then((getStudent) => {
-                studentName.value = getStudent.name
-                registerNum.value = getStudent.registerNumber
-                dob.value = getStudent.dob.split('T')[0]
-                course.value = getStudent.courseId
-                emailId.value = getStudent.emailId
-                studNum.value = getStudent.phoneNumber
-                fatherName.value = getStudent.fatherName
-                fatherNum.value = getStudent.fatherNumber
-                address.value = getStudent.address
-                blockCode.value = getStudent.blockId
-                floorNumber.value = getStudent.blockFloorId
-                roomNumber.value = getStudent.roomId
-                joinedDate.value = getStudent.joinedDate.split('T')[0];
-                createdBy.value = getStudent.createdBy
+            .then((student) => {
+                studentName.value = student.name
+                registerNum.value = student.registerNumber
+                dob.value = student.dob.split('T')[0]
+                course.value = student.courseId
+                emailId.value = student.emailId
+                studNum.value = student.phoneNumber
+                fatherName.value = student.fatherName
+                fatherNum.value = student.fatherNumber
+                address.value = student.address
+                blockCode.value = student.blockId
+                floorNumber.value = student.blockFloorId
+                roomNumber.value = student.roomId
+                joinedDate.value = student.joinedDate.split('T')[0];
+                createdBy.value = student.createdBy
             })
             .catch((error) => console.error(error));
     }

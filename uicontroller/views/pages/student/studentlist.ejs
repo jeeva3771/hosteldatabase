@@ -17,7 +17,7 @@
                 height: 34px;
                 display: flex;
                 justify-content: space-between;
-                gap: 242%;
+                gap: 204%;
             }
 
             .table-wrapper {
@@ -46,7 +46,7 @@
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadStudentPage()">
+                onchange="changeLimit()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
                 <option value="20" href="#">20</option>
@@ -94,34 +94,31 @@
         </table>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center" id="pagination">
-                <li class="page-item disabled" id="previous-page">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item" id="next-page">
-                    <a class="page-link" href="#">Next</a>
-                </li>
             </ul>
         </nav>
     </div>
 </body>
 <script>
     var tableData = document.getElementById("studentsData")
-    var page = document.getElementById("pagination").value
-    var currentPage = 1
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
+
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadStudentPage()
+    }
     
-    function loadStudentPage() {
-        var limitSelect = document.getElementById("limit").value
+    function loadStudentPage(pageNo = 1) {
 
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/student?limit=${limitSelect}&page=${page}`, requestOptions)
+        fetch(`http://localhost:1000/api/student?limit=${limit}&page=${pageNo}`, requestOptions)
             .then(response => response.json())
-            .then(students => {
+            .then(responseData => {
+                const { students, studentCount } = responseData;
+
                 var trHtml = ''
                 for (var i = 0; i < students.length; i++) {
                     var student = students[i]
@@ -153,16 +150,15 @@
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(student.totalStudents / limitSelect)
+                var totalPages = Math.ceil(responseData.studentCount / limit)
                 var paginationHtml = ''
-                var pagination = document.getElementById("pagination")
 
                 for (var i = 1; i <= totalPages; i++) {
                     paginationHtml += `<li class="page-item">
                           <a class="page-link" href="#" onclick="loadStudentPage(${i})">${i}</a>
                        </li>`;
                 }
-                pagination.innerHTML = paginationHtml;
+                paginationDom.innerHTML = paginationHtml;
             })
             .catch((error) => console.error(error));
     }

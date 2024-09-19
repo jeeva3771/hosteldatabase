@@ -42,7 +42,7 @@
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="loadRoomPage()">
+                onchange="changeLimit()">
                 <option value="5" href="#">5</option>
                 <option value="10" href="#" selected>10</option>
                 <option value="20" href="#">20</option>
@@ -83,39 +83,36 @@
         </table>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center" id="pagination">
-                <li class="page-item disabled" id="previous-page">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item" id="next-page">
-                    <a class="page-link" href="#">Next</a>
-                </li>
+                
             </ul>
         </nav>
     </div>
 </body>
 <script>
     var tableData = document.getElementById("roomsData")
-    var page = document.getElementById("pagination").value
-    var currentPage = 1
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
+
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadRoomPage()
+    }
     
-    function loadRoomPage() {
-        var limitSelect = document.getElementById("limit").value
+    function loadRoomPage(pageNo = 1) {
 
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/room?limit=${limitSelect}&page=${page}`, requestOptions)
+        fetch(`http://localhost:1000/api/room?limit=${limit}&page=${pageNo}`, requestOptions)
             .then(response => response.json())
-            .then(rooms => {
+            .then(responseData => {
+                const { rooms, roomCount } = responseData;
                 var trHtml = ''
                 for (var i = 0; i < rooms.length; i++) {
                     var room = rooms[i]
                     trHtml = trHtml + `<tr>
-                            <td>${i + 1}</td>
+                            <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${room.blockCode}</td>
                             <td>${room.floorNumber}</td>
                             <td>${room.roomNumber}</td>
@@ -135,7 +132,7 @@
                         </tr>`
                 }
                 tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(room.totalRooms / limitSelect)
+                var totalPages = Math.ceil(responseData.roomCount / limit)
                 var paginationHtml = ''
                 var pagination = document.getElementById("pagination")
 
@@ -144,7 +141,7 @@
                           <a class="page-link" href="#" onclick="loadRoomPage(${i})">${i}</a>
                        </li>`;
                 }
-                pagination.innerHTML = paginationHtml;
+                paginationDom.innerHTML = paginationHtml;
             })
             .catch((error) => console.error(error));
     }

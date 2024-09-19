@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <%- include('../../partials/head.ejs') %>
+        <style>
+            .container {
+                margin-top: 60px;
+                margin-bottom: 20px;
+                padding-top: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px
+            }
+
+            .insertLabel {
+                height: 34px;
+                display: flex;
+                justify-content: space-between;
+                gap: 116%;
+            }
+
+            .table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            }
+
+            table {
+                min-width: 1400px;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container table-wrapper">
+        <div class="insertLabel">
+            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+                onchange="changeLimit()">
+                <option value="5" href="#">5</option>
+                <option value="10" href="#" selected>10</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
+            </select>
+            <a class="btn btn-info" href="/attendance/add">Add</a>
+        </div>
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Sno</th>
+                    <th scope="col">StudentName</th>
+                    <th scope="col">RoomNumber</th>
+                    <th scope="col">FloorNumber</th>
+                    <th scope="col">BlockCode</th>
+                    <th scope="col">CheckInDate</th>
+                    <th scope="col">IsPresent</th>
+                    <th scope="col">ReviewedWarden</th>
+                    <th scope="col">CreatedAt</th>
+                    <th scope="col">UpdatedAt</th>
+                    <th scope="col">UpdatedBy</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="attendancesData">
+                <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+            </ul>
+        </nav>
+    </div>
+</body>
+<script>
+    var tableData = document.getElementById("attendancesData")
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
+    
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadAttendancePage()
+    }
+    
+    function loadAttendancePage(pageNo = 1) {
+        var requestOptions = {
+            method: 'GET'
+        };
+
+        fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}`, requestOptions)
+            .then(response => response.json())
+            .then(responseData => {
+                const { attendances, attendanceCount } = responseData;
+
+                var trHtml = ''
+                for (var i = 0; i < attendances.length; i++) {
+                    var attendance = attendances[i]
+                    trHtml = trHtml + `<tr>
+                            <td>${(pageNo - 1) * limit + i + 1}</td>
+                            <td>${attendance.name}</td>
+                            <td>${attendance.roomNumber}</td>
+                            <td>${attendance.floorNumber}</td>
+                            <td>${attendance.blockCode}</td>
+                            <td>${attendance.checkIn}</td>
+                            <td>${attendance.isPresent}</td>
+                            <td>${attendance.reviewedWarden}</td>
+                            <td>${attendance.created}</td>
+                            <td>${attendance.updated}</td>
+                            <td>${attendance.updatedBy}</td>
+                            <td>
+                                <a class="btn btn-secondary" href="/attendance/${attendance.attendanceId}">Edit</a>
+                            </td>
+                        </tr>`
+                }
+                tableData.innerHTML = trHtml
+                var totalPages = Math.ceil(responseData.attendanceCount / limit)
+                var paginationHtml = ''
+                for (var i = 1; i <= totalPages; i++) {
+                    paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="loadAttendancePage(${i})">${i}</a>
+                       </li>`;
+                }
+                paginationDom.innerHTML = paginationHtml;
+            })
+            .catch((error) => console.error(error));
+    }
+
+    window.addEventListener('load', () => {
+        loadAttendancePage()
+    })
+
+</script>
+
+</html>

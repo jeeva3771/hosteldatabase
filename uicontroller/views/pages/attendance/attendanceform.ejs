@@ -1,0 +1,243 @@
+<html>
+
+<head>
+    <%- include('../../partials/head') %>
+        <style>
+            .container {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                margin-top: 40px;
+                margin-bottom: 40px;
+                border-radius: 8px;
+                padding: 30px;
+                width: 380px;
+            }
+
+            .submission {
+                margin-top: 12px;
+                display: flex;
+                justify-content: center;
+            }
+        </style>
+</head>
+
+<body>
+    <div class="container">
+        <h2 class="label">Attendanceform</h2>
+        <div class="form-group">
+            <label for="studentName">StudentName</label>
+            <select class="form-control" id="studentName">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="roomNumber">RoomNumber</label>
+            <select class="form-control" id="roomNumber">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="floorNumber">FloorNumber</label>
+            <select class="form-control" id="floorNumber">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="blockCode">BlockCode</label>
+            <select class="form-control" id="blockCode">
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="checkIn">CheckInDate</label>
+            <input type="date" class="form-control dateLabel" id="checkIn">
+        </div>
+        <div class="form-group">
+            <label for="isPresent">Status</label><br>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="isPresent" id="present" value="1">
+                <label class="form-check-label" for="present">Present</label>
+            </div>
+            <div class="form-check form-check-inline">
+                <input class="form-check-input" type="radio" name="isPresent" id="absent" value="0">
+                <label class="form-check-label" for="absent">Absent</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="reviewedWarden">ReviewedWarden</label>
+            <select class="form-control" id="reviewedWarden">
+            </select>
+        </div>
+        <div class="submission">
+            <input type="hidden" id="attendanceId" value="<%=attendanceId %>" />
+            <button onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
+                disabled>Submit</button>
+        </div>
+    </div>
+</body>
+<script>
+    var studentName = document.getElementById('studentName');
+    var roomNumber = document.getElementById('roomNumber');
+    var floorNumber = document.getElementById('floorNumber');
+    var blockCode = document.getElementById('blockCode');
+    var checkIn = document.getElementById('checkIn');
+    var reviewedWarden = document.getElementById('reviewedWarden');
+    var submitButton = document.getElementById('submitButton');
+    var attendanceId = document.getElementById('attendanceId').value;
+
+    function saveOrUpdateAttendance() {
+        var isPresent = document.querySelector('input[name="isPresent"]:checked');
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "studentId": studentName.value,
+            "roomId": roomNumber.value,
+            "blockFloorId": floorNumber.value,
+            "blockId": blockCode.value,
+            "checkInDate": checkIn.value,
+            "isPresent": parseInt(isPresent.value),
+            "wardenId": reviewedWarden.value,
+        });
+
+        var requestOptions = {
+            method: attendanceId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/attendance";
+        if (attendanceId) {
+            url = url + '/' + attendanceId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(attendances => window.location = '/attendance')
+            .catch(error => console.error('error', error));
+    }
+
+    function loadStudent() {
+        fetch("http://localhost:1000/api/student")
+            .then(response => response.json())
+            .then(students => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < students.length; i++) {
+                    var opt = students[i]
+                    optionsList += `<option value="${opt.studentId}">${opt.name}</option>`
+                }
+                studentName.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadBlockCode() {
+        fetch("http://localhost:1000/api/block")
+            .then(response => response.json())
+            .then(blocks => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blocks.length; i++) {
+                    var opt = blocks[i]
+                    optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
+                }
+                blockCode.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadFloorNumber() {
+        fetch("http://localhost:1000/api/blockfloor")
+            .then(response => response.json())
+            .then(blockFloors => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < blockFloors.length; i++) {
+                    var opt = blockFloors[i]
+                    optionsList += `<option value="${opt.blockFloorId}">${opt.floorNumber}</option>`
+                }
+                floorNumber.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadRoomNumber() {
+        fetch("http://localhost:1000/api/room")
+            .then(response => response.json())
+            .then(rooms => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < rooms.length; i++) {
+                    var opt = rooms[i]
+                    optionsList += `<option value="${opt.roomId}">${opt.roomNumber}</option>`
+                }
+                roomNumber.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    function loadReviewedBy() {
+        fetch("http://localhost:1000/api/warden")
+            .then(response => response.json())
+            .then(wardens => {
+                var optionsList = '<option selected>Select</option>'
+                for (var i = 0; i < wardens.length; i++) {
+                    var opt = wardens[i]
+                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
+                }
+                reviewedWarden.innerHTML = optionsList
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    loadStudent()
+    loadBlockCode()
+    loadFloorNumber()
+    loadRoomNumber()
+    loadReviewedBy()
+
+    if (attendanceId) {
+        getAttendance(attendanceId)
+    }
+
+    function getAttendance(attendanceId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/attendance/" + attendanceId, requestOptions)
+            .then((response) => response.json())
+            .then((attendance) => {
+                studentName.value = attendance.studentId
+                roomNumber.value = attendance.roomId
+                floorNumber.value = attendance.blockFloorId
+                blockCode.value = attendance.blockId
+                checkIn.value = attendance.checkInDate.split('T')[0]
+                if (attendance.isPresent) {
+                    document.getElementById('present').checked = true;
+                } else {
+                    document.getElementById('absent').checked = true;
+                }
+                reviewedWarden.value = attendance.wardenId
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function toggleSubmitButton() {
+        var isPresent = document.querySelector('input[name="isPresent"]:checked');
+        submitButton.disabled = !(
+            studentName.value.length > 0 &&
+            roomNumber.value !== 'Select' &&
+            floorNumber.value !== 'Select' &&
+            blockCode.value !== 'Select' &&
+            checkIn.value !== '' &&
+            isPresent.value !== null &&
+            reviewedWarden.value !== 'Select'
+        )
+    }
+
+    studentName.addEventListener('input', toggleSubmitButton);
+    roomNumber.addEventListener('input', toggleSubmitButton);
+    floorNumber.addEventListener('input', toggleSubmitButton);
+    blockCode.addEventListener('input', toggleSubmitButton);
+    checkIn.addEventListener('input', toggleSubmitButton);
+    isPresent.addEventListener('input', toggleSubmitButton);
+    reviewedWarden.addEventListener('input', toggleSubmitButton);
+
+</script>
+
+</html>

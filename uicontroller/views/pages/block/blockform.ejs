@@ -25,14 +25,14 @@
 
 <body>
     <div class="container">
-        <h2 class="label">Blockform</h2>
+        <h2 class="label">Block</h2>
         <div class="form-group">
             <label for="blockCode">BlockCode</label>
             <input type="text" class="form-control" id="blockCode">
         </div>
         <div class="form-group">
             <label for="location">Location</label>
-            <input type="text" class="form-control" id="location">
+            <input type="text" class="form-control" id="blockLocation">
         </div>
         <div class="form-group">
             <label for="status">Status</label><br>
@@ -59,7 +59,7 @@
 </body>
 <script>
     var blockCode = document.getElementById('blockCode');
-    var location = document.getElementById('location');
+    var blockLocation = document.getElementById('blockLocation');
     var createdBy = document.getElementById('createdBy');
     var submitButton = document.getElementById('submitButton');
     var blockId = document.getElementById('blockId').value;
@@ -71,7 +71,7 @@
 
         var raw = JSON.stringify({
             "blockCode": blockCode.value,
-            "location": location.value,
+            "location": blockLocation.value,
             "isActive": parseInt(selectedStatus.value),
             "createdBy": createdBy.value
         });
@@ -119,15 +119,15 @@
 
         fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
             .then((response) => response.json())
-            .then((getBlock) => {
-                blockCode.value = getBlock.blockName
-                location.value = getBlock.location
-                if (getBlock.isActive) {
+            .then((block) => {
+                blockCode.value = block.blockName
+                location.value = block.location
+                if (block.isActive) {
                     document.getElementById('isActive').checked = true;
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
-                createdBy.value = getBlock.createdBy
+                createdBy.value = block.createdBy
             })
             .catch((error) => console.error(error));
     }
@@ -136,14 +136,14 @@
         var selectedStatus = document.querySelector('input[name="status"]:checked');
         submitButton.disabled = !(
             blockCode.value.length > 0 &&
-            location.value.length > 0 &&
+            blockLocation.value.length > 0 &&
             selectedStatus &&
             createdBy.value !== 'Select'
         )
     }
 
     blockCode.addEventListener('input', toggleSubmitButton);
-    location.addEventListener('input', toggleSubmitButton);
+    blockLocation.addEventListener('input', toggleSubmitButton);
     document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
     createdBy.addEventListener('change', toggleSubmitButton);
 </script>
