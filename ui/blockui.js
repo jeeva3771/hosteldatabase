@@ -1,18 +1,30 @@
-function loadBlockPage(req, res) {
-    res.render('pages/block/blocklist.ejs')
+function blockPageUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/block/blocklist.ejs');
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadAddBlock(req, res) {
-    res.render('pages/block/blockform.ejs', { blockId: '' })
+function addBlockUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/block/blockform.ejs', { blockId: '' });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadEditBlock(req, res) {
-    const blockId = req.params.blockId
-    res.render('pages/block/blockform.ejs', { blockId: blockId })
+function editBlockUi(req, res) {
+    const blockId = req.params.blockId;
+    if (req.session.isLogged) {
+        res.render('pages/block/blockform.ejs', { blockId: blockId });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
 module.exports = (app) => {
-    app.get('/block', loadBlockPage)
-    app.get('/block/add', loadAddBlock)
-    app.get('/block/:blockId', loadEditBlock)
+    app.get('/block', blockPageUi)
+    app.get('/block/add', addBlockUi)
+    app.get('/block/:blockId', editBlockUi)
 }

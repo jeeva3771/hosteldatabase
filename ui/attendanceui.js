@@ -1,18 +1,31 @@
-function loadAttendancePage(req, res) {
-    res.render('pages/attendance/attendancelist.ejs')
+function attendancePageUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/attendance/attendancelist.ejs');
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadAddAttendance(req, res) {
-    res.render('pages/attendance/attendanceform.ejs', { attendanceId: '' })
+function addAttendanceUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/attendance/attendanceform.ejs', { attendanceId: '' });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadEditAttendance(req, res) {
-    const attendanceId = req.params.attendanceId
-    res.render('pages/attendance/attendanceform.ejs', { attendanceId: attendanceId })
+function editAttendanceUi(req, res) {
+    const attendanceId = req.params.attendanceId;
+
+    if (req.session.isLogged) {
+        res.render('pages/attendance/attendanceform.ejs', { attendanceId: attendanceId });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
 module.exports = (app) => {
-    app.get('/attendance', loadAttendancePage)
-    app.get('/attendance/add', loadAddAttendance)
-    app.get('/attendance/:attendanceId', loadEditAttendance)
+    app.get('/attendance', attendancePageUi)
+    app.get('/attendance/add', addAttendanceUi)
+    app.get('/attendance/:attendanceId', editAttendanceUi)
 }

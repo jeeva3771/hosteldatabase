@@ -1,18 +1,31 @@
-function loadBlockFloorPage(req, res) {
-    res.render('pages/blockfloor/blockfloorlist.ejs')
+function blockFloorPageUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/blockfloor/blockfloorlist.ejs');
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadAddBlockFloor(req, res) {
-    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: '' })
+function addBlockFloorUi(req, res) {
+    if (req.session.isLogged) {
+    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: '' });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadEditBlockFloor(req, res) {
-    const blockFloorId = req.params.blockFloorId
-    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: blockFloorId })
+function editBlockFloorUi(req, res) {
+    const blockFloorId = req.params.blockFloorId;
+
+    if (req.session.isLogged) {
+    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: blockFloorId });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
 module.exports = (app) => {
-    app.get('/blockfloor', loadBlockFloorPage)
-    app.get('/blockfloor/add', loadAddBlockFloor)
-    app.get('/blockfloor/:blockFloorId', loadEditBlockFloor)
+    app.get('/blockfloor', blockFloorPageUi)
+    app.get('/blockfloor/add', addBlockFloorUi)
+    app.get('/blockfloor/:blockFloorId', editBlockFloorUi)
 }

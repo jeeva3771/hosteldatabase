@@ -1,18 +1,31 @@
-function loadStudentPage(req, res) {
-    res.render('pages/student/studentlist.ejs')
+function studentPageUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/student/studentlist.ejs');
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadAddStudent(req, res) {
-    res.render('pages/student/studentform.ejs', { studentId: '' })
+function addStudentUi(req, res) {
+    if (req.session.isLogged) {
+        res.render('pages/student/studentform.ejs', { studentId: '' });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
+
 }
 
-function loadEditStudent(req, res) {
-    const studentId = req.params.studentId
-    res.render('pages/student/studentform.ejs', { studentId: studentId })
+function editStudentUi(req, res) {
+    const studentId = req.params.studentId;
+    if (req.session.isLogged) {
+        res.render('pages/student/studentform.ejs', { studentId: studentId });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
 module.exports = (app) => {
-    app.get('/student', loadStudentPage)
-    app.get('/student/add', loadAddStudent)
-    app.get('/student/:studentId', loadEditStudent)
+    app.get('/student', studentPageUi)
+    app.get('/student/add', addStudentUi)
+    app.get('/student/:studentId', editStudentUi)
 }

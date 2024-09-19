@@ -1,18 +1,31 @@
-function loadWardenPage(req, res) {
-    res.render('pages/warden/wardenlist.ejs')
+function wardenPageUi(req, res) {
+    if (req.session.isLogged) {
+    res.render('pages/warden/wardenlist.ejs');
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadAddWarden(req, res) {
-    res.render('pages/warden/wardenform.ejs', { wardenId: '' })
+function addWardenUi(req, res) {
+    if (req.session.isLogged) {
+    res.render('pages/warden/wardenform.ejs', { wardenId: '' });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
-function loadEditWarden(req, res) {
-    const wardenId = req.params.wardenId
-    res.render('pages/warden/wardenform.ejs', { wardenId: wardenId })
+function editWardenUi(req, res) {
+    const wardenId = req.params.wardenId;
+
+    if (req.session.isLogged) {
+    res.render('pages/warden/wardenform.ejs', { wardenId: wardenId });
+    } else {
+        res.status(401).redirect('http://localhost:1000/login');
+    }
 }
 
 module.exports = (app) => {
-    app.get('/warden', loadWardenPage)
-    app.get('/warden/add', loadAddWarden)
-    app.get('/warden/:wardenId', loadEditWarden)
+    app.get('/warden', wardenPageUi)
+    app.get('/warden/add', addWardenUi)
+    app.get('/warden/:wardenId', editWardenUi)
 }
