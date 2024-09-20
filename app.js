@@ -34,15 +34,33 @@ app.use(logger('dev'))
 app.use(express.json())
 app.use(cookieParser());
 app.use(session({
-    secret: 'dhoni',
+    store: new FileStore(fileStoreOptions),
+    secret: 'keyboard',
     resave: true,
     saveUninitialized: true,
     cookie : {
      maxAge:(1000 * 60 * 15)
    } 
  }));
-app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+    if ((req.originalUrl === '/api/login' && req.method === 'POST') || req.originalUrl === '/signup') {
+        return next();
+    }
+
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged !== true) {
+            return res.status(401).redirect('http://localhost:1000/login')
+        }
+    } else {
+        if (req.session.isLogged === true) {
+            return res.status(200).redirect('http://localhost:1000/home')
+        }
+    }
+    return next()
+})
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
