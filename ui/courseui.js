@@ -1,26 +1,14 @@
 function coursePageUi(req, res) {
-    if (req.session.isLogged) {
-        res.status(200).render('pages/course/courselist.ejs');
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    res.status(200).render('pages/course/courselist.ejs');
 }
 
 function addCourseUi(req, res) {
-    if (req.session.isLogged) {
-        res.render('pages/course/courseform.ejs', { courseId: '' })
-    } else {
-        res.status(401).redirect('http://localhost:1000/login')
-    }
+    res.render('pages/course/courseform.ejs', { courseId: '' })
 }
 
 function editCourseUi(req, res) {
-    if (req.session.isLogged) {
-        const courseId = req.params.courseId;
-        res.render('pages/course/courseform.ejs', { courseId: courseId });
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    const courseId = req.params.courseId;
+    res.render('pages/course/courseform.ejs', { courseId: courseId });
 }
 
 module.exports = (app) => {

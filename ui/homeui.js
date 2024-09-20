@@ -4,7 +4,7 @@ module.exports = (app) => {
     });
 
     app.get('/home', (req, res) => {
-        if (req.session.isLogged === true) {
+        if (req.session.isLogged) {
             res.render('pages/home', { name: req.session.data })
         } else {
             res.redirect('http://localhost:1000/login')

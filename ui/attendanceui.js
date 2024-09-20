@@ -1,27 +1,15 @@
 function attendancePageUi(req, res) {
-    if (req.session.isLogged) {
-        res.render('pages/attendance/attendancelist.ejs');
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    res.render('pages/attendance/attendancelist.ejs');
 }
 
 function addAttendanceUi(req, res) {
-    if (req.session.isLogged) {
-        res.render('pages/attendance/attendanceform.ejs', { attendanceId: '' });
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    res.render('pages/attendance/attendanceform.ejs', { attendanceId: '' });
 }
+
 
 function editAttendanceUi(req, res) {
     const attendanceId = req.params.attendanceId;
-
-    if (req.session.isLogged) {
-        res.render('pages/attendance/attendanceform.ejs', { attendanceId: attendanceId });
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    res.render('pages/attendance/attendanceform.ejs', { attendanceId: attendanceId });
 }
 
 module.exports = (app) => {

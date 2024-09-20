@@ -1,27 +1,14 @@
 function blockFloorPageUi(req, res) {
-    if (req.session.isLogged) {
-        res.render('pages/blockfloor/blockfloorlist.ejs');
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
+    res.render('pages/blockfloor/blockfloorlist.ejs');
 }
 
 function addBlockFloorUi(req, res) {
-    if (req.session.isLogged) {
     res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: '' });
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
 }
 
 function editBlockFloorUi(req, res) {
     const blockFloorId = req.params.blockFloorId;
-
-    if (req.session.isLogged) {
     res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: blockFloorId });
-    } else {
-        res.status(401).redirect('http://localhost:1000/login');
-    }
 }
 
 module.exports = (app) => {
