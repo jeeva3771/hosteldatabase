@@ -1,7 +1,7 @@
 const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
-    "location",
+    "blockLocation",
     "isActive"
 ]
 
@@ -26,7 +26,7 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL 
         ORDER BY 
-            bk.blockCode ASC LIMIT ? OFFSET ?`;
+            bk.createdAt DESC, bk.blockCode ASC LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
@@ -43,7 +43,7 @@ async function readBlocks(req, res) {
             blocks: blocks,
             blockCount: totalCount[0].totalBlockCount
         });
-        
+
     } catch (error) {
         res.status(500).send(error.message)
     }
@@ -67,10 +67,10 @@ async function createBlock(req, res) {
     const mysqlClient = req.app.mysqlClient
     const {
         blockCode,
-        location,
-        isActive,
-        createdBy = `${insertedBy}`
+        blockLocation,
+        isActive
     } = req.body
+    const createdBy = req.session.data.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -86,8 +86,8 @@ async function createBlock(req, res) {
             return res.status(409).send("blockCode already exists");
         }
 
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK (blockCode,location,isActive,createdBy) VALUES(?,?,?,?)`,
-            [blockCode, location, isActive, createdBy], mysqlClient)
+        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK (blockCode,blockLocation,isActive,createdBy) VALUES(?,?,?,?)`,
+            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
         if (newBlock.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
@@ -100,7 +100,7 @@ async function createBlock(req, res) {
 
 async function updateBlock(req, res) {
     const blockId = req.params.blockId;
-
+    const updatedBy = req.session.data.wardenId;
     const values = []
     const updates = []
 
@@ -112,8 +112,8 @@ async function updateBlock(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ${insertedBy}`)
-    values.push(blockId)
+    updates.push("updatedBy = ?")
+    values.push(updatedBy, blockId)
 
     const mysqlClient = req.app.mysqlClient
 
@@ -155,6 +155,7 @@ async function updateBlock(req, res) {
 async function deleteBlock(req, res) {
     const blockId = req.params.blockId;
     const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
 
     try {
         const isValid = await validateBlockById(blockId, mysqlClient)
@@ -162,7 +163,10 @@ async function deleteBlock(req, res) {
             return res.status(404).send("blockId is not defined")
         }
 
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE blockId = ? AND deletedAt IS NULL`, [blockId], mysqlClient)
+        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
+            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
+            [deletedBy, blockId],
+            mysqlClient)
         if (deletedBlock.affectedRows === 0) {
             return res.status(404).send("Block not found or already deleted")
         }
@@ -201,33 +205,40 @@ async function validateBlockById(blockId, mysqlClient) {
 function validateInsertItems(body, isUpdate = false) {
     const {
         blockCode,
-        location,
+        blockLocation,
         isActive
     } = body
+    
 
     const errors = []
 
     if (blockCode !== undefined) {
         if (blockCode <= 0) {
+            console.log('hi')
             errors.push("blockCode is invalid")
         }
     } else if (!isUpdate) {
+        console.log('hi sir')
         errors.push("blockCode is missing")
     }
 
-    if (location !== undefined) {
-        if (location <= 0) {
+    if (blockLocation !== undefined) {
+        if (blockLocation <= 0) {
+            console.log('hi siraa')
             errors.push("location is invalid")
         }
     } else if (!isUpdate) {
+        console.log('hi sirlll')
         errors.push("location is missing")
     }
 
     if (isActive !== undefined) {
         if (![0, 1].includes(isActive)) {
+            console.log('hi sirjjj')
             errors.push("isActive is invalid")
         }
     } else if (!isUpdate) {
+        console.log('hi sirkkkkk')
         errors.push("isActive is missing")
     }
     return errors

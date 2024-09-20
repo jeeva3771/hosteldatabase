@@ -25,7 +25,7 @@ async function readAttendances(req, res) {
             ww2.name AS updated,
         DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
         DATE_FORMAT(a.createdAt, "%Y-%m-%d %T") AS created,
-        DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated,
+        DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated
         FROM attendance AS a
         LEFT JOIN
             student AS s ON s.studentId = a.studentId
@@ -62,7 +62,6 @@ async function readAttendances(req, res) {
         res.status(500).send(error.message);
     }
 }
-
 
 async function readAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient;

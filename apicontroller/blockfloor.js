@@ -75,9 +75,10 @@ async function createBlockFloor(req, res) {
     const {
         blockId,
         floorNumber,
-        isActive,
-        createdBy = `${insertedBy}`
-    } = req.body
+        isActive
+        } = req.body
+    const createdBy = req.session.data.wardenId
+
 
     const isValidInsert = await validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -105,6 +106,8 @@ async function updateBlockFloor(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const values = []
     const updates = []
+    const updatedBy = req.session.data.wardenId;
+
 
     ALLOWED_UPDATE_KEYS.forEach(key => {
         const keyValue = req.body[key]
@@ -114,8 +117,8 @@ async function updateBlockFloor(req, res) {
         }
     })
 
-    values.push(blockFloorId)
-    updates.push(`updatedBy = ${insertedBy}`)
+    values.push(updatedBy, blockFloorId)
+    updates.push('updatedBy = ?')
 
     try {
         const blockFloor = await validateBlockFloorById(blockFloorId, mysqlClient);
@@ -151,7 +154,6 @@ async function updateBlockFloor(req, res) {
         })
     }
     catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -159,6 +161,8 @@ async function updateBlockFloor(req, res) {
 async function deleteBlockFloor(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId
+
 
     try {
         const isValid = await validateBlockFloorById(blockFloorId, mysqlClient)
@@ -166,8 +170,8 @@ async function deleteBlockFloor(req, res) {
             return res.status(404).send("blockFloorId is not defined")
         }
 
-        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE blockfloorId = ? AND deletedAt IS NULL`,
-            [blockFloorId],
+        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
+            [deletedBy, blockFloorId],
             mysqlClient
         )
         if (deletedBlockFloor.affectedRows === 0) {

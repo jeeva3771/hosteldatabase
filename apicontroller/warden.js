@@ -66,14 +66,14 @@ async function readWarden(req, res) {
 }
 
 async function createWarden(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
     const {
         name,
         dob,
         emailId,
-        password,
-        createdBy = `${insertedBy}`
-    } = req.body
+        password
+        } = req.body
+    const createdBy = req.session.data.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -105,7 +105,8 @@ async function createWarden(req, res) {
 
 async function updateWarden(req, res) {
     const wardenId = req.params.wardenId;
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const updatedBy = req.session.data.wardenId;
     const values = []
     const updates = []
 
@@ -117,8 +118,8 @@ async function updateWarden(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ${insertedBy}`)
-    values.push(wardenId)
+    updates.push(`updatedBy = ?`)
+    values.push(updatedBy, wardenId)
 
     try {
         const warden = await validateWardenById(wardenId, mysqlClient)
@@ -150,6 +151,8 @@ async function updateWarden(req, res) {
 async function deleteWarden(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
+
 
     try {
         const isValid = await validateWardenById(wardenId, mysqlClient)
@@ -157,8 +160,8 @@ async function deleteWarden(req, res) {
             return res.status(404).send("wardenId is not defined")
         }
 
-        const deletedWarden = await mysqlQuery(/*sql*/`UPDATE warden SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE wardenId = ? AND deletedAt IS NULL`,
-            [wardenId],
+        const deletedWarden = await mysqlQuery(/*sql*/`UPDATE warden SET deletedAt = NOW(), deletedBy = ? WHERE wardenId = ? AND deletedAt IS NULL`,
+            [deletedBy, wardenId],
             mysqlClient)
         if (deletedWarden.affectedRows === 0) {
             return res.status(404).send("warden not found or already deleted")

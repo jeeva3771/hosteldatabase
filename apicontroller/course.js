@@ -39,7 +39,7 @@ async function readCourses(req, res) {
             mysqlQuery(coursesQuery, [limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
-
+        
         res.status(200).send({
             courses: courses,
             courseCount: totalCount[0].totalCourseCount
@@ -91,6 +91,7 @@ async function createCourse(req, res) {
             res.status(201).send("insert successfull")
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -151,8 +152,7 @@ async function updateCourse(req, res) {
 async function deleteCourse(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId
-    console.log(req.session)
+    const deletedBy = req.session.data.wardenId;
 
     try {
         const course = await validateCourseById(courseId, mysqlClient);
