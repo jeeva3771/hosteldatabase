@@ -79,7 +79,7 @@
             "emailId": emailId.value,
             "password": password.value
         });
-        console.log(raw)
+
         const requestOptions = {
             method: "POST",
             headers: myHeaders,
@@ -90,8 +90,10 @@
         const request = fetch("http://localhost:1000/api/warden", requestOptions)
         request.then(async (response) => {
             if (response.status === 201) {
+                console.log('hi')
                 window.location.replace("http://localhost:1000/login")
             } else {
+                console.log('hello')
                 alert(await response.text())
             }
         })

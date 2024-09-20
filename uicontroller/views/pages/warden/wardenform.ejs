@@ -44,11 +44,6 @@
             <label for="password">Password</label>
             <input type="password" class="form-control" id="password">
         </div>
-        <div class="form-group">
-            <label for="createdBy">CreatedBy</label>
-            <select class="form-control" id="createdBy">
-            </select>
-        </div>
         <div class="submission">
             <input type="hidden" id="wardenId" value="<%=wardenId %>" />
             <button onclick="saveOrUpdateWarden()" class="btn btn-success" id="submitButton" disabled>Submit</button>
@@ -60,7 +55,6 @@
     var dob = document.getElementById('dob');
     var emailId = document.getElementById('email');
     var password = document.getElementById('password');
-    var createdBy = document.getElementById('createdBy');
     var submitButton = document.getElementById('submitButton');
     var wardenId = document.getElementById('wardenId').value;
 
@@ -72,8 +66,7 @@
             "name": wardenName.value,
             "dob": dob.value,
             "emailId": emailId.value,
-            "password": password.value,
-            "createdBy": createdBy.value
+            "password": password.value
         });
 
         var requestOptions = {
@@ -92,21 +85,6 @@
             .then(wardens => window.location = '/warden')
             .catch(error => console.error('error', error));
     }
-
-    function loadCreatedBy() {
-        fetch("http://localhost:1000/api/warden")
-            .then(response => response.json())
-            .then(wardens => {
-                var optionsList = '<option selected>Select</option>'
-                for (var i = 0; i < wardens.length; i++) {
-                    var opt = wardens[i]
-                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
-                }
-                createdBy.innerHTML = optionsList
-            })
-            .catch(error => console.log('error', error));
-    }
-    loadCreatedBy()
 
     if (wardenId) {
         getWarden(wardenId)
@@ -134,8 +112,7 @@
             wardenName.value.length > 0 &&
             dob.value !== '' &&
             emailId.value.length > 0 &&
-            password.value.length > 0 &&
-            createdBy.value !== 'Select'
+            password.value.length > 0
         )
     }
     
@@ -143,7 +120,6 @@
     dob.addEventListener('input', toggleSubmitButton);
     emailId.addEventListener('input', toggleSubmitButton);
     password.addEventListener('input', toggleSubmitButton);
-    createdBy.addEventListener('change', toggleSubmitButton);
 </script>
 
 </html>

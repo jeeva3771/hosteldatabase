@@ -57,8 +57,6 @@
                     <th scope="col">CreatedBy</th>
                     <th scope="col">UpdatedAt</th>
                     <th scope="col">UpdatedBy</th>
-                    <th scope="col">DeletedAt</th>
-                    <th scope="col">DeletedBy</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -107,14 +105,12 @@
                     trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${block.blockCode}</td>
-                            <td>${block.location}</td>
+                            <td>${block.blockLocation}</td>
                             <td>${block.isActive}</td>
                             <td>${block.createdAt}</td>
                             <td>${block.created}</td>
                             <td>${block.updatedAt}</td>
                             <td>${block.updated}</td>
-                            <td>${block.deletedAt}</td>
-                            <td>${block.deletedBy}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/block/${block.blockId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteBlock(${block.blockId})"">Delete</a>

@@ -78,12 +78,12 @@
     var floorNumber = document.getElementById('floorNumber');
     var blockCode = document.getElementById('blockCode');
     var checkIn = document.getElementById('checkIn');
+    var isPresent = document.querySelector('input[name="isPresent"]');
     var reviewedWarden = document.getElementById('reviewedWarden');
     var submitButton = document.getElementById('submitButton');
     var attendanceId = document.getElementById('attendanceId').value;
 
     function saveOrUpdateAttendance() {
-        var isPresent = document.querySelector('input[name="isPresent"]:checked');
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -93,8 +93,8 @@
             "blockFloorId": floorNumber.value,
             "blockId": blockCode.value,
             "checkInDate": checkIn.value,
-            "isPresent": parseInt(isPresent.value),
-            "wardenId": reviewedWarden.value,
+            "isPresent": (isPresent.checked).value,
+            "wardenId": reviewedWarden.value
         });
 
         var requestOptions = {
@@ -114,7 +114,7 @@
             .catch(error => console.error('error', error));
     }
 
-    function loadStudent() {
+    function populateStudentDropdown() {
         fetch("http://localhost:1000/api/student")
             .then(response => response.json())
             .then(students => {
@@ -128,7 +128,7 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadBlockCode() {
+    function populateBlockCodeDropdown() {
         fetch("http://localhost:1000/api/block")
             .then(response => response.json())
             .then(blocks => {
@@ -184,8 +184,8 @@
             .catch(error => console.log('error', error));
     }
 
-    loadStudent()
-    loadBlockCode()
+    populateStudentDropdown()
+    populateBlockCodeDropdown()
     loadFloorNumber()
     loadRoomNumber()
     loadReviewedBy()

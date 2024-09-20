@@ -58,20 +58,19 @@
 <script>
     var blockCode = document.getElementById('blockCode');
     var floorNumber = document.getElementById('floorNumber');
-    var createdBy = document.getElementById('createdBy');
+    var selectedStatus = document.querySelector('input[name="status"]');
     var submitButton = document.getElementById('submitButton');
     var blockFloorId = document.getElementById('blockFloorId').value;
 
+
     function saveOrUpdateBlockFloor() {
-        var selectedStatus = document.querySelector('input[name="status"]:checked');
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
             "blockId": blockCode.value,
             "floorNumber": parseInt(floorNumber.value),
-            "isActive": parseInt(selectedStatus.value),
-            "createdBy": createdBy.value
+            "isActive": parseInt(selectedStatus.checked.value)
         });
 
         var requestOptions = {
@@ -94,10 +93,12 @@
     function loadBlockCode() {
         fetch("http://localhost:1000/api/block")
             .then(response => response.json())
-            .then(blocks => {
+            .then(responseData => {
+                const { blocks } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < blocks.length; i++) {
                     var opt = blocks[i]
+                    console.log(opt)
                     optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
                 }
                 blockCode.innerHTML = optionsList
@@ -105,21 +106,6 @@
             .catch(error => console.log('error', error));
     }
     loadBlockCode()
-
-    function loadCreatedBy() {
-        fetch("http://localhost:1000/api/warden")
-            .then(response => response.json())
-            .then(wardens => {
-                var optionsList = '<option selected>Select</option>'
-                for (var i = 0; i < wardens.length; i++) {
-                    var opt = wardens[i]
-                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
-                }
-                createdBy.innerHTML = optionsList
-            })
-            .catch(error => console.log('error', error));
-    }
-    loadCreatedBy()
 
     if (blockFloorId) {
         getBlockFloor(blockFloorId)
@@ -140,14 +126,11 @@
                 } else {
                     document.getElementById('inActive').checked = true;
                 }
-                createdBy.value = blockFloor.createdBy
             })
             .catch((error) => console.error(error));
     }
 
     function toggleSubmitButton() {
-        var selectedStatus = document.querySelector('input[name="status"]:checked');
-
         submitButton.disabled = !(
             blockCode.value !== 'Select' &&
             floorNumber.value.length > 0 &&
@@ -159,7 +142,6 @@
     blockCode.addEventListener('input', toggleSubmitButton);
     floorNumber.addEventListener('input', toggleSubmitButton);
     document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-    createdBy.addEventListener('change', toggleSubmitButton);
 </script>
 
 </html>

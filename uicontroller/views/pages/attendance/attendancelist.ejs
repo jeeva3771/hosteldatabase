@@ -83,19 +83,24 @@
     var tableData = document.getElementById("attendancesData")
     var limit = document.getElementById("limit").value
     var paginationDom = document.getElementById("pagination")
-    
+
     function changeLimit() {
         limit = document.getElementById("limit").value
         loadAttendancePage()
     }
-    
+
     function loadAttendancePage(pageNo = 1) {
         var requestOptions = {
             method: 'GET'
         };
 
         fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}`, requestOptions)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok ' + response.statusText);
+                }
+                return response.json();
+            })
             .then(responseData => {
                 const { attendances, attendanceCount } = responseData;
 
