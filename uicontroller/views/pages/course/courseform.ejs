@@ -39,13 +39,14 @@
 <script>
     var courseName = document.getElementById('courseName');
     var submitButton = document.getElementById('submitButton');
+    var courseId = document.getElementById('courseId').value;
 
     function saveOrUpdateCourse() {
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
-            "courseName": courseName.value,
+            "courseName": courseName.value
         });
 
         var requestOptions = {
@@ -61,11 +62,12 @@
 
         fetch(url, requestOptions)
             .then(response => response.text())
-            .then(courses => window.location = '/course')
-            .catch(error => console.error('error', error));
+            .then(response => {
+            window.location = '/course'
+        })          
+        .catch(error => console.error('error', error));
     }
 
-    var courseId = document.getElementById('courseId').value;
     if (courseId) {
         getCourse(courseId)
     }

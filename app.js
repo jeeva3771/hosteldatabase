@@ -1,13 +1,27 @@
 const express = require('express')
 const mysql = require('mysql')
-const logger = require('morgan')
+const logger  = require('morgan')
 const path = require('path');
+// const winston = require('winston');
 
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
+
+// const logger = winston.createLogger({
+//     level: 'info',
+//     format: winston.format.combine(
+//         winston.format.timestamp(),
+//         winston.format.json()
+//     ),
+//     transports: [
+//         new winston.transports.File({ filename: 'error.log', level: 'error' }),
+//         new winston.transports.Console({ format: winston.format.simple() })
+//     ]
+// });
+
 
 //apicontroller
 const course = require('./apicontroller/course.js')
@@ -28,7 +42,6 @@ const wardenUi = require('./ui/wardenui.js')
 const studentUi = require('./ui/studentui.js')
 const attendanceUi = require('./ui/attendanceui.js')
 
-
 const app = express()
 app.use(logger('dev'))
 app.use(express.json())
@@ -44,7 +57,7 @@ app.use(session({
  }));
 
 app.use((req, res, next) => {
-    if ((req.originalUrl === '/api/login' && req.method === 'POST') || req.originalUrl === '/signup') {
+    if (req.originalUrl === '/api/login' && req.method === 'POST') {
         return next();
     }
 

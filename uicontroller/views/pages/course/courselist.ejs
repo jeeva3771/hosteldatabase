@@ -14,16 +14,27 @@
             }
 
             .insertLabel {
-                height: 34px;
+                height: 36px;
                 display: flex;
                 justify-content: space-between;
+                gap: 114%;
+            }
+
+            .table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            }
+
+            table {
+                min-width: 1400px;
             }
 
         </style>
 </head>
 
 <body>
-    <div class="container">
+    <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
                 onchange="changeLimit()">
@@ -79,9 +90,10 @@
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}`, requestOptions)
+        fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}&orderby=c.createdAt&sort=DESC`,
+        requestOptions)
             .then(response => response.json())
-            .then(responseData => {
+            .then(responseData => { 
                 const { courses, courseCount } = responseData;
                 
                 let trHtml = '';

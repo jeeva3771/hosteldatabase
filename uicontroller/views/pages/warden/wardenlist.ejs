@@ -14,10 +14,10 @@
             }
 
             .insertLabel {
-                height: 34px;
+                height: 36px;
                 display: flex;
                 justify-content: space-between;
-                gap: 116%;
+                gap: 114%;
             }
 
             .table-wrapper {
@@ -48,15 +48,15 @@
             <thead>
                 <tr>
                     <th scope="col">Sno</th>
-                    <th scope="col">Name</th>
+                    <th scope="col">FirstName</th>
+                    <th scope="col">LastName</th>
                     <th scope="col">DOB</th>
                     <th scope="col">EmailId</th>
+                    <th scope="col">SuperAdmin</th>
                     <th scope="col">CreatedAt</th>
                     <th scope="col">CreatedBy</th>
                     <th scope="col">UpdatedAt</th>
                     <th scope="col">UpdatedBy</th>
-                    <th scope="col">DeletedAt</th>
-                    <th scope="col">DeletedBy</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -74,15 +74,7 @@
         </table>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center" id="pagination">
-                <li class="page-item disabled" id="previous-page">
-                    <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
-                </li>
-                <li class="page-item"><a class="page-link" href="#">1</a></li>
-                <li class="page-item"><a class="page-link" href="#">2</a></li>
-                <li class="page-item"><a class="page-link" href="#">3</a></li>
-                <li class="page-item" id="next-page">
-                    <a class="page-link" href="#">Next</a>
-                </li>
+                
             </ul>
         </nav>
     </div>
@@ -112,15 +104,15 @@
                     var warden = wardens[i]
                     trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
-                            <td>${warden.name}</td>
+                            <td>${warden.firstName}</td>
+                            <td>${warden.lastName}</td>
                             <td>${warden.dob}</td>
                             <td>${warden.emailId}</td>
+                            <td>${warden.superAdmin}</td>
                             <td>${warden.createdAt}</td>
                             <td>${warden.created}</td>
                             <td>${warden.updatedAt}</td>
                             <td>${warden.updated}</td>
-                            <td>${warden.deletedAt}</td>
-                            <td>${warden.deletedBy}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/warden/${warden.wardenId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteWarden(${warden.wardenId})">Delete</a>

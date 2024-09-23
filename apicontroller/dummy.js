@@ -1,232 +1,158 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
-const ALLOWED_UPDATE_KEY = [
-    "courseName"
-]
+<!DOCTYPE html>
+<html>
 
-async function readCourses(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    var orderBy = ''
-    if (req.method === 'POST') {
-        return orderBy += 'c.createdAt DESC'
-    } else {
-        orderBy += 'c.courseName ASC'
-    }
-
-    const coursesQuery = /*sql*/ `
-        SELECT 
-            c.*,
-            w.name AS created,
-            w2.name AS updated,
-            DATE_FORMAT(c.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(c.updatedAt, "%Y-%m-%d %T") AS updatedAt
-        FROM 
-            course AS c 
-        LEFT JOIN
-            warden AS w ON w.wardenId = c.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = c.updatedBy
-        WHERE 
-            c.deletedAt IS NULL
-        ORDER BY 
-        ${orderBy}
-        LIMIT ? 
-        OFFSET ?`;
-
-    const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalCourseCount 
-        FROM course 
-        WHERE deletedAt IS NULL`;
-
-    try {
-        const [courses, totalCount] = await Promise.all([
-            mysqlQuery(coursesQuery, [limit, offset], mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
-        ]);
-
-        res.status(200).send({
-            courses: courses,
-            courseCount: totalCount[0].totalCourseCount
-        });
-
-    } catch (error) {
-        res.status(500).send(error.message);
-    }
-}
-
-async function readCourse(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const courseId = req.params.courseId;
-    try {
-        const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
-            [courseId],
-            mysqlClient
-        )
-        if (course.length === 0) {
-            return res.status(404).send("courseId not valid")
-        }
-        res.status(200).send(course[0])
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function createCourse(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const { courseName } = req.body
-    const createdBy = req.session.data.wardenId
-
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert) {
-        return res.status(400).send(isValidInsert);
-    }
-
-    try {
-        const existingCourseName = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseName = ?`, [courseName], mysqlClient);
-        if (existingCourseName.length > 0) {
-            return res.status(409).send("courseName already exists");
-        }
-
-        const newCourse = await mysqlQuery(/*sql*/`INSERT INTO course(courseName, createdBy) VALUES(?,?)`, [courseName, createdBy], mysqlClient)
-        if (newCourse.affectedRows === 0) {
-            res.status(400).send("no insert was made")
-        } else {
-            res.status(201).send("insert successfull")
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
-    }
-}
-
-async function updateCourse(req, res) {
-    const courseId = req.params.courseId;
-    const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
-    const values = []
-    const updates = []
-
-    ALLOWED_UPDATE_KEY.forEach(key => {
-        const keyValue = req.body[key]
-        if (keyValue !== undefined) {
-            values.push(keyValue)
-            updates.push(` ${key} = ?`)
-        }
-    })
-
-    updates.push("updatedBy = ?")
-    values.push(updatedBy, courseId)
-
-    try {
-        const course = await validateCourseById(courseId, mysqlClient);
-        if (!course) {
-            return res.status(404).send("course not found or already deleted");
-        }
-
-        const existingCourseName = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseName = ?`, values, mysqlClient);
-        if (existingCourseName.length > 0) {
-            return res.status(409).send("courseName already exists");
-        }
-
-        const isValidInsert = validateInsertItems(req.body, true);
-        if (isValidInsert) {
-            return res.status(400).send(isValidInsert);
-        }
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE course SET ${updates.join(', ')} WHERE courseId = ? AND deletedAt IS NULL`,
-            values, mysqlClient)
-        if (isUpdate.affectedRows === 0) {
-            return res.status(204).send("course not found or no changes made")
-        }
-
-        const getUpdatedCourse = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
-            [courseId],
-            mysqlClient
-        )
-        res.status(200).send({
-            status: 'successfull',
-            data: getUpdatedCourse[0]
-        })
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function deleteCourse(req, res) {
-    const courseId = req.params.courseId;
-    const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
-
-    try {
-        const course = await validateCourseById(courseId, mysqlClient);
-        if (!course) {
-            return res.status(404).send("Course not found or already deleted");
-        }
-
-        const deleteCourse = await mysqlQuery(/*sql*/ `UPDATE course SET deletedAt = NOW(), deletedBy = ? 
-            WHERE courseId = ? AND deletedAt IS NULL`,
-            [deletedBy, courseId],
-            mysqlClient
-        );
-
-        if (deleteCourse.affectedRows === 0) {
-            return res.status(404).send("course not found or already deleted")
-        }
-
-        const getDeletedCourse = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
-            [courseId],
-            mysqlClient
-        )
-        res.status(200).send({
-            status: 'deleted',
-            data: getDeletedCourse[0]
-        });
-
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-function getCourseById(courseId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM course WHERE courseId = ? AND deletedAt IS NULL`, [courseId], (err, course) => {
-            if (err) {
-                return reject(err)
+<head>
+    <%- include('../../partials/head.ejs') %>
+        <style>
+            .container {
+                margin-top: 60px;
+                margin-bottom: 20px;
+                padding-top: 14px;
+                display: flex;
+                flex-direction: column;
+                gap: 20px
             }
-            resolve(course.length ? course[0] : null)
-        })
+
+            .insertLabel {
+                height: 36px;
+                display: flex;
+                justify-content: space-between;
+                gap: 114%;
+            }
+
+            .table-wrapper {
+                width: 100%;
+                overflow-x: auto;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
+            }
+
+            table {
+                min-width: 1400px;
+            }
+
+        </style>
+</head>
+
+<body>
+    <div class="container table-wrapper">
+        <div class="insertLabel">
+            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+                onchange="changeLimit()">
+                <option value="5" href="#">5</option>
+                <option value="10" href="#" selected>10</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
+            </select>
+            <a class="btn btn-info" href="/course/add">Add</a>
+        </div>
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Sno</th>
+                    <th scope="col">CourseName</th>
+                    <th scope="col">CreatedAt</th>
+                    <th scope="col">CreatedBy</th>
+                    <th scope="col">UpdatedAt</th>
+                    <th scope="col">UpdatedBy</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="courseData">
+                <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+            </ul>
+        </nav>
+    </div>
+</body>
+<script>
+    var tableData = document.getElementById("courseData")
+    var limit = document.getElementById("limit").value
+    var paginationDom = document.getElementById("pagination")
+    var insert = false;
+
+    function changeLimit() {
+        limit = document.getElementById("limit").value
+        loadCoursePage()
+    }
+
+    function loadCoursePage(pageNo = 1) {
+        var requestOptions = {
+            method: 'GET'
+        };
+       
+        var orderBy = insert === true ? 'createdAt' : 'courseName';
+        var sort = insert === true ? 'DESC' : 'ASC';
+
+        fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}&orderby=${orderBy}&sort=${sort}`,
+        requestOptions)
+            .then(response => response.json())
+            .then(responseData => { 
+                const { courses, courseCount } = responseData;
+                
+                let trHtml = '';
+                for (let i = 0; i < courses.length; i++) {
+                    const course = courses[i];
+                    trHtml += `<tr>
+                            <td>${(pageNo - 1) * limit + i + 1}</td>
+                            <td>${course.courseName}</td>
+                            <td>${course.createdAt}</td>
+                            <td>${course.created}</td>
+                            <td>${course.updatedAt}</td>
+                            <td>${course.updated}</td>
+                            <td>
+                                <a class="btn btn-secondary" href="/course/${course.courseId}">Edit</a>
+                                <a class="btn btn-secondary" onClick="deleteCourse(${course.courseId})">Delete</a>
+                            </td>
+                        </tr>`;
+                }
+                tableData.innerHTML = trHtml;
+
+                var totalPages = Math.ceil(responseData.courseCount / limit)
+                var paginationHtml = ''
+                for (var i = 1; i <= totalPages; i++) {
+                    paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="loadCoursePage(${i})">${i}</a>
+                       </li>`;
+                }
+                paginationDom.innerHTML = paginationHtml;
+            })
+            .catch((error) => console.error(error));
+    }
+
+
+    function deleteCourse(courseId) {
+        var validateDelete = confirm('are you sure you want to delete?')
+
+        if (!validateDelete)
+            return
+
+        var requestOptions = {
+            method: 'DELETE',
+        };
+
+        fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+            .then(response => response.text())
+            .then(deleted =>
+                window.location = '/course'
+            )
+            .catch(error => console.log('error', error));
+    }
+
+    window.addEventListener('load', () => {
+        loadCoursePage()
     })
-}
 
-async function validateCourseById(courseId, mysqlClient) {
-    var course = await getCourseById(courseId, mysqlClient)
-    if (course !== null) {
-        return true
-    }
-    return false
-}
+</script>
 
-function validateInsertItems(body, isUpdate = false) {
-    const { courseName } = body
-
-    if (courseName !== undefined) {
-        if (courseName.length <= 1) {
-            return "courseName is invalid"
-        }
-    } else if (!isUpdate) {
-        return "courseName is missing"
-    }
-    return
-}
-
-module.exports = (app) => {
-    app.get('/api/course', readCourses)
-    app.get('/api/course/:courseId', readCourse)
-    app.post('/api/course', createCourse)
-    app.put('/api/course/:courseId', updateCourse)
-    app.put('/api/course/:courseId', updateCourse)
-    app.delete('/api/course/:courseId', deleteCourse)
-}
+</html>

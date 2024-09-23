@@ -90,7 +90,7 @@
             .catch(error => console.error('error', error));
     }
 
-    function loadBlockCode() {
+    function populateBlockCode() {
         fetch("http://localhost:1000/api/block")
             .then(response => response.json())
             .then(responseData => {
@@ -98,14 +98,13 @@
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < blocks.length; i++) {
                     var opt = blocks[i]
-                    console.log(opt)
                     optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
                 }
                 blockCode.innerHTML = optionsList
             })
             .catch(error => console.log('error', error));
     }
-    loadBlockCode()
+    populateBlockCode()
 
     if (blockFloorId) {
         getBlockFloor(blockFloorId)

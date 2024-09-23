@@ -8,7 +8,10 @@ async function readCourses(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
+    const orderBy = req.query.orderby || 'c.courseName';
+    const sort = req.query.sort || 'ASC';
 
+   
     const coursesQuery = /*sql*/ `
         SELECT 
             c.*,
@@ -25,7 +28,7 @@ async function readCourses(req, res) {
         WHERE 
             c.deletedAt IS NULL
         ORDER BY 
-            c.createdAt DESC, c.courseName ASC
+            ${orderBy} ${sort}
         LIMIT ? 
         OFFSET ?`;
 
@@ -91,7 +94,6 @@ async function createCourse(req, res) {
             res.status(201).send("insert successfull")
         }
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -220,7 +222,6 @@ module.exports = (app) => {
     app.get('/api/course', readCourses)
     app.get('/api/course/:courseId', readCourse)
     app.post('/api/course', createCourse)
-    app.put('/api/course/:courseId', updateCourse)
     app.put('/api/course/:courseId', updateCourse)
     app.delete('/api/course/:courseId', deleteCourse)
 }

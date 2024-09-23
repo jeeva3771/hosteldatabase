@@ -1,10 +1,22 @@
 const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
-    "name",
+    "firstName",
+    "lastName",
     "dob",
     "emailId",
-    "password"
+    "password",
+    "superAdmin"
 ]
+
+// function superAdminValidate(req, res) {
+//     app.use((req, res, next) => {
+//         console.log(req.session)
+//         if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
+//             return res.status(403).send('Access denied. Only superAdmin can perform this action.');
+//         }
+//         next();
+//     })
+// }
 
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -12,11 +24,11 @@ async function readWardens(req, res) {
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
 
-        const wardensQuery = /*sql*/`
+    const wardensQuery = /*sql*/`
         SELECT 
             w.*,
-            ww.name AS created,
-            ww2.name AS updated,
+            CONCAT(ww.firstName, ' ', ww.lastName) AS created,
+            CONCAT(ww2.firstName, ' ', ww2.lastName) AS updated,
             DATE_FORMAT(w.dob, "%Y-%m-%d") AS dob,
             DATE_FORMAT(w.createdAt, "%Y-%m-%d %T") AS createdAt,
             DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt
@@ -28,9 +40,9 @@ async function readWardens(req, res) {
             WHERE 
               w.deletedAt IS NULL 
             ORDER BY 
-              w.name ASC LIMIT ? OFFSET ?`
-       
-       const countQuery = /*sql*/ `
+              w.firstName ASC LIMIT ? OFFSET ?`
+
+    const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
         FROM warden 
         WHERE deletedAt IS NULL`;
@@ -47,6 +59,7 @@ async function readWardens(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -68,11 +81,13 @@ async function readWarden(req, res) {
 async function createWarden(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const {
-        name,
+        firstName,
+        lastName,
         dob,
         emailId,
-        password
-        } = req.body
+        password,
+        superAdmin
+    } = req.body
     const createdBy = req.session.data.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
@@ -87,9 +102,9 @@ async function createWarden(req, res) {
         }
 
         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
-            warden (name,dob,emailId,password,createdBy)
-            VALUES(?,?,?,?,?)`,
-            [name, dob, emailId, password, createdBy],
+            warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
+            VALUES(?,?,?,?,?,?,?)`,
+            [firstName, lastName, dob, emailId, password, superAdmin, createdBy],
             mysqlClient
         )
         if (newWarden.affectedRows === 0) {
@@ -153,7 +168,6 @@ async function deleteWarden(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
 
-
     try {
         const isValid = await validateWardenById(wardenId, mysqlClient)
         if (!isValid) {
@@ -203,19 +217,29 @@ async function authentication(req, res) {
 
 function validateInsertItems(body, isUpdate = false) {
     const {
-        name,
+        firstName,
+        lastName,
         dob,
         emailId,
-        password
+        password,
+        superAdmin
     } = body
 
     const errors = []
-    if (name !== undefined) {
-        if (name.length < 2) {
-            errors.push('name is invalid')
+    if (firstName !== undefined) {
+        if (firstName.length < 2) {
+            errors.push('firstName is invalid')
         }
     } else if (!isUpdate) {
-        errors.push('name is missing')
+        errors.push('firstName is missing')
+    }
+
+    if (lastName !== undefined) {
+        if (lastName.length < 1) {
+            errors.push('lastName is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('lastName is missing')
     }
 
     if (dob !== undefined) {
@@ -249,6 +273,14 @@ function validateInsertItems(body, isUpdate = false) {
     } else if (!isUpdate) {
         errors.push('password is missing')
     }
+
+    if (superAdmin !== undefined) {
+        if (![0, 1].includes(superAdmin)) {
+            errors.push('superAdmin is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('superAdmin is missing')
+    }
     return errors
 }
 
@@ -271,6 +303,17 @@ async function validateWardenById(wardenId, mysqlClient) {
     }
     return false
 }
+
+// module.exports = (app) => {
+//     app.get('/api/warden', readWardens)
+//     app.get('/api/warden/:wardenId', readWarden)
+//     app.post('/api/warden', superAdminValidate, createWarden)
+//     app.put('/api/warden/:wardenId', superAdminValidate, updateWarden)
+//     app.delete('/api/warden/:wardenId', superAdminValidate, deleteWarden)
+//     app.post('/api/login', authentication)
+//     superAdminValidate
+
+// }
 
 module.exports = (app) => {
     app.get('/api/warden', readWardens)

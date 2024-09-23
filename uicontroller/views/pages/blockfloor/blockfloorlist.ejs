@@ -14,7 +14,7 @@
             }
 
             .insertLabel {
-                height: 34px;
+                height: 36px;
                 display: flex;
                 justify-content: space-between;
                 gap: 116%;
@@ -55,8 +55,6 @@
                     <th scope="col">CreatedBy</th>
                     <th scope="col">UpdatedAt</th>
                     <th scope="col">UpdatedBy</th>
-                    <th scope="col">DeletedAt</th>
-                    <th scope="col">DeletedBy</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -111,8 +109,6 @@
                             <td>${blockFloor.created}</td>
                             <td>${blockFloor.updatedAt}</td>
                             <td>${blockFloor.updated}</td>
-                            <td>${blockFloor.deletedAt}</td>
-                            <td>${blockFloor.deletedBy}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/blockfloor/${blockFloor.blockFloorId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteBlockFloor(${blockFloor.blockFloorId})">Delete</a>

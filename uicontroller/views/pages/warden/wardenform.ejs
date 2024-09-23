@@ -1,70 +1,100 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <%- include('../../partials/head') %>
-
+    <%- include('../../partials/head.ejs') %>
         <style>
+            .container1 {
+                margin-bottom: 30px;
+            }
+
             .container {
                 display: flex;
-                flex-direction: column;
                 justify-content: center;
-                margin-top: 40px;
-                margin-bottom: 40px;
+                margin-top: 10px;
                 border-radius: 8px;
                 padding: 30px;
-                width: 380px;
+                width: 400px;
             }
 
             .submission {
-                margin-top: 10px;
+                margin-top: 30px;
                 display: flex;
-                justify-content: center;
-                gap: 14px;
+                justify-content: space-around;
+                align-items: center;
             }
         </style>
 </head>
 
 <body>
-    <div class="container">
-        <h2 class="label">WardenForm</h2>
-        <div class="form-group">
-            <label for="wardenName">Name</label>
-            <input type="text" class="form-control" id="wardenName">
-        </div>
-        <div class="form-group">
-            <label for="dob">DOB</label>
-            <input type="date" class="form-control dateLabel" id="dob">
-        </div>
-        <div class="form-group">
-            <label for="email">EmailId</label>
-            <input type="email" class="form-control" id="email">
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" class="form-control" id="password">
-        </div>
-        <div class="submission">
-            <input type="hidden" id="wardenId" value="<%=wardenId %>" />
-            <button onclick="saveOrUpdateWarden()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+    <div class="container1">
+        <a href="/warden" class="exits">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" fill="currentColor"
+                class="bi bi-arrow-left-short" viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                    d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5" />
+            </svg>
+        </a>
+        <div class="container">
+            <div>
+                <h2 class="label">Warden</h2>
+                <div class="form-group">
+                    <label for="wardenName">Name</label>
+                    <input type="text" class="form-control" id="wardenName" onkeyup="toggleSubmitButton()">
+                </div>
+                <div class="form-group">
+                    <label for="dob">DOB</label>
+                    <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
+                </div>
+                <div class="form-group">
+                    <label for="emailId">EmailId</label>
+                    <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
+                </div>
+                <div class="form-group">
+                    <label for="isAdmin">Admin</label><br>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="isAdmin" id="isAdmin" value="1">
+                        <label class="form-check-label" for="isAir">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="isAdmin" id="notAdmin" value="0">
+                        <label class="form-check-label" for="notAir">No</label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" onkeyup="toggleSubmitButton()">
+                </div>
+                <div class="form-group">
+                    <label for="password">Confirm Password</label>
+                    <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
+
+                </div>
+                <div class="submission">
+                    <input type="hidden" id="wardenId" value="<%=wardenId %>" />
+                    <button onclick="authentication()" class="btn btn-success" id="Submit" disabled>Submit</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
 <script>
-    var wardenName = document.getElementById('wardenName');
-    var dob = document.getElementById('dob');
-    var emailId = document.getElementById('email');
-    var password = document.getElementById('password');
-    var submitButton = document.getElementById('submitButton');
+    const wardenName = document.getElementById('wardenName');
+    const dob = document.getElementById('dob');
+    const emailId = document.getElementById('emailId');
+    const password = document.getElementById('password');
+    const conform = document.getElementById('conform');
     var wardenId = document.getElementById('wardenId').value;
+    const submit = document.getElementById('submit');
 
-    function saveOrUpdateWarden() {
-        var myHeaders = new Headers();
+    function authentication() {
+        const isAdmin = document.querySelectorAll('input[name="isAdmin"]:checked');
+        const myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
-
-        var raw = JSON.stringify({
+        const raw = JSON.stringify({
             "name": wardenName.value,
             "dob": dob.value,
+            "superAdmin": isAdmin.value,
             "emailId": emailId.value,
             "password": password.value
         });
@@ -101,25 +131,39 @@
                 wardenName.value = warden.name;
                 dob.value = warden.dob.split('T')[0];
                 emailId.value = warden.emailId;
+
+                if (warden.superAdmin) {
+                    document.getElementById('isAdmin').checked = true;
+                } else {
+                    document.getElementById('notAdmin').checked = true;
+                }
+
                 password.value = warden.password;
-                createdBy.value = warden.createdBy;
+                conform.value = warden.password;
             })
             .catch((error) => console.error(error));
     }
 
     function toggleSubmitButton() {
-        submitButton.disabled = !(
+        submit.disabled = !(
             wardenName.value.length > 0 &&
-            dob.value !== '' &&
+            dob.value.length > 0 &&
             emailId.value.length > 0 &&
-            password.value.length > 0
-        )
+            isAdmin.value.length > 0 &&
+            password.value.length > 0 &&
+            conform.value.length > 0 &&
+            password.value === conform.value
+        );
     }
-    
+
     wardenName.addEventListener('input', toggleSubmitButton);
     dob.addEventListener('input', toggleSubmitButton);
     emailId.addEventListener('input', toggleSubmitButton);
+    document.querySelectorAll('input[wardenName="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
     password.addEventListener('input', toggleSubmitButton);
+    conform.addEventListener('input', toggleSubmitButton);
+
+
 </script>
 
 </html>

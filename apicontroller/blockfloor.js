@@ -2,7 +2,8 @@ const { mysqlQuery, insertedBy } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockId",
     "floorNumber",
-    "isActive"
+    "isActive",
+    "updatedBy"
 ]
 
 async function readBlockFloors(req, res) {
@@ -71,13 +72,13 @@ async function readBlockFloor(req, res) {
 }
 
 async function createBlockFloor(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
     const {
         blockId,
         floorNumber,
         isActive
         } = req.body
-    const createdBy = req.session.data.wardenId
+    const createdBy = req.session.data.wardenId;
 
 
     const isValidInsert = await validateInsertItems(req.body);

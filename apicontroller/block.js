@@ -45,6 +45,7 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -266,7 +267,6 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
     }
     return true
 }
-
 
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
