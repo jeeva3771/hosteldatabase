@@ -8,15 +8,13 @@ const ALLOWED_UPDATE_KEYS = [
     "superAdmin"
 ]
 
-// function superAdminValidate(req, res) {
-//     app.use((req, res, next) => {
-//         console.log(req.session)
-//         if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
-//             return res.status(403).send('Access denied. Only superAdmin can perform this action.');
-//         }
-//         next();
-//     })
-// }
+function superAdminValidate(req, res, next) {
+    if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
+        return res.status(403).send('Access denied. Only superAdmin can perform this action.');
+    }
+    next();
+}
+
 
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -27,8 +25,10 @@ async function readWardens(req, res) {
     const wardensQuery = /*sql*/`
         SELECT 
             w.*,
-            CONCAT(ww.firstName, ' ', ww.lastName) AS created,
-            CONCAT(ww2.firstName, ' ', ww2.lastName) AS updated,
+            ww.firstName AS createdFirstName,
+            ww.lastName AS createdLastName,
+            ww2.firstName AS updatedFirstName,
+            ww2.lastName AS updatedLastName,
             DATE_FORMAT(w.dob, "%Y-%m-%d") AS dob,
             DATE_FORMAT(w.createdAt, "%Y-%m-%d %T") AS createdAt,
             DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt
@@ -59,7 +59,6 @@ async function readWardens(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -304,22 +303,21 @@ async function validateWardenById(wardenId, mysqlClient) {
     return false
 }
 
+module.exports = (app) => {
+    app.get('/api/warden', superAdminValidate, readWardens)
+    app.get('/api/warden/:wardenId', superAdminValidate, readWarden)
+    app.post('/api/warden', superAdminValidate, createWarden)
+    app.put('/api/warden/:wardenId', superAdminValidate, updateWarden)
+    app.delete('/api/warden/:wardenId', superAdminValidate, deleteWarden)
+    app.post('/api/login', authentication)
+
+}
+
 // module.exports = (app) => {
 //     app.get('/api/warden', readWardens)
 //     app.get('/api/warden/:wardenId', readWarden)
-//     app.post('/api/warden', superAdminValidate, createWarden)
-//     app.put('/api/warden/:wardenId', superAdminValidate, updateWarden)
-//     app.delete('/api/warden/:wardenId', superAdminValidate, deleteWarden)
+//     app.post('/api/warden', createWarden)
+//     app.put('/api/warden/:wardenId', updateWarden)
+//     app.delete('/api/warden/:wardenId', deleteWarden)
 //     app.post('/api/login', authentication)
-//     superAdminValidate
-
 // }
-
-module.exports = (app) => {
-    app.get('/api/warden', readWardens)
-    app.get('/api/warden/:wardenId', readWarden)
-    app.post('/api/warden', createWarden)
-    app.put('/api/warden/:wardenId', updateWarden)
-    app.delete('/api/warden/:wardenId', deleteWarden)
-    app.post('/api/login', authentication)
-}

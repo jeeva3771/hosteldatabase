@@ -5,7 +5,7 @@
     <%- include('../../partials/head.ejs') %>
         <style>
             .container {
-                margin-top: 60px;
+                margin-top: 30px;
                 margin-bottom: 20px;
                 padding-top: 14px;
                 display: flex;
@@ -39,6 +39,17 @@
 </head>
 
 <body>
+    <header>
+        <%- include('../../partials/header.ejs') %>
+    </header>
+    <div class="searchLabel">
+        <nav class="navbar navbar-light bg-light">
+            <form class="form-inline">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </nav>
+    </div>
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"

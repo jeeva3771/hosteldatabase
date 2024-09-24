@@ -8,15 +8,17 @@ async function readCourses(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby || 'c.courseName';
-    const sort = req.query.sort || 'ASC';
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
 
    
     const coursesQuery = /*sql*/ `
         SELECT 
             c.*,
-            w.name AS created,
-            w2.name AS updated,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
             DATE_FORMAT(c.createdAt, "%Y-%m-%d %T") AS createdAt,
             DATE_FORMAT(c.updatedAt, "%Y-%m-%d %T") AS updatedAt
         FROM 
@@ -29,8 +31,7 @@ async function readCourses(req, res) {
             c.deletedAt IS NULL
         ORDER BY 
             ${orderBy} ${sort}
-        LIMIT ? 
-        OFFSET ?`;
+        LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalCourseCount 

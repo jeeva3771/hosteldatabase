@@ -5,12 +5,19 @@
     <%- include('../../partials/head.ejs') %>
         <style>
             .container {
-                margin-top: 60px;
+                margin-top: 30px;
                 margin-bottom: 20px;
                 padding-top: 14px;
                 display: flex;
                 flex-direction: column;
-                gap: 20px
+                gap: 20px;
+            }
+
+            .searchLabel {
+                display: flex;
+                justify-content: flex-end;
+                margin-right: 58px;
+                margin-top: 10px
             }
 
             .insertLabel {
@@ -29,11 +36,21 @@
             table {
                 min-width: 1400px;
             }
-
         </style>
 </head>
 
 <body>
+    <header>
+        <%- include('../../partials/header.ejs') %>
+    </header>
+    <div class="searchLabel">
+        <nav class="navbar navbar-light bg-light">
+            <form class="form-inline">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </nav>
+    </div>
     <div class="container table-wrapper">
         <div class="insertLabel">
             <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
@@ -49,11 +66,11 @@
             <thead>
                 <tr>
                     <th scope="col">Sno</th>
-                    <th scope="col">CourseName</th>
-                    <th scope="col">CreatedAt</th>
-                    <th scope="col">CreatedBy</th>
-                    <th scope="col">UpdatedAt</th>
-                    <th scope="col">UpdatedBy</th>
+                    <th scope="col" onclick="sortByColumn('courseName')">CourseName</th>
+                    <th scope="col" onclick="sortByColumn('createdAt')">CreatedAt</th>
+                    <th scope="col" onclick="sortByColumn('createdBy')">CreatedBy</th>
+                    <th scope="col" onclick="sortByColumn('UpdatedAt')">UpdatedAt</th>
+                    <th scope="col" onclick="sortByColumn('updatedBy')">UpdatedBy</th>
                     <th scope="col">Action</th>
                 </tr>
             </thead>
@@ -76,13 +93,32 @@
     </div>
 </body>
 <script>
-    var tableData = document.getElementById("courseData")
-    var limit = document.getElementById("limit").value
-    var paginationDom = document.getElementById("pagination")
+    var tableData = document.getElementById("courseData");
+    var limit = document.getElementById("limit").value;
+    var paginationDom = document.getElementById("pagination");
 
-    function changeLimit() {
+    var columnSortOrders = {
+        courseName: 'ASC',
+        createdAt: 'ASC',
+        createdBy: 'ASC',
+        updatedAt: 'ASC',
+        updatedBy: 'ASC'
+    };
+    var currentColumn = 'createdAt';
+    var url = `&orderby=c.${currentColumn}&sort=DESC`;
+
+
+    function changeLimit(column) {
         limit = document.getElementById("limit").value
         loadCoursePage()
+    }
+
+    function sortByColumn(column) {
+        columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+        currentColumn = column;
+        var sortOrder = columnSortOrders[column];
+        url = `&orderby=c.${currentColumn}&sort=${sortOrder}`;
+        loadCoursePage();
     }
 
     function loadCoursePage(pageNo = 1) {
@@ -90,12 +126,13 @@
             method: 'GET'
         };
 
-        fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}&orderby=c.createdAt&sort=DESC`,
-        requestOptions)
+        fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}` + url,
+            requestOptions)
+
             .then(response => response.json())
-            .then(responseData => { 
+            .then(responseData => {
                 const { courses, courseCount } = responseData;
-                
+
                 let trHtml = '';
                 for (let i = 0; i < courses.length; i++) {
                     const course = courses[i];
@@ -103,9 +140,9 @@
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${course.courseName}</td>
                             <td>${course.createdAt}</td>
-                            <td>${course.created}</td>
+                            <td>${course.createdFirstName} ${course.createdLastName}</td>
                             <td>${course.updatedAt}</td>
-                            <td>${course.updated}</td>
+                            <td>${course.updatedFirstName} ${course.updatedLastName}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/course/${course.courseId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteCourse(${course.courseId})">Delete</a>

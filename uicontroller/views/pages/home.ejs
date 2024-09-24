@@ -13,6 +13,10 @@
           font-size: 16px;
       }
 
+      .bgClr {
+        background-color:darkgray;
+      }
+
       body {
           font-family: 'Times New Roman', Times, serif;
       }
@@ -21,41 +25,41 @@
           font-size: x-large;
       }
 
+      .linkLabel {
+        margin-top: 4px;
+        margin-left: 6px;
+      }
+
       .link {
         font-size: larger;
       }
 
-      .linkTag-2 {
-        margin: 16px;
-      }
-
-      .linkTag-1 {
-        margin: 6px;
+      .destroy {
+        margin-left: 6px;
       }
 
   </style>
 </head>
 <body>
-    <nav class="navbar navbar-light nav-bar" style="background-color: #e3f2fd;">
+  <header>
+    <%- include('../partials/header.ejs') %>
+  </header>
+    <nav class="navbar navbar-light nav-bar bgClr">
       <div class="right-head">
           <h1>Hostel</h1>
           <h2>College Name</h2>
       </div>
       <div class="left-head">
-          <p class="fontSize">Welcome <%=name.name %> !</p>
-          <a href="/api/logout" class="link linkTag-1">Logout</a>
+          <p class="fontSize">Welcome <%=name.firstName %> <%=name.lastName %>!</p>
+          <span class="destroy">
+          <a href="/api/logout" class="btn btn-light">Logout</a>
+          </span>
       </div> 
   </nav>
-  <div class="attendance-btn">
-      <a href="#" class="link linkTag-2">Take Attendance</a>
-      <a href="/block" class="link linkTag-2">Block</a>
-      <a href="/blockfloor" class="link linkTag-2">Blockfloor</a>
-      <a href="/room" class="link linkTag-2">Room</a>
-      <a href="/student" class="link linkTag-2">Student</a>
-      <a href="/course" class="link linkTag-2">Course</a>
-      <a href="/attendance" class="link linkTag-2">Attendance</a>
-      <a href="/warden" class="link linkTag-2">Warden</a>
+  <div class="linkLabel">
+  <a href="/attendance" class="btn btn-light link">Take Attendance</a>
   </div>
+
 </body>
 
 </html>

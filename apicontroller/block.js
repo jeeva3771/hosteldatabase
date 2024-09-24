@@ -10,12 +10,16 @@ async function readBlocks(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
 
     const blocksQuery = /*sql*/`
         SELECT 
             bk.*,
-            w.name AS created,
-            w2.name AS updated,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS createdFirstName,
+            w2.lastName AS createdLastName,
             DATE_FORMAT(bk.createdAt, "%Y-%m-%d %T") AS createdAt,
             DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM block AS bk
@@ -26,7 +30,8 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL 
         ORDER BY 
-            bk.createdAt DESC, bk.blockCode ASC LIMIT ? OFFSET ?`;
+        ${orderBy} ${sort}
+         LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 

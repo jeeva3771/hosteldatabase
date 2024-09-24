@@ -12,7 +12,6 @@
                 flex-direction: column;
                 gap: 20px;
                 box-shadow: none;
-
             }
 
             .insertLabel {
@@ -35,54 +34,59 @@
 </head>
 
 <body>
-    <a href="/home" class="exits">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" fill="currentColor"
-            class="bi bi-arrow-left-short" viewBox="0 0 16 16">
-            <path fill-rule="evenodd"
-                d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5" />
-        </svg>
-        <div class="container table-wrapper">
-            <div class="insertLabel">
-                <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example"
-                    id="limit" onchange="changeLimit()">
-                    <option value="5" href="#">5</option>
-                    <option value="10" href="#" selected>10</option>
-                    <option value="20" href="#">20</option>
-                    <option value="40" href="#">40</option>
-                </select>
-                <a class="btn btn-info" href="/block/add">Add</a>
-            </div>
-            <table class="table table-striped table-hover table-bordered">
-                <thead>
-                    <tr>
-                        <th scope="col">Sno</th>
-                        <th scope="col">BlockCode</th>
-                        <th scope="col">Location</th>
-                        <th scope="col">IsActive</th>
-                        <th scope="col">CreatedAt</th>
-                        <th scope="col">CreatedBy</th>
-                        <th scope="col">UpdatedAt</th>
-                        <th scope="col">UpdatedBy</th>
-                        <th scope="col">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="blocksData">
-                    <tr>
-                        <td>
-                            <div class="d-flex justify-content-center">
-                                <div class="spinner-border" role="status">
-                                    <span class="visually-hidden"></span>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-            <nav aria-label="Page navigation example">
-                <ul class="pagination justify-content-center" id="pagination">
-                </ul>
-            </nav>
+    <header>
+        <%- include('../../partials/header.ejs') %>
+    </header>
+    <div class="searchLabel">
+        <nav class="navbar navbar-light bg-light">
+            <form class="form-inline">
+                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+            </form>
+        </nav>
+    </div>
+    <div class="container table-wrapper">
+        <div class="insertLabel">
+            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+                onchange="changeLimit()">
+                <option value="5" href="#">5</option>
+                <option value="10" href="#" selected>10</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
+            </select>
+            <a class="btn btn-info" href="/block/add">Add</a>
         </div>
+        <table class="table table-striped table-hover table-bordered">
+            <thead>
+                <tr>
+                    <th scope="col">Sno</th>
+                    <th scope="col">BlockCode</th>
+                    <th scope="col">Location</th>
+                    <th scope="col">IsActive</th>
+                    <th scope="col">CreatedAt</th>
+                    <th scope="col">CreatedBy</th>
+                    <th scope="col">UpdatedAt</th>
+                    <th scope="col">UpdatedBy</th>
+                    <th scope="col">Action</th>
+                </tr>
+            </thead>
+            <tbody id="blocksData">
+                <tr>
+                    <td>
+                        <div class="d-flex justify-content-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden"></span>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center" id="pagination">
+            </ul>
+        </nav>
+    </div>
 </body>
 <script>
     var tableData = document.getElementById("blocksData")
@@ -114,9 +118,9 @@
                             <td>${block.blockLocation}</td>
                             <td>${block.isActive}</td>
                             <td>${block.createdAt}</td>
-                            <td>${block.created}</td>
+                            <td>${block.createdFirstName} ${block.createdLastName}</td>
                             <td>${block.updatedAt}</td>
-                            <td>${block.updated}</td>
+                            <td>${block.updatedFirstName} ${block.updatedLastName}<</td>
                             <td>
                                 <a class="btn btn-secondary" href="/block/${block.blockId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteBlock(${block.blockId})"">Delete</a>
