@@ -21,6 +21,8 @@ async function readWardens(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
 
     const wardensQuery = /*sql*/`
         SELECT 
@@ -40,7 +42,8 @@ async function readWardens(req, res) {
             WHERE 
               w.deletedAt IS NULL 
             ORDER BY 
-              w.firstName ASC LIMIT ? OFFSET ?`
+              ${orderBy} ${sort} 
+            LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
@@ -158,6 +161,7 @@ async function updateWarden(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -212,6 +216,20 @@ async function authentication(req, res) {
     } catch (error) {
         res.status(500).send(error.message)
     }
+}
+
+// app.get('/api/logout', (req, res) => {
+//     req.session.destroy ((err) => {
+//         if (err) logger.error();
+//         res.redirect('http://localhost:1000/login')
+//     })
+// })
+
+function logOut(req, res) {
+    req.session.destroy ((err) => {
+        if (err) logger.error();
+        res.redirect('http://localhost:1000/login')
+    })
 }
 
 function validateInsertItems(body, isUpdate = false) {
@@ -310,6 +328,7 @@ module.exports = (app) => {
     app.put('/api/warden/:wardenId', superAdminValidate, updateWarden)
     app.delete('/api/warden/:wardenId', superAdminValidate, deleteWarden)
     app.post('/api/login', authentication)
+    app.get('/api/logout', logOut)
 
 }
 

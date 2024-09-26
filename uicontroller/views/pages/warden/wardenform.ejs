@@ -1,169 +1,144 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <%- include('../../partials/head.ejs') %>
-        <style>
-            .container1 {
-                margin-bottom: 30px;
-            }
-
-            .container {
-                display: flex;
-                justify-content: center;
-                margin-top: 10px;
-                border-radius: 8px;
-                padding: 30px;
-                width: 400px;
-            }
-
-            .submission {
-                margin-top: 30px;
-                display: flex;
-                justify-content: space-around;
-                align-items: center;
-            }
-        </style>
-</head>
-
-<body>
-    <div class="container1">
-        <a href="/warden" class="exits">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" fill="currentColor"
-                class="bi bi-arrow-left-short" viewBox="0 0 16 16">
-                <path fill-rule="evenodd"
-                    d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5" />
-            </svg>
-        </a>
-        <div class="container">
-            <div>
-                <h2 class="label">Warden</h2>
-                <div class="form-group">
-                    <label for="wardenName">Name</label>
-                    <input type="text" class="form-control" id="wardenName" onkeyup="toggleSubmitButton()">
-                </div>
-                <div class="form-group">
-                    <label for="dob">DOB</label>
-                    <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
-                </div>
-                <div class="form-group">
-                    <label for="emailId">EmailId</label>
-                    <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
-                </div>
-                <div class="form-group">
-                    <label for="isAdmin">Admin</label><br>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="isAdmin" id="isAdmin" value="1">
-                        <label class="form-check-label" for="isAir">Yes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="isAdmin" id="notAdmin" value="0">
-                        <label class="form-check-label" for="notAir">No</label>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="password" class="form-control" id="password" onkeyup="toggleSubmitButton()">
-                </div>
-                <div class="form-group">
-                    <label for="password">Confirm Password</label>
-                    <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
-
-                </div>
-                <div class="submission">
-                    <input type="hidden" id="wardenId" value="<%=wardenId %>" />
-                    <button onclick="authentication()" class="btn btn-success" id="Submit" disabled>Submit</button>
-                </div>
-            </div>
+<%- include('../../partials/header.ejs',{ 
+    isMenuVisible : true,
+     title: 'Warden',
+      name: 'name' 
+    }) %>
+    <h2 class="label">Warden</h2>
+    <div class="form-group">
+        <label for="wardenName">FirstName</label>
+        <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="wardenName">LastName</label>
+        <input type="text" class="form-control" id="lastName" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="dob">DOB</label>
+        <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="emailId">EmailId</label>
+        <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
+    </div>
+    <div class="form-group">
+        <label for="isAdmin">Admin</label><br>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="isAdmin" id="isAdmin" value="1"
+                onchange="toggleSubmitButton()">
+            <label class="form-check-label" for="isAir">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="isAdmin" id="notAdmin" value="0"
+                onchange="toggleSubmitButton()">
+            <label class="form-check-label" for="notAir">No</label>
         </div>
     </div>
-</body>
-<script>
-    const wardenName = document.getElementById('wardenName');
-    const dob = document.getElementById('dob');
-    const emailId = document.getElementById('emailId');
-    const password = document.getElementById('password');
-    const conform = document.getElementById('conform');
-    var wardenId = document.getElementById('wardenId').value;
-    const submit = document.getElementById('submit');
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="password">Confirm Password</label>
+        <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
 
-    function authentication() {
-        const isAdmin = document.querySelectorAll('input[name="isAdmin"]:checked');
-        const myHeaders = new Headers();
-        myHeaders.append("Content-Type", "application/json");
-        const raw = JSON.stringify({
-            "name": wardenName.value,
-            "dob": dob.value,
-            "superAdmin": isAdmin.value,
-            "emailId": emailId.value,
-            "password": password.value
-        });
+    </div>
+    <div class="submission">
+        <input type="hidden" id="wardenId" value="<%=wardenId %>" />
+        <button onclick="authentication()" class="btn btn-success" id="submit" disabled>Submit</button>
+    </div>
 
-        var requestOptions = {
-            method: wardenId ? 'PUT' : 'POST',
-            headers: myHeaders,
-            body: raw
-        };
+    <script>
+        const firstName = document.getElementById('firstName');
+        const lastName = document.getElementById('lastName');
+        const dob = document.getElementById('dob');
+        const emailId = document.getElementById('emailId');
+        const password = document.getElementById('password');
+        const conform = document.getElementById('conform');
+        var wardenId = document.getElementById('wardenId').value;
+        const submit = document.getElementById('submit');
 
-        let url = "http://localhost:1000/api/warden";
-        if (wardenId) {
-            url = url + '/' + wardenId
+        function authentication() {
+            const isAdmin = document.querySelectorAll('input[name="isAdmin"]:checked');
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            
+            const raw = JSON.stringify({
+                "firstName": firstName.value,
+                "lastName": lastName.value,
+                "dob": dob.value,
+                "superAdmin": parseInt(isAdmin.value),
+                "emailId": emailId.value,
+                "password": password.value
+            });
+
+            var requestOptions = {
+                method: wardenId ? 'PUT' : 'POST',
+                headers: myHeaders,
+                body: raw
+            };
+
+            let url = "http://localhost:1000/api/warden";
+            if (wardenId) {
+                url = url + '/' + wardenId
+            }
+
+            fetch(url, requestOptions)
+                .then(response => response.text())
+                .then(wardens => window.location = '/warden')
+                .catch(error => console.error('error', error));
         }
 
-        fetch(url, requestOptions)
-            .then(response => response.text())
-            .then(wardens => window.location = '/warden')
-            .catch(error => console.error('error', error));
-    }
+        if (wardenId) {
+            getWarden(wardenId)
+        }
 
-    if (wardenId) {
-        getWarden(wardenId)
-    }
+        function getWarden(wardenId) {
+            const requestOptions = {
+                method: "GET"
+            };
 
-    function getWarden(wardenId) {
-        const requestOptions = {
-            method: "GET"
-        };
+            fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                .then((response) => response.json())
+                .then((warden) => {
+                    firstName.value = warden.firstName;
+                    lastName.value = warden.lastName;
+                    dob.value = warden.dob.split('T')[0];
+                    emailId.value = warden.emailId;
 
-        fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
-            .then((response) => response.json())
-            .then((warden) => {
-                wardenName.value = warden.name;
-                dob.value = warden.dob.split('T')[0];
-                emailId.value = warden.emailId;
+                    if (warden.superAdmin) {
+                        document.getElementById('isAdmin').checked = true;
+                    } else {
+                        document.getElementById('notAdmin').checked = true;
+                    }
 
-                if (warden.superAdmin) {
-                    document.getElementById('isAdmin').checked = true;
-                } else {
-                    document.getElementById('notAdmin').checked = true;
-                }
+                    password.value = warden.password;
+                    conform.value = warden.password;
+                })
+                .catch((error) => console.error(error));
+        }
 
-                password.value = warden.password;
-                conform.value = warden.password;
-            })
-            .catch((error) => console.error(error));
-    }
+        function toggleSubmitButton() {
+            submit.disabled = !(
+                firstName.value.length > 0 &&
+                lastName.value.length > 0 &&
+                dob.value.length > 0 &&
+                emailId.value.length > 0 &&
+                isAdmin.value.length > 0 &&
+                password.value.length > 0 &&
+                conform.value.length > 0 &&
+                password.value === conform.value
+            );
+        }
 
-    function toggleSubmitButton() {
-        submit.disabled = !(
-            wardenName.value.length > 0 &&
-            dob.value.length > 0 &&
-            emailId.value.length > 0 &&
-            isAdmin.value.length > 0 &&
-            password.value.length > 0 &&
-            conform.value.length > 0 &&
-            password.value === conform.value
-        );
-    }
-
-    wardenName.addEventListener('input', toggleSubmitButton);
-    dob.addEventListener('input', toggleSubmitButton);
-    emailId.addEventListener('input', toggleSubmitButton);
-    document.querySelectorAll('input[wardenName="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-    password.addEventListener('input', toggleSubmitButton);
-    conform.addEventListener('input', toggleSubmitButton);
+        firstName.addEventListener('input', toggleSubmitButton);
+        lastName.addEventListener('input', toggleSubmitButton);
+        dob.addEventListener('input', toggleSubmitButton);
+        emailId.addEventListener('input', toggleSubmitButton);
+        document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+        password.addEventListener('input', toggleSubmitButton);
+        conform.addEventListener('input', toggleSubmitButton);
 
 
-</script>
+    </script>
 
-</html>
+    </html>

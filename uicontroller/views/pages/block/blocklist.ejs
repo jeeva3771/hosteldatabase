@@ -1,169 +1,134 @@
-<!DOCTYPE html>
-<html>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'BlockPage , name: ' name' }) %>
 
-<head>
-    <%- include('../../partials/head.ejs') %>
-        <style>
-            .container {
-                margin-top: 30px;
-                margin-bottom: 30px;
-                padding-top: 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px;
-                box-shadow: none;
-            }
-
-            .insertLabel {
-                height: 36px;
-                display: flex;
-                gap: 152%;
-                justify-content: space-between;
-            }
-
-            .table-wrapper {
-                width: 100%;
-                overflow-x: auto;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            }
-
-            table {
-                min-width: 1800px;
-            }
-        </style>
-</head>
-
-<body>
-    <header>
-        <%- include('../../partials/header.ejs') %>
-    </header>
-    <div class="searchLabel">
+    <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+        onchange="changeLimit()">
+        <option value="5" href="#">5</option>
+        <option value="10" href="#" selected>10</option>
+        <option value="20" href="#">20</option>
+        <option value="40" href="#">40</option>
+    </select>
         <nav class="navbar navbar-light bg-light">
             <form class="form-inline">
                 <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
                 <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
             </form>
         </nav>
-    </div>
-    <div class="container table-wrapper">
-        <div class="insertLabel">
-            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="changeLimit()">
-                <option value="5" href="#">5</option>
-                <option value="10" href="#" selected>10</option>
-                <option value="20" href="#">20</option>
-                <option value="40" href="#">40</option>
-            </select>
-            <a class="btn btn-info" href="/block/add">Add</a>
-        </div>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">Sno</th>
-                    <th scope="col">BlockCode</th>
-                    <th scope="col">Location</th>
-                    <th scope="col">IsActive</th>
-                    <th scope="col">CreatedAt</th>
-                    <th scope="col">CreatedBy</th>
-                    <th scope="col">UpdatedAt</th>
-                    <th scope="col">UpdatedBy</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="blocksData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
+    <a class="btn btn-info" href="/block/add">Add</a>
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Sno</th>
+                <th scope="col" onclick="sortByColumn('blockCode')">BlockCode</th>
+                <th scope="col" onclick="sortByColumn('blockLocation')">Location</th>
+                <th scope="col" onclick="sortByColumn('isActive')">IsActive</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">CreatedBy</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="blocksData">
+            <tr>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden"></span>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center" id="pagination">
-            </ul>
-        </nav>
-    </div>
-</body>
-<script>
-    var tableData = document.getElementById("blocksData")
-    var limit = document.getElementById("limit").value
-    var paginationDom = document.getElementById("pagination")
-
-    function changeLimit() {
-        limit = document.getElementById("limit").value
-        loadBlockPage()
-    }
-
-    function loadBlockPage(pageNo = 1) {
-
-        var requestOptions = {
-            method: 'GET'
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+    </nav>
+    <script>
+        var tableData = document.getElementById("blocksData");
+        var limit = document.getElementById("limit").value;
+        var paginationDom = document.getElementById("pagination");
+        var columnSortOrders = {
+            blockCode: 'ASC',
+            blockLocation: 'ASC',
+            isActive: 'ASC',
+            createdBy: 'ASC'
         };
+        var currentColumn = 'createdAt';
+        var url = `&orderby=bk.${currentColumn}&sort=DESC`;
 
-        fetch(`http://localhost:1000/api/block?limit=${limit}&page=${pageNo}`, requestOptions)
-            .then(response => response.json())
-            .then(responseData => {
-                const { blocks, blockCount } = responseData;
 
-                var trHtml = ''
-                for (var i = 0; i < blocks.length; i++) {
-                    var block = blocks[i]
-                    trHtml = trHtml + `<tr>
+        function changeLimit() {
+            limit = document.getElementById("limit").value
+            blockPage()
+        }
+
+        function sortByColumn(column) {
+            columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+            currentColumn = column;
+            var sortOrder = columnSortOrders[column];
+            url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
+            blockPage();
+        }
+
+        function blockPage(pageNo = 1) {
+
+            var requestOptions = {
+                method: 'GET'
+            };
+
+            fetch(`http://localhost:1000/api/block?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                .then(response => response.json())
+                .then(responseData => {
+                    const { blocks, blockCount } = responseData;
+
+                    var trHtml = ''
+                    for (var i = 0; i < blocks.length; i++) {
+                        var block = blocks[i]
+                        trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${block.blockCode}</td>
                             <td>${block.blockLocation}</td>
                             <td>${block.isActive}</td>
-                            <td>${block.createdAt}</td>
                             <td>${block.createdFirstName} ${block.createdLastName}</td>
-                            <td>${block.updatedAt}</td>
-                            <td>${block.updatedFirstName} ${block.updatedLastName}<</td>
                             <td>
                                 <a class="btn btn-secondary" href="/block/${block.blockId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteBlock(${block.blockId})"">Delete</a>
                             </td>
                         </tr>`
-                }
-                tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(responseData.blockCount / limit)
-                var paginationHtml = ''
-                var pagination = document.getElementById("pagination")
+                    }
+                    tableData.innerHTML = trHtml
+                    var totalPages = Math.ceil(responseData.blockCount / limit)
+                    var paginationHtml = ''
+                    var pagination = document.getElementById("pagination")
 
-                for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="loadBlockPage(${i})">${i}</a>
+                    for (var i = 1; i <= totalPages; i++) {
+                        paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="blockPage(${i})">${i}</a>
                        </li>`;
-                }
-                paginationDom.innerHTML = paginationHtml;
-            })
-            .catch((error) => console.error(error));
-    }
+                    }
+                    paginationDom.innerHTML = paginationHtml;
+                })
+                .catch((error) => console.error(error));
+        }
 
-    function deleteBlock(blockId) {
-        var validateDelete = confirm('are you sure you want to delete?')
+        function deleteBlock(blockId) {
+            var validateDelete = confirm('are you sure you want to delete?')
 
-        if (!validateDelete)
-            return
+            if (!validateDelete)
+                return
 
-        var requestOptions = {
-            method: 'DELETE',
-        };
+            var requestOptions = {
+                method: 'DELETE',
+            };
 
-        fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
-            .then(response => response.text())
-            .then(result =>
-                window.location = '/block'
-            )
-            .catch(error => console.log('error', error));
-    }
+            fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
+                .then(response => response.text())
+                .then(result =>
+                    window.location = '/block'
+                )
+                .catch(error => console.log('error', error));
+        }
 
-    window.addEventListener('load', () => {
-        loadBlockPage()
-    })
+        window.addEventListener('load', () => {
+            blockPage()
+        })
 
-</script>
-
-</html>
+    </script>

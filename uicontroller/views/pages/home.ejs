@@ -1,65 +1,12 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <%- include('../partials/head.ejs') %>
-  <title>Document</title>
-  <style>
-      .nav-bar {
-          height: 4.5cm;
-          display: flex;
-          align-content: space-between;
-          flex-direction: column;
-          justify-content: center;
-          font-size: 16px;
-      }
 
-      .bgClr {
-        background-color:darkgray;
-      }
-
-      body {
-          font-family: 'Times New Roman', Times, serif;
-      }
-
-      .fontSize {
-          font-size: x-large;
-      }
-
-      .linkLabel {
-        margin-top: 4px;
-        margin-left: 6px;
-      }
-
-      .link {
-        font-size: larger;
-      }
-
-      .destroy {
-        margin-left: 6px;
-      }
-
-  </style>
-</head>
-<body>
-  <header>
-    <%- include('../partials/header.ejs') %>
-  </header>
-    <nav class="navbar navbar-light nav-bar bgClr">
-      <div class="right-head">
-          <h1>Hostel</h1>
-          <h2>College Name</h2>
-      </div>
-      <div class="left-head">
-          <p class="fontSize">Welcome <%=name.firstName %> <%=name.lastName %>!</p>
-          <span class="destroy">
-          <a href="/api/logout" class="btn btn-light">Logout</a>
-          </span>
-      </div> 
-  </nav>
-  <div class="linkLabel">
-  <a href="/attendance" class="btn btn-light link">Take Attendance</a>
+<%- include('../partials/header.ejs', { 
+  isMenuVisible : true,
+  title: 'home',
+  name: name
+}) %>
+  <div class="right-head">
+    <h1>Hostel</h1>
+    <h2>College Name</h2>
   </div>
-
-</body>
-
-</html>
+    <a href="/attendance" class="btn btn-light link text-primary my-2">Take Attendance</a>
+<%- include('../partials/footer.ejs') %>

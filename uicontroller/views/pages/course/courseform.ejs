@@ -1,48 +1,17 @@
-<html>
-
-<head>
-    <%- include('../../partials/head') %>
-
-        <style>
-            .container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                margin-top: 100px;
-                border-radius: 8px;
-                padding: 30px;
-                width: 380px;
-            }
-
-            .submission {
-                margin-top: 10px;
-                display: flex;
-                justify-content: center;
-                gap: 14px;
-            }
-        </style>
-</head>
-
-<body>
-    <a href="/course" class="exits">
-        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="50" fill="currentColor"
-            class="bi bi-arrow-left-short" viewBox="0 0 16 16">
-            <path fill-rule="evenodd"
-                d="M12 8a.5.5 0 0 1-.5.5H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5a.5.5 0 0 1 .5.5" />
-        </svg>
-    </a>
-    <div class="container">
+<%- include('../../partials/header.ejs', { 
+    isMenuVisible : true,
+     title: 'Course' ,
+      name: 'name'
+     }) %>
         <h2 class="label">Course</h2>
         <div class="form-group">
             <label for="courseName">CourseName</label>
             <input type="text" class="form-control" id="courseName" >
         </div>
-        <div class="submission">
             <input type="hidden" id="courseId" value="<%=courseId %>" />
             <button onclick="saveOrUpdateCourse()" class="btn btn-success" id="submitButton" disabled>Submit</button>
-        </div>
-    </div>
-</body>
+<%- include('../../partials/footer.ejs') %>
+
 <script>
     var courseName = document.getElementById('courseName');
     var submitButton = document.getElementById('submitButton');

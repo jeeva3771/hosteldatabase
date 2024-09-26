@@ -18,8 +18,8 @@ async function readBlocks(req, res) {
             bk.*,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS createdFirstName,
-            w2.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
             DATE_FORMAT(bk.createdAt, "%Y-%m-%d %T") AS createdAt,
             DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt
             FROM block AS bk

@@ -1,27 +1,14 @@
-const express = require('express')
-const mysql = require('mysql')
-const logger  = require('morgan')
+const express = require('express');
+const mysql = require('mysql');
+const logger = require('pino')();
+const pinoReqLogger = require('pino-http')();
 const path = require('path');
-// const winston = require('winston');
 
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
-
-// const logger = winston.createLogger({
-//     level: 'info',
-//     format: winston.format.combine(
-//         winston.format.timestamp(),
-//         winston.format.json()
-//     ),
-//     transports: [
-//         new winston.transports.File({ filename: 'error.log', level: 'error' }),
-//         new winston.transports.Console({ format: winston.format.simple() })
-//     ]
-// });
-
 
 //apicontroller
 const course = require('./apicontroller/course.js')
@@ -43,8 +30,8 @@ const studentUi = require('./ui/studentui.js')
 const attendanceUi = require('./ui/attendanceui.js')
 
 const app = express()
-app.use(logger('dev'))
 app.use(express.json())
+app.use(pinoReqLogger)
 app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
@@ -75,8 +62,11 @@ app.use((req, res, next) => {
 
 app.use(bodyParser.urlencoded({ extended: true }));
 
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 app.mysqlClient = mysql.createConnection({
     host: 'localhost',
@@ -108,7 +98,7 @@ app.mysqlClient.connect(function (err) {
         attendanceUi(app)
 
         app.listen(1000, () => {
-            console.log('listen 1000port')
+            logger.info('listen 1000port')
         })
     }
 })

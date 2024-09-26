@@ -1,171 +1,141 @@
-<!DOCTYPE html>
-<html>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Wardenpage' , name: 'name' }) %>
+    <select class="form-select form-select-lg mb-3" aria-label=".form-select-lg example" id="limit"
+        onchange="changeLimit()">
+        <option value="5" href="#">5</option>
+        <option value="10" href="#" selected>10</option>
+        <option value="20" href="#">20</option>
+        <option value="40" href="#">40</option>
+    </select>
+    <nav class="navbar navbar-light bg-light">
+        <form class="form-inline">
+            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
+            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        </form>
+    </nav>
 
-<head>
-    <%- include('../../partials/head.ejs') %>
-        <style>
-            .container {
-                margin-top: 30px;
-                margin-bottom: 20px;
-                padding-top: 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px
-            }
-
-            .insertLabel {
-                height: 36px;
-                display: flex;
-                justify-content: space-between;
-                gap: 114%;
-            }
-
-            .table-wrapper {
-                width: 100%;
-                overflow-x: auto;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            }
-
-            table {
-                min-width: 1400px;
-            }
-        </style>
-</head>
-
-<body>
-    <header>
-        <%- include('../../partials/header.ejs') %>
-    </header>
-    <div class="searchLabel">
-        <nav class="navbar navbar-light bg-light">
-            <form class="form-inline">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </form>
-        </nav>
-    </div>
-    <div class="container table-wrapper">
-        <div class="insertLabel">
-            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="changeLimit()">
-                <option value="5" href="#">5</option>
-                <option value="10" href="#" selected>10</option>
-                <option value="20" href="#">20</option>
-                <option value="40" href="#">40</option>
-            </select>
-            <a class="btn btn-info" href="/warden/add">Add</a>
-        </div>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">Sno</th>
-                    <th scope="col">FirstName</th>
-                    <th scope="col">LastName</th>
-                    <th scope="col">DOB</th>
-                    <th scope="col">EmailId</th>
-                    <th scope="col">SuperAdmin</th>
-                    <th scope="col">CreatedAt</th>
-                    <th scope="col">CreatedBy</th>
-                    <th scope="col">UpdatedAt</th>
-                    <th scope="col">UpdatedBy</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="wardensData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
+    <a class="btn btn-info" href="/warden/add">Add</a>
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Sno</th>
+                <th scope="col" onclick="sortByColumn('firstName')">First Name</th>
+                <th scope="col" onclick="sortByColumn('lastName')">Last Name</th>
+                <th scope="col" onclick="sortByColumn('dob')">DOB</th>
+                <th scope="col" onclick="sortByColumn('emailId')">Email Id</th>
+                <th scope="col" onclick="sortByColumn('superAdmin')">Super Admin</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">Created By</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="wardensData">
+            <tr>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden"></span>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center" id="pagination">
-                
-            </ul>
-        </nav>
-    </div>
-</body>
-<script>
-    var tableData = document.getElementById("wardensData")
-    var limit = document.getElementById("limit").value
-    var paginationDom = document.getElementById("pagination")
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center" id="pagination">
 
-    function changeLimit() {
-        limit = document.getElementById("limit").value
-        loadWardenPage()
-    }
+        </ul>
+    </nav>
+    <%- include('../../partials/footer.ejs') %>
 
-    function loadWardenPage(pageNo = 1) {
-        var requestOptions = {
-            method: 'GET'
-        };
+        <script>
+            var tableData = document.getElementById("wardensData");
+            var limit = document.getElementById("limit").value;
+            var paginationDom = document.getElementById("pagination");
+            var columnSortOrders = {
+                firstName: 'ASC',
+                lastName: 'ASC',
+                dob: 'ASC',
+                emailId: 'ASC',
+                superAdmin: 'ASC',
+                createdBy: 'ASC',
+            };
+            var currentColumn = 'createdAt';
+            var url = `&orderby=w.${currentColumn}&sort=DESC`;
 
-        fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}`, requestOptions)
-            .then(response => response.json())
-            .then(responseData => {
-                const { wardens, wardenCount } = responseData;
+            function changeLimit() {
+                limit = document.getElementById("limit").value
+                wardenPage()
+            }
 
-                var trHtml = ''
-                for (var i = 0; i < wardens.length; i++) {
-                    var warden = wardens[i]
-                    trHtml = trHtml + `<tr>
+            function sortByColumn(column) {
+                columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+                currentColumn = column;
+                var sortOrder = columnSortOrders[column];
+                url = `&orderby=w.${currentColumn}&sort=${sortOrder}`;
+                wardenPage();
+            }
+
+            function wardenPage(pageNo = 1) {
+                var requestOptions = {
+                    method: 'GET'
+                };
+
+                fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                    .then(response => response.json())
+                    .then(responseData => {
+                        const { wardens, wardenCount } = responseData;
+
+                        var trHtml = ''
+                        for (var i = 0; i < wardens.length; i++) {
+                            var warden = wardens[i]
+
+                            trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${warden.firstName}</td>
                             <td>${warden.lastName}</td>
                             <td>${warden.dob}</td>
                             <td>${warden.emailId}</td>
-                            <td>${warden.superAdmin}</td>
-                            <td>${warden.createdAt}</td>
+                            <td>${warden.superAdmin === 1 ? 'Admin' : ''}</td>
                             <td>${warden.createdFirstName} ${warden.createdLastName}</td>
-                            <td>${warden.updatedAt}</td>
-                            <td>${warden.updatedFirstName} ${warden.updatedLastName}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/warden/${warden.wardenId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteWarden(${warden.wardenId})">Delete</a>
                             </td>
                         </tr>`
-                }
-                tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(responseData.wardenCount / limit)
-                var paginationHtml = ''
+                        }
+                        tableData.innerHTML = trHtml
+                        var totalPages = Math.ceil(responseData.wardenCount / limit)
+                        var paginationHtml = ''
 
-                for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="loadWardenPage(${i})">${i}</a>
+                        for (var i = 1; i <= totalPages; i++) {
+                            paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="wardenPage(${i})">${i}</a>
                        </li>`;
-                }
-                paginationDom.innerHTML = paginationHtml;
+                        }
+                        paginationDom.innerHTML = paginationHtml;
+                    })
+                    .catch((error) => console.error(error));
+            }
+
+            function deleteWarden(wardenId) {
+                var validateDelete = confirm('are you sure you want to delete?')
+
+                if (!validateDelete)
+                    return
+
+                var requestOptions = {
+                    method: 'DELETE',
+                };
+
+                fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                    .then(response => response.text())
+                    .then(deleted =>
+                        window.location = '/warden'
+                    )
+                    .catch(error => console.log('error', error));
+            }
+
+            window.addEventListener('load', () => {
+                wardenPage()
             })
-            .catch((error) => console.error(error));
-    }
 
-    function deleteWarden(wardenId) {
-        var validateDelete = confirm('are you sure you want to delete?')
-
-        if (!validateDelete)
-            return
-
-        var requestOptions = {
-            method: 'DELETE',
-        };
-
-        fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
-            .then(response => response.text())
-            .then(deleted =>
-                window.location = '/warden'
-            )
-            .catch(error => console.log('error', error));
-    }
-
-    window.addEventListener('load', () => {
-        loadWardenPage()
-    })
-
-</script>
-
-</html>
+        </script>

@@ -1,143 +1,68 @@
-<!DOCTYPE html>
-<html>
+<%- include('../partials/header.ejs', { isMenuVisible: false, title: 'login' }) %>
+    <form class="container my-5" style="width: 400px;">
+      <h2 class="topLabel text-primary mx-5">Hostel-Attendance</h2>
+      <p class="font-weight-bold">Login</p>
+      <div class="form-group mx-auto">
+        <label for="exampleInputEmail1">Email</label>
+        <input type="email" class="form-control" id="emailId" aria-describedby="emailHelp" placeholder="Enter email"
+          onkeyup="toggleLoginButton()">
+      </div>
+      <div class="form-group">
+        <label for="exampleInputPassword1">Password</label>
+        <input type="password" class="form-control" id="password" placeholder="Password" onkeyup="toggleLoginButton()">
+      </div>
+      <div class="form-check">
+        <input type="checkbox" class="form-check-input" id="exampleCheck1" onclick="secure()">
+        <label class="form-check-label" for="exampleCheck1">Show Password</label>
+        <a href="#" class="link-primary mx-4">forgotten password?</a>
+      </div>
+     
+      <button type="submit" class="btn btn-primary my-3" onclick="loginUser()" id="loginButton" disabled>Login</button>
+    </form>
+  <script>
+    const loginButton = document.getElementById('loginButton')
+    const emailId = document.getElementById('emailId')
+    const password = document.getElementById('password')
 
-<head>
-  <%- include('../partials/head.ejs') %>
-    <title>Hostel-Attendance</title>
-    <style>
-      .container1 {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        margin-top: 50px;
-      }
+    function loginUser() {
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
 
-      .topLabel {
-        display: flex;
-        justify-content: center;
-        color: #1877f2;
-        font-weight: bold;
-        font-size: 30px;
-      }
+      const raw = JSON.stringify({
+        "emailId": emailId.value,
+        "password": password.value
+      });
 
-      .container {
-        display: flex;
-        justify-content: center;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-        width: 400px;
-        margin-bottom: 10px;
-      }
+      const requestOptions = {
+        method: "POST",
+        headers: myHeaders,
+        body: raw,
+        redirect: "follow"
+      };
 
-      .submission {
-        margin-top: 20px;
-        display: flex;
-        justify-content: center;
-      }
-
-      .label {
-        width: 350px;
-      }
-
-      .fontStyle {
-        font-size: 18px;
-        font-weight: 400px;
-      }
-
-      .fontStyle-2 {
-        font-size: 16px;
-      }
-
-      .log {
-        width: 100px;
-      }
-
-      .secure {
-        display: flex;
-        flex-direction: row;
-        gap: 4px;
-        justify-content: space-between;
-      }
-
-      .check {
-        margin-left: auto;
-        margin-bottom: 7px;
-      }
-    </style>
-</head>
-
-<body>
-  <div class="container1">
-    <h2 class="topLabel">Hostel-Attendance</h2>
-    <div class="container">
-      <form id="loginForm">
-        <p class="font-weight-bold">Login</p>
-        <div class="form-group">
-          <label for="emailId" class="fontStyle">EmailId</label>
-          <input type="text" class="form-control label" id="emailId" onkeyup="toggleLoginButton()">
-        </div>
-        <div class="form-group">
-          <label for="password" class="fontStyle">Password</label>
-          <input type="password" class="form-control label" id="password" onkeyup="toggleLoginButton()">
-        </div>
-        <div class="secure">
-          <a href="">Forget Password?</a>
-          <input type="checkbox" onclick="secure()" class="check">
-          <label for="password" class="fontStyle-2">Show Password</label>
-        </div>
-        <div class="submission">
-          <button type="button" onclick="loginUser()" class="btn btn-success log fontStyle" id="loginButton"
-            disabled>Login</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</body>
-<script>
-  const loginButton = document.getElementById('loginButton')
-  const emailId = document.getElementById('emailId')
-  const password = document.getElementById('password')
-
-  function loginUser() {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-
-    const raw = JSON.stringify({
-      "emailId": emailId.value,
-      "password": password.value
-    });
-
-    const requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow"
-    };
-
-    const request = fetch("http://localhost:1000/api/login", requestOptions)
-    request.then(async (response) => {
-      if (response.status === 200) {
-        window.location.replace("http://localhost:1000/home")
-      } else {
-        alert(await response.text())
-      }
-    })
-  }
-
-  function secure() {
-    var password = document.getElementById("password");
-    if (password.type === "password") {
-      password.type = "text"
-    } else {
-      password.type = "password"
+      const request = fetch("http://localhost:1000/api/login", requestOptions)
+      request.then(async (response) => {
+        if (response.status === 200) {
+          window.location.replace("http://localhost:1000/home")
+        } else {
+          alert(await response.text())
+        }
+      })
     }
-  }
 
-  function toggleLoginButton() {
-    loginButton.disabled = !(emailId.value.length > 0 && password.value.length > 0)
-  }
+    function secure() {
+      var password = document.getElementById("password");
+      if (password.type === "password") {
+        password.type = "text"
+      } else {
+        password.type = "password"
+      }
+    }
 
-</script>
+    function toggleLoginButton() {
+      loginButton.disabled = !(emailId.value.length > 0 && password.value.length > 0)
+    }
 
-</html>
+  </script>
+
+  <%- include('../partials/footer.ejs') %>

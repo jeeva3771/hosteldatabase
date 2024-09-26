@@ -10,11 +10,4 @@ module.exports = (app) => {
             res.redirect('http://localhost:1000/login')
         }
     })
-
-    app.get('/api/logout', (req, res) => {
-        req.session.destroy ((err) => {
-            if (err) logger.error();
-            res.redirect('http://localhost:1000/login')
-        })
-    })
 }
