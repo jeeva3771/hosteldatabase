@@ -11,14 +11,18 @@ async function readBlockFloors(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
 
     const blockFloorsQuery = /*sql*/`select 
             b.*,
             bk.blockCode,
-            w.name AS created,
-            w2.name AS updated,
-            DATE_FORMAT(b.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(b.updatedAt, "%Y-%m-%d %T") AS updatedAt
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedAt
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
@@ -29,7 +33,8 @@ async function readBlockFloors(req, res) {
             WHERE 
               b.deletedAt IS NULL
             ORDER BY 
-              b.blockId ASC LIMIT ? OFFSET ?`;
+             ${orderBy} ${sort} 
+            LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 

@@ -1,15 +1,11 @@
-<%- include('../../partials/header.ejs',{ 
-    isMenuVisible : true,
-     title: 'Warden',
-      name: 'name' 
-    }) %>
-    <h2 class="label">Warden</h2>
+<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Warden' }) %>
+    <h2>Warden</h2>
     <div class="form-group">
-        <label for="wardenName">FirstName</label>
+        <label for="firstName">FirstName</label>
         <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
     </div>
     <div class="form-group">
-        <label for="wardenName">LastName</label>
+        <label for="lastName">LastName</label>
         <input type="text" class="form-control" id="lastName" onkeyup="toggleSubmitButton()">
     </div>
     <div class="form-group">
@@ -17,7 +13,7 @@
         <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
     </div>
     <div class="form-group">
-        <label for="emailId">EmailId</label>
+        <label for="emailId">Email</label>
         <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
     </div>
     <div class="form-group">
@@ -40,13 +36,12 @@
     <div class="form-group">
         <label for="password">Confirm Password</label>
         <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
-
     </div>
     <div class="submission">
         <input type="hidden" id="wardenId" value="<%=wardenId %>" />
         <button onclick="authentication()" class="btn btn-success" id="submit" disabled>Submit</button>
     </div>
-
+    <%- include('../../partials/footer.ejs') %>
     <script>
         const firstName = document.getElementById('firstName');
         const lastName = document.getElementById('lastName');
@@ -58,10 +53,10 @@
         const submit = document.getElementById('submit');
 
         function authentication() {
-            const isAdmin = document.querySelectorAll('input[name="isAdmin"]:checked');
+            const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
             const myHeaders = new Headers();
             myHeaders.append("Content-Type", "application/json");
-            
+
             const raw = JSON.stringify({
                 "firstName": firstName.value,
                 "lastName": lastName.value,
@@ -137,8 +132,4 @@
         document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
         password.addEventListener('input', toggleSubmitButton);
         conform.addEventListener('input', toggleSubmitButton);
-
-
     </script>
-
-    </html>

@@ -19,8 +19,8 @@ async function readCourses(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(c.createdAt, "%y-%M-%d %T") AS createdAt,
-            DATE_FORMAT(c.updatedAt, "%y-%M-%d %T") AS updatedAt
+            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedAt
         FROM 
             course AS c 
         LEFT JOIN

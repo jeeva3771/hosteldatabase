@@ -20,8 +20,8 @@ async function readBlocks(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(bk.updatedAt, "%Y-%m-%d %T") AS updatedAt
+            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedAt
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy
@@ -240,11 +240,9 @@ function validateInsertItems(body, isUpdate = false) {
 
     if (isActive !== undefined) {
         if (![0, 1].includes(isActive)) {
-            console.log('hi sirjjj')
             errors.push("isActive is invalid")
         }
     } else if (!isUpdate) {
-        console.log('hi sirkkkkk')
         errors.push("isActive is missing")
     }
     return errors

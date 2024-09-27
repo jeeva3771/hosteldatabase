@@ -23,9 +23,9 @@ async function readAttendances(req, res) {
             bk.blockCode,
             ww.name AS reviewedWarden,
             ww2.name AS updated,
-        DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
-        DATE_FORMAT(a.createdAt, "%Y-%m-%d %T") AS created,
-        DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated
+        DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
+        DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS created,
+        DATE_FORMAT(a.updatedAt, "%y-%b-%D %r") AS updated
         FROM attendance AS a
         LEFT JOIN
             student AS s ON s.studentId = a.studentId

@@ -30,10 +30,10 @@ async function readStudents(req, res) {
             c.courseName,
             w.name AS created,
             w2.name AS updated,
-            DATE_FORMAT(s.dob, "%Y-%m-%d") AS dob,
-            DATE_FORMAT(s.joinedDate, "%Y-%m-%d") AS joinedDate,
-            DATE_FORMAT(s.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(s.updatedAt, "%Y-%m-%d %T") AS updatedAt
+            DATE_FORMAT(s.dob, "%y-%b-%D") AS dob,
+            DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinedDate,
+            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedAt
             FROM student AS s
             LEFT JOIN 
             block AS bk ON bk.blockId = s.blockId

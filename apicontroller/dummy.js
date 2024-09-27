@@ -1,11 +1,22 @@
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Coursepage', userName: userName}) %>
 
+module.exports = (app) => {
+    app.get('/login', (req, res) => {
+        res.render('pages/login')
+    });
 
-<div class="userLabel">
-            <li>
-                <p>Welcome <%=name.firstName %>
-                        <%=name.lastName %>!</p>
-            </li>
-            <li>
-                <a href="/api/logout" class="btn btn-light">Logout</a>
-            </li>
-        </div> -->
+    app.get('/home', (req, res) => {
+        if (req.session.isLogged === true) {
+            res.render('pages/home','pages/courseList', {
+                userName: req.session.data
+            })
+        } else {
+            res.redirect('http://localhost:1000/login')
+        }
+    })
+}
+
+............................
+<script>
+        var user = <%=userName.firstName%> <%=userName.lastName%>
+      </script>

@@ -5,9 +5,12 @@ module.exports = (app) => {
 
     app.get('/home', (req, res) => {
         if (req.session.isLogged === true) {
-            res.render('pages/home', { name: req.session.data })
+            res.render('pages/home', {
+                userName: req.session.data
+            })
         } else {
             res.redirect('http://localhost:1000/login')
         }
     })
 }
+// <!-- <p><%=userName.firstName%> <%=userName.lastName%></p>  -->

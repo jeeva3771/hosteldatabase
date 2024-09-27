@@ -31,9 +31,9 @@ async function readWardens(req, res) {
             ww.lastName AS createdLastName,
             ww2.firstName AS updatedFirstName,
             ww2.lastName AS updatedLastName,
-            DATE_FORMAT(w.dob, "%Y-%m-%d") AS dob,
-            DATE_FORMAT(w.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(w.updatedAt, "%Y-%m-%d %T") AS updatedAt
+            DATE_FORMAT(w.dob, "%y-%b-%D") AS dob,
+            DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedAt
             FROM warden AS w
             LEFT JOIN
               warden AS ww ON ww.wardenId = w.createdBy
@@ -116,6 +116,7 @@ async function createWarden(req, res) {
         }
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }

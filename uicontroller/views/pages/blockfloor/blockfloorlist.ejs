@@ -1,167 +1,125 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <%- include('../../partials/head.ejs') %>
-        <style>
-            .container {
-                margin-top: 30px;
-                margin-bottom: 20px;
-                padding-top: 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px
-            }
-
-            .insertLabel {
-                height: 36px;
-                display: flex;
-                justify-content: space-between;
-                gap: 116%;
-            }
-
-            .table-wrapper {
-                width: 100%;
-                overflow-x: auto;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            }
-
-            table {
-                min-width: 1400px;
-            }
-        </style>
-</head>
-
-<body>
-    <header>
-        <%- include('../../partials/header.ejs') %>
-    </header>
-    <div class="searchLabel">
-        <nav class="navbar navbar-light bg-light">
-            <form class="form-inline">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </form>
-        </nav>
-    </div>
-    <div class="container table-wrapper">
-        <div class="insertLabel">
-            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="changeLimit()">
-                <option value="5" href="#">5</option>
-                <option value="10" href="#" selected>10</option>
-                <option value="20" href="#">20</option>
-                <option value="40" href="#">40</option>
-            </select>
-            <a class="btn btn-info" href="/blockfloor/add">Add</a>
-        </div>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">Sno</th>
-                    <th scope="col">BlockCode</th>
-                    <th scope="col">FloorNumber</th>
-                    <th scope="col">IsActive</th>
-                    <th scope="col">CreatedAt</th>
-                    <th scope="col">CreatedBy</th>
-                    <th scope="col">UpdatedAt</th>
-                    <th scope="col">UpdatedBy</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="blockFloorsData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
+<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Blockfloorpage' }) %>
+    <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+        onchange="changeLimit()">
+        <option value="5" href="#">5</option>
+        <option value="10" href="#" selected>10</option>
+        <option value="20" href="#">20</option>
+        <option value="40" href="#">40</option>
+    </select>
+    <a class="btn btn-info" href="/blockfloor/add">Add</a>
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Sno</th>
+                <th scope="col" onclick="sortByColumn('blockId')">Block Code</th>
+                <th scope="col" onclick="sortByColumn('floorNumber')">Floor Number</th>
+                <th scope="col" onclick="sortByColumn('isActive')">Is Active</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">Created By</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="blockFloorsData">
+            <tr>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden"></span>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center" id="pagination">
-            </ul>
-        </nav>
-    </div>
-</body>
-<script>
-    var tableData = document.getElementById("blockFloorsData")
-    var limit = document.getElementById("limit").value
-    var paginationDom = document.getElementById("pagination")
-
-    function changeLimit() {
-        limit = document.getElementById("limit").value
-        loadBlockFloorPage()
-    }
-    
-    function loadBlockFloorPage(pageNo = 1) {
-
-        var requestOptions = {
-            method: 'GET'
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+    </nav>
+    <script>
+        var tableData = document.getElementById("blockFloorsData")
+        var limit = document.getElementById("limit").value
+        var paginationDom = document.getElementById("pagination")
+        var columnSortOrders = {
+            blockId: 'ASC',
+            floorNumber: 'ASC',
+            isActive: 'ASC',
+            createdBy: 'ASC'
         };
+        var currentColumn = 'createdAt'
+        var url = `&orderby=b.${currentColumn}&sort=DESC`
 
-        fetch(`http://localhost:1000/api/blockfloor?limit=${limit}&page=${pageNo}`, requestOptions)
-            .then(response => response.json())
-            .then(responseData => {
-                const { blockFloors, blockFloorCount } = responseData;
+        function changeLimit() {
+            limit = document.getElementById("limit").value
+            blockFloorPage()
+        }
 
-                var trHtml = ''
-                for (var i = 0; i < blockFloors.length; i++) {
-                    var blockFloor = blockFloors[i]
-                    trHtml = trHtml + `<tr>
+        function sortByColumn(column) {
+            columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+            currentColumn = column;
+            var sortOrder = columnSortOrders[column];
+            url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+            blockFloorPage();
+        }
+
+        function blockFloorPage(pageNo = 1) {
+
+            var requestOptions = {
+                method: 'GET'
+            };
+
+            fetch(`http://localhost:1000/api/blockfloor?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                .then(response => response.json())
+                .then(responseData => {
+                    const { blockFloors, blockFloorCount } = responseData;
+
+                    var trHtml = ''
+                    for (var i = 0; i < blockFloors.length; i++) {
+                        var blockFloor = blockFloors[i]
+                        trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${blockFloor.blockCode}</td>
                             <td>${blockFloor.floorNumber}</td>
-                            <td>${blockFloor.isActive}</td>
-                            <td>${blockFloor.createdAt}</td>
-                            <td>${blockFloor.created}</td>
-                            <td>${blockFloor.updatedAt}</td>
-                            <td>${blockFloor.updated}</td>
+                            <td>${blockFloor.isActive === 1 ? 'Active': ''}</td>
+                            <td>${blockFloor.createdFirstName} ${blockFloor.updatedLastName}</td>
                             <td>
                                 <a class="btn btn-secondary" href="/blockfloor/${blockFloor.blockFloorId}">Edit</a>
                                 <a class="btn btn-secondary" onClick="deleteBlockFloor(${blockFloor.blockFloorId})">Delete</a>
                             </td>
                         </tr>`
-                }
-                tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(responseData.blockFloorCount / limit)
-                var paginationHtml = ''
+                    }
+                    tableData.innerHTML = trHtml
+                    var totalPages = Math.ceil(responseData.blockFloorCount / limit)
+                    var paginationHtml = ''
 
-                for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="loadBlockFloorPage(${i})">${i}</a>
+                    for (var i = 1; i <= totalPages; i++) {
+                        paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="blockFloorPage(${i})">${i}</a>
                        </li>`;
-                }
-                paginationDom.innerHTML = paginationHtml;
-            })
-            .catch((error) => console.error(error));
-    }
+                    }
+                    paginationDom.innerHTML = paginationHtml;
+                })
+                .catch((error) => console.error(error));
+        }
 
-    function deleteBlockFloor(blockFloorId) {
-        var validateDelete = confirm('are you sure you want to delete?')
+        function deleteBlockFloor(blockFloorId) {
+            var validateDelete = confirm('are you sure you want to delete?')
 
-        if (!validateDelete)
-            return
+            if (!validateDelete)
+                return
 
-        var requestOptions = {
-            method: 'DELETE',
-        };
+            var requestOptions = {
+                method: 'DELETE',
+            };
 
-        fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
-            .then(response => response.text())
-            .then(deleted =>
-                window.location = '/blockfloor'
-            )
-            .catch(error => console.log('error', error));
-    }
+            fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
+                .then(response => response.text())
+                .then(deleted =>
+                    window.location = '/blockfloor'
+                )
+                .catch(error => console.log('error', error));
+        }
 
-    window.addEventListener('load', () => {
-        loadBlockFloorPage()
-    })
-
-</script>
-
-</html>
+        window.addEventListener('load', () => {
+            blockFloorPage()
+        })
+    </script>
+    <%- include('../../partials/footer.ejs') %>

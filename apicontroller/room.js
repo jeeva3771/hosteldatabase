@@ -13,16 +13,20 @@ async function readRooms(req, res) {
     const limit = parseInt(req.query.limit);
     const page = parseInt(req.query.page);
     const offset = (page - 1) * limit;
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
 
     const roomsQuery = /*sql*/`
         SELECT 
             r.*,
             b.floorNumber,
             bk.blockCode,
-            w.name AS created,
-            w2.name AS updated,
-            DATE_FORMAT(r.createdAt, "%Y-%m-%d %T") AS createdAt,
-            DATE_FORMAT(r.updatedAt, "%Y-%m-%d %T") AS updatedAt
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(r.createdAt, "%y-%b-%D %r") AS createdAt,
+            DATE_FORMAT(r.updatedAt, "%y-%b-%D %r") AS updatedAt
             FROM room AS r
             LEFT JOIN 
                blockfloor AS b ON b.blockFloorId = r.blockFloorId
@@ -35,7 +39,8 @@ async function readRooms(req, res) {
             WHERE 
               r.deletedAt IS NULL 
             ORDER BY 
-              r.blockId ASC LIMIT ? OFFSET ?`
+              ${orderBy} ${sort}
+            LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
     SELECT COUNT(*) AS totalRoomCount 
