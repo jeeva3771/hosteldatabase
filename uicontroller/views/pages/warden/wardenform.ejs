@@ -113,12 +113,13 @@
         }
 
         function toggleSubmitButton() {
+            const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
             submit.disabled = !(
                 firstName.value.length > 0 &&
                 lastName.value.length > 0 &&
                 dob.value.length > 0 &&
                 emailId.value.length > 0 &&
-                isAdmin.value.length > 0 &&
+                isAdmin !== null &&
                 password.value.length > 0 &&
                 conform.value.length > 0 &&
                 password.value === conform.value

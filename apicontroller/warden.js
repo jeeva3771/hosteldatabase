@@ -18,13 +18,13 @@ function superAdminValidate(req, res, next) {
 
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby;
-    const sort = req.query.sort;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'w.wardenId';
+    const sort = req.query.sort || 'ASC';
 
-    const wardensQuery = /*sql*/`
+    var wardensQuery = /*sql*/`
         SELECT 
             w.*,
             ww.firstName AS createdFirstName,
@@ -42,8 +42,11 @@ async function readWardens(req, res) {
             WHERE 
               w.deletedAt IS NULL 
             ORDER BY 
-              ${orderBy} ${sort} 
-            LIMIT ? OFFSET ?`
+              ${orderBy} ${sort}`;
+
+    if (limit && offset !== null) {
+        wardensQuery += ` LIMIT ? OFFSET ?`;
+    }
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
@@ -227,7 +230,7 @@ async function authentication(req, res) {
 // })
 
 function logOut(req, res) {
-    req.session.destroy ((err) => {
+    req.session.destroy((err) => {
         if (err) logger.error();
         res.redirect('http://localhost:1000/login')
     })

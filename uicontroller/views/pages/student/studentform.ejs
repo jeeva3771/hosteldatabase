@@ -1,30 +1,5 @@
-<html>
-
-<head>
-    <%- include('../../partials/head') %>
-        <style>
-            .container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                margin-top: 40px;
-                margin-bottom: 40px;
-                border-radius: 8px;
-                padding: 30px;
-                width: 380px;
-            }
-
-            .submission {
-                margin-top: 12px;
-                display: flex;
-                justify-content: center;
-            }
-        </style>
-</head>
-
-<body>
-    <div class="container">
-        <h2 class="label">Studentform</h2>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Student' }) %>
+        <h2>Studentform</h2>
         <div class="form-group">
             <label for="studentName">Name</label>
             <input type="text" class="form-control" id="studentName">
@@ -81,17 +56,11 @@
             <label for="joinedDate">JoinedDate</label>
             <input type="date" class="form-control dateLabel" id="joinedDate">
         </div>
-        <div class="form-group">
-            <label for="createdBy">CreatedBy</label>
-            <select class="form-control" id="createdBy">
-            </select>
-        </div>
         <div class="submission">
             <input type="hidden" id="studentId" value="<%=studentId %>" />
             <button onclick="saveOrUpdateStudent()" class="btn btn-success" id="submitButton" disabled>Submit</button>
         </div>
-    </div>
-</body>
+        <%- include('../../partials/footer.ejs') %>
 <script>
     var studentName = document.getElementById('studentName');
     var registerNum = document.getElementById('registerNum');
@@ -106,7 +75,6 @@
     var floorNumber = document.getElementById('floorNumber');
     var roomNumber = document.getElementById('roomNumber');
     var joinedDate = document.getElementById('joinedDate');
-    var createdBy = document.getElementById('createdBy');
     var submitButton = document.getElementById('submitButton');
     var studentId = document.getElementById('studentId').value;
 
@@ -127,8 +95,7 @@
             "blockId": blockCode.value,
             "blockFloorId": floorNumber.value,
             "roomId": roomNumber.value,
-            "joinedDate": joinedDate.value,
-            "createdBy": createdBy.value    
+            "joinedDate": joinedDate.value
         });
 
         var requestOptions = {
@@ -148,10 +115,11 @@
             .catch(error => console.error('error', error));
     }
 
-    function loadCourse() {
+    function populateCourse() {
         fetch("http://localhost:1000/api/course")
             .then(response => response.json())
-            .then(courses => {
+            .then(responseData => {
+                const { courses } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < courses.length; i++) {
                     var opt = courses[i]
@@ -162,10 +130,11 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadBlockCode() {
+    function populateBlockCode() {
         fetch("http://localhost:1000/api/block")
             .then(response => response.json())
-            .then(blocks => {
+            .then(responseData => {
+                const { blocks } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < blocks.length; i++) {
                     var opt = blocks[i]
@@ -176,10 +145,11 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadFloorNumber() {
+    function populateFloorNumber() {
         fetch("http://localhost:1000/api/blockfloor")
         .then(response => response.json())
-            .then(blockFloors => {
+            .then(responseData => {
+                const { blockFloors } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < blockFloors.length; i++) {
                     var opt = blockFloors[i]
@@ -190,10 +160,11 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadRoomNumber() {
+    function populateRoomNumber() {
         fetch("http://localhost:1000/api/room")
         .then(response => response.json())
-            .then(rooms => {
+            .then(responseData => {
+                const { rooms } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < rooms.length; i++) {
                     var opt = rooms[i]
@@ -204,25 +175,10 @@
             .catch(error => console.log('error', error));
     }
 
-    function loadCreatedBy() {
-        fetch("http://localhost:1000/api/warden")
-            .then(response => response.json())
-            .then(wardens => {
-                var optionsList = '<option selected>Select</option>'
-                for (var i = 0; i < wardens.length; i++) {
-                    var opt = wardens[i]
-                    optionsList += `<option value="${opt.wardenId}">${opt.name}</option>`
-                }
-                createdBy.innerHTML = optionsList
-            })
-            .catch(error => console.log('error', error));
-    }
-
-    loadCourse()
-    loadBlockCode()
-    loadFloorNumber()
-    loadRoomNumber()
-    loadCreatedBy()
+    populateCourse()
+    populateBlockCode()
+    populateFloorNumber()
+    populateRoomNumber()
 
     if (studentId) {
         getStudent(studentId)
@@ -248,8 +204,7 @@
                 blockCode.value = student.blockId
                 floorNumber.value = student.blockFloorId
                 roomNumber.value = student.roomId
-                joinedDate.value = student.joinedDate.split('T')[0];
-                createdBy.value = student.createdBy
+                joinedDate.value = student.joinedDate.split('T')[0]
             })
             .catch((error) => console.error(error));
     }
@@ -257,7 +212,7 @@
     function toggleSubmitButton() {
         submitButton.disabled = !(
             studentName.value.length > 0 &&
-            registerNumber.value.length > 0 &&
+            registerNum.value.length > 0 &&
             dob.value !== '' &&
             course.value !== 'Select' &&
             emailId.value.length > 0 &&
@@ -268,13 +223,12 @@
             blockCode.value !== 'Select' &&
             floorNumber.value !== 'Select' &&
             roomNumber.value  !== 'Select' &&
-            joinedDate.value !== '' && 
-            createdBy.value !== 'Select'
+            joinedDate.value !== ''
         )
     }
 
     studentName.addEventListener('input', toggleSubmitButton);
-    registerNumber.addEventListener('input', toggleSubmitButton);
+    registerNum.addEventListener('input', toggleSubmitButton);
     dob.addEventListener('input', toggleSubmitButton);
     course.addEventListener('change', toggleSubmitButton);
     emailId.addEventListener('input', toggleSubmitButton);
@@ -286,7 +240,4 @@
     floorNumber.addEventListener('input', toggleSubmitButton);
     roomNumber.addEventListener('input', toggleSubmitButton);
     joinedDate.addEventListener('input', toggleSubmitButton);
-    createdBy.addEventListener('change', toggleSubmitButton);
 </script>
-
-</html>

@@ -1,201 +1,133 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-    <%- include('../../partials/head.ejs') %>
-        <style>
-            .container {
-                margin-top: 20px;
-                margin-bottom: 20px;
-                padding-top: 14px;
-                display: flex;
-                flex-direction: column;
-                gap: 20px
-            }
-
-            .insertLabel {
-                height: 34px;
-                display: flex;
-                justify-content: space-between;
-                gap: 204%;
-            }
-
-            .table-wrapper {
-                width: 100%;
-                overflow-x: auto;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
-            }
-
-            table {
-                min-width: 1600px;
-            }
-
-            .action {
-                display: flex;
-                flex-direction: row;
-                gap: 4px;
-            }
-            
-            .date {
-                 width: 300px;
-            }
-        </style>
-</head>
-
-<body>
-    <header>    
-        <%- include('../../partials/header.ejs') %>
-    </header>
-    <div class="searchLabel">
-        <nav class="navbar navbar-light bg-light">
-            <form class="form-inline">
-                <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-                <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-            </form>
-        </nav>
-    </div>
-    <div class="container table-wrapper">
-        <div class="insertLabel">
-            <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-                onchange="changeLimit()">
-                <option value="5" href="#">5</option>
-                <option value="10" href="#" selected>10</option>
-                <option value="20" href="#">20</option>
-                <option value="40" href="#">40</option>
-            </select>
-            <a class="btn btn-info" href="/student/add">Add</a>
-        </div>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">Sno</th>
-                    <th scope="col">Name</th>
-                    <th scope="col">RegisterNumber</th>
-                    <th scope="col">DOB</th>
-                    <th scope="col">CourseName</th>
-                    <th scope="col">EmailId</th>
-                    <th scope="col">PhoneNumber</th>
-                    <th scope="col">fatherName</th>
-                    <th scope="col">fatherNumber</th>
-                    <th scope="col">Address</th>
-                    <th scope="col">BlockCode</th>
-                    <th scope="col">FloorNumber</th>
-                    <th scope="col">RoomNumber</th>
-                    <th scope="col">JoinedDate</th>
-                    <th scope="col">CreatedAt</th>
-                    <th scope="col">CreatedBy</th>
-                    <th scope="col">UpdatedAt</th>
-                    <th scope="col">UpdatedBy</th>
-                    <th scope="col">DeletedAt</th>
-                    <th scope="col">DeletedBy</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="studentsData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Studentpage' }) %>
+    <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
+        onchange="changeLimit()">
+        <option value="5" href="#">5</option>
+        <option value="10" href="#" selected>10</option>
+        <option value="20" href="#">20</option>
+        <option value="40" href="#">40</option>
+    </select>
+    <a class="btn btn-info" href="/student/add">Add</a>
+    <table class="table table-striped table-hover table-bordered">
+        <thead>
+            <tr>
+                <th scope="col">Sno</th>
+                <th scope="col" onclick="sortByColumn('name')">Name</th>
+                <th scope="col" onclick="sortByColumn('registerNumber')">RegisterNumber</th>
+                <th scope="col" onclick="sortByColumn('joinedDate')">JoinedDate</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">CreatedBy</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody id="studentsData">
+            <tr>
+                <td>
+                    <div class="d-flex justify-content-center">
+                        <div class="spinner-border" role="status">
+                            <span class="visually-hidden"></span>
                         </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center" id="pagination">
-            </ul>
-        </nav>
-    </div>
-</body>
-<script>
-    var tableData = document.getElementById("studentsData")
-    var limit = document.getElementById("limit").value
-    var paginationDom = document.getElementById("pagination")
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center" id="pagination">
+        </ul>
+    </nav>
+    <%- include('../../partials/footer.ejs') %>
+        <script>
+            var tableData = document.getElementById("studentsData");
+            var limit = document.getElementById("limit").value;
+            var paginationDom = document.getElementById("pagination");
+            var columnSortOrders = {
+                name: 'ASC',
+                registerNumber: 'ASC',
+                joinedDate: 'ASC'
+            };
 
-    function changeLimit() {
-        limit = document.getElementById("limit").value
-        loadStudentPage()
-    }
-    
-    function loadStudentPage(pageNo = 1) {
+            var currentColumn = 'createdAt';
+            var url = `&orderby=s.${currentColumn}&sort=DESC`;
+           
+            function changeLimit() {
+                limit = document.getElementById("limit").value
+                studentPage()
+            }
 
-        var requestOptions = {
-            method: 'GET'
-        };
+            function sortByColumn(column) {
+                columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+                currentColumn = column;
+                var sortOrder = columnSortOrders[column];
+                url = `&orderby=s.${currentColumn}&sort=${sortOrder}`;
+                studentPage();
+            }
 
-        fetch(`http://localhost:1000/api/student?limit=${limit}&page=${pageNo}`, requestOptions)
-            .then(response => response.json())
-            .then(responseData => {
-                const { students, studentCount } = responseData;
+            function studentPage(pageNo = 1) {
+                var requestOptions = {
+                    method: 'GET'
+                };
 
-                var trHtml = ''
-                for (var i = 0; i < students.length; i++) {
-                    var student = students[i]
-                    trHtml = trHtml + `<tr>
+                fetch(`http://localhost:1000/api/student?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                    .then(response => response.json())
+                    .then(responseData => {
+                        const { students, studentCount } = responseData;
+
+                        var trHtml = ''
+                        for (var i = 0; i < students.length; i++) {
+                            var student = students[i]
+                            trHtml = trHtml + `<tr>
                             <td>${i + 1}</td>
                             <td>${student.name}</td>
                             <td>${student.registerNumber}</td>
-                            <td>${student.dob}</td>
-                            <td>${student.courseName}</td>
-                            <td>${student.emailId}</td>
-                            <td>${student.phoneNumber}</td>
-                            <td>${student.fatherName}</td>
-                            <td>${student.fatherNumber}</td>
-                            <td>${student.address}</td>
-                            <td>${student.blockCode}</td>
-                            <td>${student.floorNumber}</td>
-                            <td>${student.roomNumber}</td>
                             <td>${student.joinedDate}</td>
-                            <td>${student.createdAt}</td>
-                            <td>${student.created}</td>
-                            <td>${student.updatedAt}</td>
-                            <td>${student.updated}</td>
-                            <td>${student.deletedAt}</td>
-                            <td>${student.deletedBy}</td>
+                            <td>${student.createdFirstName} ${student.createdLastName}</td>
                             <td class="action">
-                                <a class="btn btn-secondary" href="/student/${student.studentId}">Edit</a>
-                                <a class="btn btn-secondary" onClick="deleteStudent(${student.studentId})">Delete</a>
+                                <a href="/student/${student.studentId}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
+                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                                </svg></a>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash" onClick="deleteStudent(${student.studentId})" viewBox="0 0 16 16">
+                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                                </svg>
                             </td>
                         </tr>`
-                }
-                tableData.innerHTML = trHtml
-                var totalPages = Math.ceil(responseData.studentCount / limit)
-                var paginationHtml = ''
+                        }
+                        tableData.innerHTML = trHtml
+                        var totalPages = Math.ceil(responseData.studentCount / limit)
+                        var paginationHtml = ''
 
-                for (var i = 1; i <= totalPages; i++) {
-                    paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="loadStudentPage(${i})">${i}</a>
+                        for (var i = 1; i <= totalPages; i++) {
+                            paginationHtml += `<li class="page-item">
+                          <a class="page-link" href="#" onclick="studentPage(${i})">${i}</a>
                        </li>`;
-                }
-                paginationDom.innerHTML = paginationHtml;
+                        }
+                        paginationDom.innerHTML = paginationHtml;
+                    })
+                    .catch((error) => console.error(error));
+            }
+
+            function deleteStudent(studentId) {
+                var validateDelete = confirm('are you sure you want to delete?')
+
+                if (!validateDelete)
+                    return
+
+                var requestOptions = {
+                    method: 'DELETE',
+                };
+
+                fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
+                    .then(response => response.text())
+                    .then(deleted =>
+                        window.location = '/student'
+                    )
+                    .catch(error => console.log('error', error));
+            }
+
+            window.addEventListener('load', () => {
+                studentPage()
             })
-            .catch((error) => console.error(error));
-    }
 
-    function deleteStudent(studentId) {
-        var validateDelete = confirm('are you sure you want to delete?')
+        </script>
 
-        if (!validateDelete)
-            return
-
-        var requestOptions = {
-            method: 'DELETE',
-        };
-
-        fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
-            .then(response => response.text())
-            .then(deleted =>
-                window.location = '/student'
-            )
-            .catch(error => console.log('error', error));
-    }
-
-    window.addEventListener('load', () => {
-        loadStudentPage()
-    })
-
-</script>
-
-</html>
+        </html>

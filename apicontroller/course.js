@@ -5,14 +5,13 @@ const ALLOWED_UPDATE_KEY = [
 
 async function readCourses(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby;
-    const sort = req.query.sort;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'c.courseId';
+    const sort = req.query.sort || 'ASC';
 
-   
-    const coursesQuery = /*sql*/ `
+    var coursesQuery = /*sql*/ `
         SELECT 
             c.*,
             w.firstName AS createdFirstName,
@@ -30,8 +29,11 @@ async function readCourses(req, res) {
         WHERE 
             c.deletedAt IS NULL
         ORDER BY 
-            ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`;
+            ${orderBy} ${sort}`;
+    
+    if (limit && offset !== null) { 
+        coursesQuery += ` LIMIT ? OFFSET ?`;
+    }
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalCourseCount 

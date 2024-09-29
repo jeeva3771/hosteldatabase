@@ -1,12 +1,12 @@
 <%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Blockfloor' }) %>
         <h2>Blockfloor</h2>
         <div class="form-group">
-            <label for="blockCode">BlockCode</label>
+            <label for="blockCode">Block Code</label>
             <select class="form-control" id="blockCode">
             </select>
         </div>
         <div class="form-group">
-            <label for="floorNumber">FloorNumber</label>
+            <label for="floorNumber">Floor Number</label>
             <input type="number" class="form-control" id="floorNumber">
         </div>
         <div class="form-group">
@@ -31,19 +31,19 @@
 <script>
     var blockCode = document.getElementById('blockCode');
     var floorNumber = document.getElementById('floorNumber');
-    var selectedStatus = document.querySelector('input[name="status"]');
     var submitButton = document.getElementById('submitButton');
     var blockFloorId = document.getElementById('blockFloorId').value;
 
-
     function saveOrUpdateBlockFloor() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
             "blockId": blockCode.value,
             "floorNumber": parseInt(floorNumber.value),
-            "isActive": parseInt(selectedStatus.checked.value)
+            "isActive": parseInt(selectedStatus.value)
         });
 
         var requestOptions = {
@@ -64,14 +64,13 @@
     }
 
     function populateBlockCode() {
-        fetch("http://localhost:1000/api/block")
+        fetch(`http://localhost:1000/api/block`)
             .then(response => response.json())
             .then(responseData => {
                 const { blocks } = responseData
                 var optionsList = '<option selected>Select</option>'
                 for (var i = 0; i < blocks.length; i++) {
                     var opt = blocks[i]
-                    console.log(opt)
                     optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
                 }
                 blockCode.innerHTML = optionsList
@@ -104,10 +103,11 @@
     }
 
     function toggleSubmitButton() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
         submitButton.disabled = !(
             blockCode.value !== 'Select' &&
             floorNumber.value.length > 0 &&
-            selectedStatus.value.length > 0
+            selectedStatus !== null
         )
     }
     

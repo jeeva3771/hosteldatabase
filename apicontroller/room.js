@@ -10,13 +10,13 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readRooms(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby;
-    const sort = req.query.sort;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'r.roomId';
+    const sort = req.query.sort || 'ASC';
 
-    const roomsQuery = /*sql*/`
+    var roomsQuery = /*sql*/`
         SELECT 
             r.*,
             b.floorNumber,
@@ -35,12 +35,15 @@ async function readRooms(req, res) {
             LEFT JOIN 
                warden AS w ON w.wardenId = r.createdBy
             LEFT JOIN 
-             warden AS w2 ON w2.wardenId = b.updatedBy
+              warden AS w2 ON w2.wardenId = r.updatedBy
             WHERE 
               r.deletedAt IS NULL 
             ORDER BY 
-              ${orderBy} ${sort}
-            LIMIT ? OFFSET ?`
+              ${orderBy} ${sort}`
+
+    if (limit && offset !== null) {
+        roomsQuery += ` LIMIT ? OFFSET ?`;
+    }
 
     const countQuery = /*sql*/ `
     SELECT COUNT(*) AS totalRoomCount 

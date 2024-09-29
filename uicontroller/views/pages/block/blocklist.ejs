@@ -18,10 +18,10 @@
         <thead>
             <tr>
                 <th scope="col">Sno</th>
-                <th scope="col" onclick="sortByColumn('blockCode')">BlockCode</th>
+                <th scope="col" onclick="sortByColumn('blockCode')">Block Code</th>
                 <th scope="col" onclick="sortByColumn('blockLocation')">Location</th>
-                <th scope="col" onclick="sortByColumn('isActive')">IsActive</th>
-                <th scope="col" onclick="sortByColumn('createdBy')">CreatedBy</th>
+                <th scope="col" onclick="sortByColumn('isActive')">Is Active</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">Created By</th>
                 <th scope="col">Action</th>
             </tr>
         </thead>
@@ -49,8 +49,7 @@
         var columnSortOrders = {
             blockCode: 'ASC',
             blockLocation: 'ASC',
-            isActive: 'ASC',
-            createdBy: 'ASC'
+            isActive: 'ASC'
         };
         var currentColumn = 'createdAt';
         var url = `&orderby=bk.${currentColumn}&sort=DESC`;
@@ -69,7 +68,6 @@
         }
 
         function blockPage(pageNo = 1) {
-
             var requestOptions = {
                 method: 'GET'
             };
@@ -103,7 +101,6 @@
                     tableData.innerHTML = trHtml
                     var totalPages = Math.ceil(responseData.blockCount / limit)
                     var paginationHtml = ''
-                    var pagination = document.getElementById("pagination")
 
                     for (var i = 1; i <= totalPages; i++) {
                         paginationHtml += `<li class="page-item">

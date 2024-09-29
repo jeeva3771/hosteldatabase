@@ -7,14 +7,15 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readBlockFloors(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby;
-    const sort = req.query.sort;
+    const mysqlClient = req.app.mysqlClient;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'bk.blockCode';
+    const sort = req.query.sort || 'ASC';
 
-    const blockFloorsQuery = /*sql*/`select 
+    var blockFloorsQuery = /*sql*/`
+        SELECT 
             b.*,
             bk.blockCode,
             w.firstName AS createdFirstName,
@@ -33,8 +34,11 @@ async function readBlockFloors(req, res) {
             WHERE 
               b.deletedAt IS NULL
             ORDER BY 
-             ${orderBy} ${sort} 
-            LIMIT ? OFFSET ?`;
+             ${orderBy} ${sort}`;
+
+    if (limit && offset !== null) {
+        blockFloorsQuery += ` LIMIT ? OFFSET ?`;
+    }
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 
@@ -82,7 +86,7 @@ async function createBlockFloor(req, res) {
         blockId,
         floorNumber,
         isActive
-        } = req.body
+    } = req.body
     const createdBy = req.session.data.wardenId;
 
 

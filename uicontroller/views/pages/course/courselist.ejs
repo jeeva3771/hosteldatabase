@@ -67,12 +67,10 @@
             var paginationDom = document.getElementById("pagination");
 
             var columnSortOrders = {
-                courseName: 'ASC',
-                createdBy: 'ASC'
+                courseName: 'ASC'
             };
             var currentColumn = 'createdAt';
             var url = `&orderby=c.${currentColumn}&sort=DESC`;
-
 
             function changeLimit() {
                 limit = document.getElementById("limit").value
@@ -155,3 +153,4 @@
             })
 
         </script>
+        

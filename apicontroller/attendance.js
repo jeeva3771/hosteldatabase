@@ -10,12 +10,12 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 async function readAttendances(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
 
         const attendancesQuery = /*sql*/`
-        select 
+        SELECT 
             a.*,
             s.name,
             r.roomNumber,

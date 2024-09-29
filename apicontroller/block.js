@@ -7,13 +7,13 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
-    const orderBy = req.query.orderby;
-    const sort = req.query.sort;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'bk.blockId';
+    const sort = req.query.sort || 'ASC';
 
-    const blocksQuery = /*sql*/`
+    var blocksQuery = /*sql*/`
         SELECT 
             bk.*,
             w.firstName AS createdFirstName,
@@ -30,8 +30,11 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL 
         ORDER BY 
-        ${orderBy} ${sort}
-         LIMIT ? OFFSET ?`;
+        ${orderBy} ${sort}`;
+
+    if (limit && offset !== null) { 
+        blocksQuery += ` LIMIT ? OFFSET ?`;
+    }
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
@@ -50,7 +53,6 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -214,7 +216,7 @@ function validateInsertItems(body, isUpdate = false) {
         blockLocation,
         isActive
     } = body
-    
+
 
     const errors = []
 

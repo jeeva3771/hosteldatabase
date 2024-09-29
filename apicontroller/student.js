@@ -17,19 +17,23 @@ const ALLOWED_UPDATE_KEYS = [
 
 async function readStudents(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = parseInt(req.query.limit);
-    const page = parseInt(req.query.page);
-    const offset = (page - 1) * limit;
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 's.studentId';
+    const sort = req.query.sort || 'ASC';
 
-        const studentsQuery = /*sql*/`
-        select 
+    var studentsQuery = /*sql*/`
+        SELECT 
             s.*,
             bk.blockCode,
             b.floorNumber,
             r.roomNumber,
             c.courseName,
-            w.name AS created,
-            w2.name AS updated,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
             DATE_FORMAT(s.dob, "%y-%b-%D") AS dob,
             DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinedDate,
             DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdAt,
@@ -50,9 +54,13 @@ async function readStudents(req, res) {
             WHERE 
             s.deletedAt IS NULL 
             ORDER BY 
-            s.blockId ASC LIMIT ? OFFSET ?`;
-        
-        const countQuery = /*sql*/ `
+            ${orderBy} ${sort}`;
+
+    if (limit && offset !== null) {
+        studentsQuery += ` LIMIT ? OFFSET ?`;
+    }
+
+    const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 
         FROM student 
         WHERE deletedAt IS NULL`;
@@ -69,6 +77,7 @@ async function readStudents(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -149,7 +158,6 @@ async function createStudent(req, res) {
         res.status(500).send(error.message)
     }
 }
-
 
 async function updateStudent(req, res) {
     const studentId = req.params.studentId;
