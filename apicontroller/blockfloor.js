@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockId",
     "floorNumber",
@@ -11,7 +11,7 @@ async function readBlockFloors(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockCode';
+    const orderBy = req.query.orderby || 'b.floorNumber';
     const sort = req.query.sort || 'ASC';
 
     var blockFloorsQuery = /*sql*/`
@@ -171,8 +171,7 @@ async function updateBlockFloor(req, res) {
 async function deleteBlockFloor(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId
-
+    const deletedBy = req.session.data.wardenId;
 
     try {
         const isValid = await validateBlockFloorById(blockFloorId, mysqlClient)

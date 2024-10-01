@@ -35,6 +35,7 @@
         </ul>
     </nav>
     <script>
+        var currentPage = 1;
         var tableData = document.getElementById("blockFloorsData")
         var limit = document.getElementById("limit").value
         var paginationDom = document.getElementById("pagination")
@@ -52,16 +53,15 @@
             blockFloorPage()
         }
 
-        function sortByColumn(column) {
-            columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
-            currentColumn = column;
-            var sortOrder = columnSortOrders[column];
-            url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
-            blockFloorPage();
+        function sortByColumn(column, sortOrder) {
+                columnSortOrders[column] = sortOrder;
+                currentColumn = column;
+                url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+                blockFloorPage(currentPage);
         }
 
         function blockFloorPage(pageNo = 1) {
-
+            currentPage = pageNo
             var requestOptions = {
                 method: 'GET'
             };

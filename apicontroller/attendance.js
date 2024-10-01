@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 
 const ALLOWED_UPDATE_KEYS = [
     "studentId",
@@ -13,16 +13,20 @@ async function readAttendances(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'a.attendanceId';
+    const sort = req.query.sort || 'ASC';
 
-        const attendancesQuery = /*sql*/`
+    var attendancesQuery = /*sql*/`
         SELECT 
             a.*,
             s.name,
             r.roomNumber,
             b.floorNumber,
             bk.blockCode,
-            ww.name AS reviewedWarden,
-            ww2.name AS updated,
+            w.firstName AS reviewedWardenFirstName,
+            w.LastName AS reviewedWardenLastName,
+            w2.firstName AS updatedWardenFirstName,
+            w2.LastName AS updatedWardenLastName,
         DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
         DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS created,
         DATE_FORMAT(a.updatedAt, "%y-%b-%D %r") AS updated
@@ -36,14 +40,17 @@ async function readAttendances(req, res) {
         LEFT JOIN 
             block AS bk ON bk.blockId = a.blockId
         LEFT JOIN
-            warden AS ww ON ww.wardenId = a.wardenId
+            warden AS w ON w.wardenId = a.wardenId
         LEFT JOIN 
-            warden AS ww2 ON ww2.wardenId = a.updatedBy
+            warden AS w2 ON w2.wardenId = a.updatedBy
         ORDER BY 
-            a.studentId ASC 
-        LIMIT ? OFFSET ?`;
+         ${orderBy} ${sort}`;
 
-        const countQuery = /*sql*/ `
+    if (limit && offset !== null) {
+        attendancesQuery += ` LIMIT ? OFFSET ?`;
+    }
+
+    const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalAttendanceCount 
         FROM attendance`;
 
@@ -85,9 +92,9 @@ async function createAttendance(req, res) {
         blockFloorId,
         blockId,
         checkInDate = new Date().toISOString().slice(0, 10),
-        isPresent,
-        wardenId = `${insertedBy}`
+        isPresent
     } = req.body
+    const wardenId = req.session.data.wardenId
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -114,6 +121,7 @@ async function createAttendance(req, res) {
 async function updateAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient
     const attendanceId = req.params.attendanceId;
+    const updatedBy = req.session.data.wardenId;
 
     const values = []
     const updates = []
@@ -126,8 +134,8 @@ async function updateAttendance(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ${insertedBy}`)
-    values.push(attendanceId)
+    updates.push('updatedBy = ?')
+    values.push(updatedBy, attendanceId)
 
     try {
         const attendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ? `,
@@ -181,7 +189,6 @@ async function attendanceList(req, res) {
         )
         return res.status(200).send(attendanceList)
     } catch (error) {
-        console.log(error)
         return res.status(500).send(error.message)
     }
 }

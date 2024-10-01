@@ -8,7 +8,7 @@ async function readCourses(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'c.courseId';
+    const orderBy = req.query.orderby || 'c.courseName';
     const sort = req.query.sort || 'ASC';
 
     var coursesQuery = /*sql*/ `
@@ -18,8 +18,8 @@ async function readCourses(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdAt,
-            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedAt
+            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
         FROM 
             course AS c 
         LEFT JOIN

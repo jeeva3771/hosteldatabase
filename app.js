@@ -18,6 +18,7 @@ const blockFloor = require('./apicontroller/blockfloor.js')
 const room = require('./apicontroller/room.js')
 const student = require('./apicontroller/student.js')
 const attendance = require('./apicontroller/attendance.js')
+// const utilityClient = require('./utilityclient.js')
 
 //uicontroller
 const homeUi = require('./ui/homeui.js')
@@ -38,10 +39,10 @@ app.use(session({
     secret: 'keyboard',
     resave: true,
     saveUninitialized: true,
-    cookie : {
-     maxAge:(1000 * 60 * 15)
-   } 
- }));
+    cookie: {
+        maxAge: (1000 * 60 * 15)
+    }
+}));
 
 app.use((req, res, next) => {
     if (req.originalUrl === '/api/login' && req.method === 'POST') {
@@ -66,7 +67,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
 app.use(express.static(path.join(__dirname, 'public')));
-
 
 app.mysqlClient = mysql.createConnection({
     host: 'localhost',
@@ -96,6 +96,7 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
+        // utilityClient(app)
 
         app.listen(1000, () => {
             logger.info('listen 1000port')

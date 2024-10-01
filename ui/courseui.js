@@ -1,5 +1,5 @@
 function coursePageUi(req, res) {
-    res.status(200).render('pages/course/courselist.ejs');
+    res.status(200).render('pages/course/courselist.ejs', {userName : req.session.data});
 }
 
 function addCourseUi(req, res) {

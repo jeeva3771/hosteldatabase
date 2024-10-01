@@ -1,77 +1,51 @@
-<html>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
 
-<head>
-    <%- include('../../partials/head') %>
-        <style>
-            .container {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                margin-top: 40px;
-                margin-bottom: 40px;
-                border-radius: 8px;
-                padding: 30px;
-                width: 380px;
-            }
-
-            .submission {
-                margin-top: 12px;
-                display: flex;
-                justify-content: center;
-            }
-        </style>
-</head>
-
-<body>
-    <div class="container">
-        <h2 class="label">Attendanceform</h2>
-        <div class="form-group">
-            <label for="studentName">StudentName</label>
-            <select class="form-control" id="studentName">
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="roomNumber">RoomNumber</label>
-            <select class="form-control" id="roomNumber">
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="floorNumber">FloorNumber</label>
-            <select class="form-control" id="floorNumber">
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="blockCode">BlockCode</label>
-            <select class="form-control" id="blockCode">
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="checkIn">CheckInDate</label>
-            <input type="date" class="form-control dateLabel" id="checkIn">
-        </div>
-        <div class="form-group">
-            <label for="isPresent">Status</label><br>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="isPresent" id="present" value="1">
-                <label class="form-check-label" for="present">Present</label>
-            </div>
-            <div class="form-check form-check-inline">
-                <input class="form-check-input" type="radio" name="isPresent" id="absent" value="0">
-                <label class="form-check-label" for="absent">Absent</label>
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="reviewedWarden">ReviewedWarden</label>
-            <select class="form-control" id="reviewedWarden">
-            </select>
-        </div>
-        <div class="submission">
-            <input type="hidden" id="attendanceId" value="<%=attendanceId %>" />
-            <button onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
-                disabled>Submit</button>
-        </div>
+<h2>Attendanceform</h2>
+<div class="form-group">
+    <label for="studentName">StudentName</label>
+    <select class="form-control" id="studentName">
+    </select>
+</div>
+<div class="form-group">
+    <label for="roomNumber">RoomNumber</label>
+    <select class="form-control" id="roomNumber">
+    </select>
+</div>
+<div class="form-group">
+    <label for="floorNumber">FloorNumber</label>
+    <select class="form-control" id="floorNumber">
+    </select>
+</div>
+<div class="form-group">
+    <label for="blockCode">BlockCode</label>
+    <select class="form-control" id="blockCode">
+    </select>
+</div>
+<div class="form-group">
+    <label for="checkIn">CheckInDate</label>
+    <input type="date" class="form-control dateLabel" id="checkIn">
+</div>
+<div class="form-group">
+    <label for="isPresent">Status</label><br>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="isPresent" id="present" value="1">
+        <label class="form-check-label" for="present">Present</label>
     </div>
-</body>
+    <div class="form-check form-check-inline">
+        <input class="form-check-input" type="radio" name="isPresent" id="absent" value="0">
+        <label class="form-check-label" for="absent">Absent</label>
+    </div>
+</div>
+<div class="form-group">
+    <label for="reviewedWarden">ReviewedWarden</label>
+    <select class="form-control" id="reviewedWarden">
+    </select>
+</div>
+<div class="submission">
+    <input type="hidden" id="attendanceId" value="<%=attendanceId %>" />
+    <button onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+</div>
+<%- include('../../partials/footer.ejs') %>
 <script>
     var studentName = document.getElementById('studentName');
     var roomNumber = document.getElementById('roomNumber');
@@ -240,4 +214,3 @@
 
 </script>
 
-</html>

@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "firstName",
     "lastName",
@@ -10,7 +10,7 @@ const ALLOWED_UPDATE_KEYS = [
 
 function superAdminValidate(req, res, next) {
     if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
-        return res.status(403).send('Access denied. Only superAdmin can perform this action.');
+        return res.status(403).redirect('/error')
     }
     next();
 }
@@ -21,8 +21,9 @@ async function readWardens(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'w.wardenId';
+    const orderBy = req.query.orderby || 'w.firstName';
     const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || ''; 
 
     var wardensQuery = /*sql*/`
         SELECT 
@@ -41,6 +42,7 @@ async function readWardens(req, res) {
               warden AS ww2 ON ww2.wardenId = w.updatedBy
             WHERE 
               w.deletedAt IS NULL 
+            AND (w.firstName LIKE ? OR w.lastName LIKE ?)
             ORDER BY 
               ${orderBy} ${sort}`;
 
@@ -48,14 +50,22 @@ async function readWardens(req, res) {
         wardensQuery += ` LIMIT ? OFFSET ?`;
     }
 
+    // function superAdminValidate(req, res, next) {
+    //     if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
+    //         res.status(403).redirect('http://localhost:1000/home')
+    //     }
+    //     next();
+    // }
+
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
         FROM warden 
         WHERE deletedAt IS NULL`;
 
     try {
+        const searchPattern = `%${searchQuery}%`;  
         const [wardens, totalCount] = await Promise.all([
-            mysqlQuery(wardensQuery, [limit, offset], mysqlClient),
+            mysqlQuery(wardensQuery, [searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -113,13 +123,12 @@ async function createWarden(req, res) {
             mysqlClient
         )
         if (newWarden.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+            return res.status(400).send("no insert was made")
         } else {
             res.status(201).send('insert successfully')
         }
     }
     catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -165,7 +174,6 @@ async function updateWarden(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -221,13 +229,6 @@ async function authentication(req, res) {
         res.status(500).send(error.message)
     }
 }
-
-// app.get('/api/logout', (req, res) => {
-//     req.session.destroy ((err) => {
-//         if (err) logger.error();
-//         res.redirect('http://localhost:1000/login')
-//     })
-// })
 
 function logOut(req, res) {
     req.session.destroy((err) => {
@@ -343,4 +344,5 @@ module.exports = (app) => {
 //     app.put('/api/warden/:wardenId', updateWarden)
 //     app.delete('/api/warden/:wardenId', deleteWarden)
 //     app.post('/api/login', authentication)
+//    app.get('/api/logout', logOut)
 // }

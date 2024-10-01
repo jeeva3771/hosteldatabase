@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
     "blockLocation",
@@ -10,7 +10,7 @@ async function readBlocks(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockId';
+    const orderBy = req.query.orderby || 'bk.blockCode';
     const sort = req.query.sort || 'ASC';
 
     var blocksQuery = /*sql*/`
@@ -72,7 +72,7 @@ async function readBlock(req, res) {
 }
 
 async function createBlock(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;    
     const {
         blockCode,
         blockLocation,
@@ -222,21 +222,17 @@ function validateInsertItems(body, isUpdate = false) {
 
     if (blockCode !== undefined) {
         if (blockCode <= 0) {
-            console.log('hi')
             errors.push("blockCode is invalid")
         }
     } else if (!isUpdate) {
-        console.log('hi sir')
         errors.push("blockCode is missing")
     }
 
     if (blockLocation !== undefined) {
         if (blockLocation <= 0) {
-            console.log('hi siraa')
             errors.push("location is invalid")
         }
     } else if (!isUpdate) {
-        console.log('hi sirlll')
         errors.push("location is missing")
     }
 

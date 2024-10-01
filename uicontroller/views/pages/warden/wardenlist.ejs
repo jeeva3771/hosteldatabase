@@ -7,9 +7,8 @@
         <option value="40" href="#">40</option>
     </select>
     <nav class="navbar navbar-light bg-light">
-        <form class="form-inline">
-            <input class="form-control mr-sm-2" type="search" placeholder="Search" aria-label="Search">
-            <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+        <form class="form-inline" onkeyup="handleSearch(event)">
+            <input class="form-control mr-sm-2" id="searchInput" type="search" placeholder="Search by Name" aria-label="Search">
         </form>
     </nav>
     <a class="btn btn-info" href="/warden/add">Add</a>
@@ -45,6 +44,8 @@
     </nav>
     <%- include('../../partials/footer.ejs') %>
         <script>
+            var currentPage = 1;
+            var searchQuery = '';
             var tableData = document.getElementById("wardensData");
             var limit = document.getElementById("limit").value;
             var paginationDom = document.getElementById("pagination");
@@ -64,20 +65,26 @@
                 wardenPage()
             }
 
-            function sortByColumn(column) {
-                columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
-                currentColumn = column;
-                var sortOrder = columnSortOrders[column];
-                url = `&orderby=w.${currentColumn}&sort=${sortOrder}`;
+            function handleSearch(event) {
+                event.preventDefault();
+                searchQuery = document.getElementById("searchInput").value;
                 wardenPage();
             }
 
+            function sortByColumn(column, sortOrder) {
+                columnSortOrders[column] = sortOrder;
+                currentColumn = column;
+                url = `&orderby=w.${currentColumn}&sort=${sortOrder}`;
+                wardenPage(currentPage);
+            }
+
             function wardenPage(pageNo = 1) {
+                currentPage = pageNo
                 var requestOptions = {
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
                         const { wardens, wardenCount } = responseData;
@@ -143,4 +150,3 @@
             })
 
         </script>
-        

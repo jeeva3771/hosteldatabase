@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     'blockFloorId',
     'blockId',
@@ -13,7 +13,7 @@ async function readRooms(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'r.roomId';
+    const orderBy = req.query.orderby || 'r.roomNumber';
     const sort = req.query.sort || 'ASC';
 
     var roomsQuery = /*sql*/`
@@ -81,16 +81,16 @@ async function readRoom(req, res) {
 }
 
 async function createRoom(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
     const {
         blockFloorId,
         blockId,
         roomNumber,
         roomCapacity,
         isActive,
-        isAirConditioner,
-        createdBy = `${insertedBy}`
-    } = req.body
+        isAirConditioner
+    } = req.body;
+    const createdBy = req.session.data.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -117,6 +117,7 @@ async function createRoom(req, res) {
 async function updateRoom(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
+    const updatedBy = req.session.data.wardenId;
 
     const values = []
     const updates = []
@@ -129,8 +130,8 @@ async function updateRoom(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ${insertedBy}`)
-    values.push(roomId)
+    updates.push('updatedBy = ?')
+    values.push(updatedBy, roomId)
 
     try {
         const room = await validateRoomById(roomId, mysqlClient)
@@ -167,6 +168,7 @@ async function updateRoom(req, res) {
 async function deleteRoom(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
 
     try {
         const isValid = await validateRoomById(roomId, mysqlClient)
@@ -174,8 +176,8 @@ async function deleteRoom(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE roomId = ? AND deletedAt IS NULL`,
-            [roomId],
+        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ? WHERE roomId = ? AND deletedAt IS NULL`,
+            [deletedBy, roomId],
             mysqlClient
         )
         if (deletedRoom.affectedRows === 0) {

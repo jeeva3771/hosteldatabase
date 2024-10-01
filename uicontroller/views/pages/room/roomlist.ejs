@@ -38,6 +38,7 @@
     </nav>
     <%- include('../../partials/footer.ejs') %>
         <script>
+            var currentPage = 1;
             var tableData = document.getElementById("roomsData");
             var limit = document.getElementById("limit").value;
             var paginationDom = document.getElementById("pagination");
@@ -55,15 +56,15 @@
                 roomPage()
             }
 
-            function sortByColumn(column) {
-                columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
+            function sortByColumn(column, sortOrder) {
+                columnSortOrders[column] = sortOrder;
                 currentColumn = column;
-                var sortOrder = columnSortOrders[column];
                 url = `&orderby=r.${currentColumn}&sort=${sortOrder}`;
-                roomPage();
+                roomPage(currentPage);
             }
 
             function roomPage(pageNo = 1) {
+                currentPage = pageNo
                 var requestOptions = {
                     method: 'GET'
                 };

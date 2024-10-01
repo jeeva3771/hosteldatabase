@@ -43,6 +43,7 @@
     </nav>
     <%- include('../../partials/footer.ejs') %>
     <script>
+        var currentPage = 1;
         var tableData = document.getElementById("blocksData");
         var limit = document.getElementById("limit").value;
         var paginationDom = document.getElementById("pagination");
@@ -59,15 +60,15 @@
             blockPage()
         }
 
-        function sortByColumn(column) {
-            columnSortOrders[column] = columnSortOrders[column] === 'ASC' ? 'DESC' : 'ASC';
-            currentColumn = column;
-            var sortOrder = columnSortOrders[column];
-            url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
-            blockPage();
+        function sortByColumn(column, sortOrder) {
+                columnSortOrders[column] = sortOrder;
+                currentColumn = column;
+                url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
+                wardenPage(currentPage);
         }
 
         function blockPage(pageNo = 1) {
+            currentPage =pageNo
             var requestOptions = {
                 method: 'GET'
             };

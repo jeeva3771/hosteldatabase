@@ -78,6 +78,9 @@
     var submitButton = document.getElementById('submitButton');
     var studentId = document.getElementById('studentId').value;
 
+    const today = new Date().toISOString().split('T')[0];
+    joinedDate.value = today;
+
     function saveOrUpdateStudent() {
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");

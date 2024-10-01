@@ -1,4 +1,4 @@
-const { mysqlQuery, insertedBy } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "roomId",
     "blockFloorId",
@@ -20,8 +20,9 @@ async function readStudents(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 's.studentId';
+    const orderBy = req.query.orderby || 's.name';
     const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || '';
 
     var studentsQuery = /*sql*/`
         SELECT 
@@ -53,6 +54,7 @@ async function readStudents(req, res) {
             warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
             s.deletedAt IS NULL 
+            AND (s.name LIKE ? OR s.registerNumber LIKE ? OR s.emailId LIKE ? OR s.phoneNumber LIKE ?) 
             ORDER BY 
             ${orderBy} ${sort}`;
 
@@ -66,11 +68,13 @@ async function readStudents(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
+        const searchPattern = `%${searchQuery}%`;
+        const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern]
         const [students, totalCount] = await Promise.all([
-            mysqlQuery(studentsQuery, [limit, offset], mysqlClient),
+            mysqlQuery(studentsQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
-
+        console.log(students)
         res.status(200).send({
             students: students,
             studentCount: totalCount[0].totalStudentCount
@@ -110,9 +114,9 @@ async function createStudent(req, res) {
         emailId,
         fatherName,
         fatherNumber,
-        address,
-        createdBy = `${insertedBy}`
-    } = req.body
+        address
+    } = req.body;
+    const createdBy = req.session.data.wardenId
     const validateExistingItems = [
         { name: 'phoneNumber', value: phoneNumber },
         { name: 'fatherNumber', value: fatherNumber },
@@ -148,7 +152,7 @@ async function createStudent(req, res) {
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber, emailId, fatherName, fatherNumber, address, createdBy],
             mysqlClient)
-        console.log(newStudent)
+
         if (newStudent.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
@@ -161,7 +165,8 @@ async function createStudent(req, res) {
 
 async function updateStudent(req, res) {
     const studentId = req.params.studentId;
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
+    const updatedBy = req.session.data.wardenId;
     const values = []
     const updates = []
 
@@ -173,8 +178,8 @@ async function updateStudent(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ${insertedBy}`)
-    values.push(studentId)
+    updates.push(`updatedBy = ?`)
+    values.push(updatedBy, studentId)
 
     try {
         const student = await validateStudentById(studentId, mysqlClient);
@@ -208,6 +213,7 @@ async function updateStudent(req, res) {
 async function deleteStudent(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
 
     try {
         const isValid = await validateStudentById(studentId, mysqlClient)
@@ -215,8 +221,8 @@ async function deleteStudent(req, res) {
             return res.status(404).send("studentId is not defined")
         }
 
-        const deletedStudent = await mysqlQuery(/*sql*/`UPDATE student SET deletedAt = NOW(), deletedBy = ${insertedBy} WHERE studentId = ? AND deletedAt IS NULL`,
-            [studentId],
+        const deletedStudent = await mysqlQuery(/*sql*/`UPDATE student SET deletedAt = NOW(), deletedBy = ? WHERE studentId = ? AND deletedAt IS NULL`,
+            [deletedBy, studentId],
             mysqlClient
         )
         if (deletedStudent.affectedRows === 0) {
