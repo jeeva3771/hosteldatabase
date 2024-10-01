@@ -1,11 +1,11 @@
 function mysqlQuery(sql, options, mysqlClient) {
     return new Promise((resolve, reject) => {
         try {
-            mysqlClient.query(sql, options || [], (err, rooms) => {
+            mysqlClient.query(sql, options || [], (err, data) => {
                 if (err) {
                     return reject(err.sqlMessage)
-                } 
-                resolve(rooms)    
+                }
+                resolve(data)
             })
         } catch (error) {
             reject(error.message)
@@ -13,7 +13,20 @@ function mysqlQuery(sql, options, mysqlClient) {
     })
 }
 
+function readAuthenticationName(req, res) {
+    console.log(req.session.data)
+    var sessionData = req.session.data
+    return sessionData
+}
+
 module.exports = {
     mysqlQuery,
-    insertedBy: 8
+    readAuthenticationName
 }
+
+// module.exports.mysqlQuery = mysqlQuery;
+// module.exports.readAuthenticationName = readAuthenticationName;
+
+
+
+
