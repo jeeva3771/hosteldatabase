@@ -12,6 +12,8 @@ async function readBlocks(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'bk.blockCode';
     const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || ''; 
+    const searchPattern = `%${searchQuery}%`;
 
     var blocksQuery = /*sql*/`
         SELECT 
@@ -20,19 +22,19 @@ async function readBlocks(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdAt,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedAt
+            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy
         LEFT JOIN 
             warden AS w2 ON w2.wardenId = bk.updatedBy
         WHERE 
-            bk.deletedAt IS NULL 
+            bk.deletedAt IS NULL AND bk.blockCode LIKE ? 
         ORDER BY 
         ${orderBy} ${sort}`;
 
-    if (limit && offset !== null) { 
+    if (limit && offset !== null) {
         blocksQuery += ` LIMIT ? OFFSET ?`;
     }
 
@@ -43,7 +45,7 @@ async function readBlocks(req, res) {
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [limit, offset], mysqlClient),
+            mysqlQuery(blocksQuery, [searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -61,7 +63,26 @@ async function readBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
-        const block = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE blockId = ?`, [blockId], mysqlClient)
+        // const block = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE blockId = ?`, [blockId], mysqlClient)
+        const block = await mysqlQuery(/*sql*/`
+             SELECT 
+                bk.*,
+                w.firstName AS createdFirstName,
+                w.lastName AS createdLastName,
+                w2.firstName AS updatedFirstName,
+                w2.lastName AS updatedLastName,
+                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+                FROM block AS bk
+            LEFT JOIN 
+                warden AS w ON w.wardenId = bk.createdBy
+            LEFT JOIN 
+                warden AS w2 ON w2.wardenId = bk.updatedBy
+            WHERE 
+                bk.deletedAt IS NULL AND blockId = ?`,
+            [blockId],
+            mysqlClient
+        )
         if (block.length === 0) {
             return res.status(404).send("blockId not valid");
         }
@@ -86,7 +107,7 @@ async function createBlock(req, res) {
     }
 
     try {
-        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ?`,
+        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? `,
             [blockCode],
             mysqlClient
         );
@@ -94,7 +115,7 @@ async function createBlock(req, res) {
             return res.status(409).send("blockCode already exists");
         }
 
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK (blockCode,blockLocation,isActive,createdBy) VALUES(?,?,?,?)`,
+        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
             [blockCode, blockLocation, isActive, createdBy], mysqlClient)
         if (newBlock.affectedRows === 0) {
             res.status(400).send("no insert was made")
@@ -116,7 +137,7 @@ async function updateBlock(req, res) {
         const keyValue = req.body[key]
         if (keyValue !== undefined) {
             values.push(keyValue)
-            updates.push(` ${key} = ?`)
+            updates.push(` ${ key } = ? `)
         }
     })
 
@@ -141,14 +162,14 @@ async function updateBlock(req, res) {
             return res.status(400).send(isValidInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${ updates.join(', ') } WHERE blockId = ? AND deletedAt IS NULL`,
             values, mysqlClient
         )
         if (isUpdate.affectedRows === 0) {
             res.status(204).send("Block not found or no changes made")
         }
 
-        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ?`,
+        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
             [blockId], mysqlClient)
         res.status(200).send({
             status: 'successfull',
@@ -179,7 +200,7 @@ async function deleteBlock(req, res) {
             return res.status(404).send("Block not found or already deleted")
         }
 
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ?`, [blockId], mysqlClient)
+        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
         res.status(200).send({
             status: 'deleted',
             data: getDeletedBlock[0]
@@ -192,7 +213,7 @@ async function deleteBlock(req, res) {
 
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ?`, [blockId], (err, block) => {
+        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
             if (err) {
                 return reject(err)
             }

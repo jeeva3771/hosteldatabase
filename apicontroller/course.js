@@ -10,6 +10,9 @@ async function readCourses(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'c.courseName';
     const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || ''; 
+    const searchPattern = `%${searchQuery}%`; 
+
 
     var coursesQuery = /*sql*/ `
         SELECT 
@@ -27,7 +30,7 @@ async function readCourses(req, res) {
         LEFT JOIN 
             warden AS w2 ON w2.wardenId = c.updatedBy
         WHERE 
-            c.deletedAt IS NULL
+            c.deletedAt IS NULL AND c.courseName LIKE ? 
         ORDER BY 
             ${orderBy} ${sort}`;
     
@@ -42,7 +45,7 @@ async function readCourses(req, res) {
 
     try {
         const [courses, totalCount] = await Promise.all([
-            mysqlQuery(coursesQuery, [limit, offset], mysqlClient),
+            mysqlQuery(coursesQuery, [searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
         
@@ -60,10 +63,30 @@ async function readCourse(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const courseId = req.params.courseId;
     try {
-        const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
-            [courseId],
-            mysqlClient
-        )
+        // const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
+        //     [courseId],
+        //     mysqlClient
+        // )
+
+        const course = await mysqlQuery(/*sql*/`SELECT 
+            c.*,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+        FROM 
+            course AS c 
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = c.updatedBy
+        WHERE 
+            c.deletedAt IS NULL AND courseId = ?`,
+        [courseId],
+        mysqlClient)
+
         if (course.length === 0) {
             return res.status(404).send("courseId not valid")
         }

@@ -2,8 +2,7 @@ const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockId",
     "floorNumber",
-    "isActive",
-    "updatedBy"
+    "isActive"
 ]
 
 async function readBlockFloors(req, res) {
@@ -13,6 +12,9 @@ async function readBlockFloors(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'b.floorNumber';
     const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const queryParameters = [searchPattern, searchPattern, searchPattern]
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -22,8 +24,8 @@ async function readBlockFloors(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdAt,
-            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedAt
+            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
@@ -33,11 +35,13 @@ async function readBlockFloors(req, res) {
               warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
             ORDER BY 
              ${orderBy} ${sort}`;
 
     if (limit && offset !== null) {
         blockFloorsQuery += ` LIMIT ? OFFSET ?`;
+        queryParameters.push(limit,offset);
     }
 
     const countQuery = /*sql*/ `
@@ -47,7 +51,7 @@ async function readBlockFloors(req, res) {
 
     try {
         const [blockFloors, totalCount] = await Promise.all([
-            mysqlQuery(blockFloorsQuery, [limit, offset], mysqlClient),
+            mysqlQuery(blockFloorsQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -57,6 +61,7 @@ async function readBlockFloors(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -66,10 +71,34 @@ async function readBlockFloor(req, res) {
     const blockFloorId = req.params.blockfloorId;
 
     try {
-        const blockFloor = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`,
+        // const blockFloor = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`,
+        //     [blockFloorId],
+        //     mysqlClient
+        // )
+
+        const blockFloor = await mysqlQuery(/*sql*/`
+            SELECT 
+            b.*,
+            bk.blockCode,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            FROM blockfloor AS b
+            LEFT JOIN 
+              block AS bk ON bk.blockId = b.blockId
+            LEFT JOIN 
+              warden AS w ON w.wardenId = b.createdBy
+            LEFT JOIN 
+              warden AS w2 ON w2.wardenId = b.updatedBy
+            WHERE 
+              b.deletedAt IS NULL AND blockFloorId = ?`,
             [blockFloorId],
             mysqlClient
-        )
+            )
+            
         if (blockFloor.length === 0) {
             return res.status(404).send("blockFloorId not valid");
         }

@@ -23,7 +23,7 @@ async function readWardens(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'w.firstName';
     const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || ''; 
+    const searchQuery = req.query.search || '';
 
     var wardensQuery = /*sql*/`
         SELECT 
@@ -32,9 +32,9 @@ async function readWardens(req, res) {
             ww.lastName AS createdLastName,
             ww2.firstName AS updatedFirstName,
             ww2.lastName AS updatedLastName,
-            DATE_FORMAT(w.dob, "%y-%b-%D") AS dob,
-            DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdAt,
-            DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedAt
+            DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
+            DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM warden AS w
             LEFT JOIN
               warden AS ww ON ww.wardenId = w.createdBy
@@ -63,7 +63,7 @@ async function readWardens(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
-        const searchPattern = `%${searchQuery}%`;  
+        const searchPattern = `%${searchQuery}%`;
         const [wardens, totalCount] = await Promise.all([
             mysqlQuery(wardensQuery, [searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
@@ -83,12 +83,33 @@ async function readWarden(req, res) {
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
-        const warden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        // const warden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        const warden = await mysqlQuery(/*sql*/`
+        SELECT 
+                w.*,
+                ww.firstName AS createdFirstName,
+                ww.lastName AS createdLastName,
+                ww2.firstName AS updatedFirstName,
+                ww2.lastName AS updatedLastName,
+                DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
+                DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+                DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+                FROM warden AS w
+                LEFT JOIN
+                warden AS ww ON ww.wardenId = w.createdBy
+                LEFT JOIN 
+                warden AS ww2 ON ww2.wardenId = w.updatedBy
+                WHERE 
+                w.deletedAt IS NULL AND w.wardenId = ?`,
+                [wardenId],
+                mysqlClient
+            )
         if (warden.length === 0) {
             return res.status(404).send("wardenId not valid");
         }
         res.status(200).send(warden[0])
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }

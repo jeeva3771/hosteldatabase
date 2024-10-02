@@ -23,6 +23,8 @@ async function readStudents(req, res) {
     const orderBy = req.query.orderby || 's.name';
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const queryParameters = [searchPattern, searchPattern]
 
     var studentsQuery = /*sql*/`
         SELECT 
@@ -35,10 +37,10 @@ async function readStudents(req, res) {
             w.lastName AS createdLastName,
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
-            DATE_FORMAT(s.dob, "%y-%b-%D") AS dob,
-            DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinedDate,
-            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdAt,
-            DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedAt
+            DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
+            DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
+            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM student AS s
             LEFT JOIN 
             block AS bk ON bk.blockId = s.blockId
@@ -54,12 +56,13 @@ async function readStudents(req, res) {
             warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
             s.deletedAt IS NULL 
-            AND (s.name LIKE ? OR s.registerNumber LIKE ? OR s.emailId LIKE ? OR s.phoneNumber LIKE ?) 
+            AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
             ORDER BY 
             ${orderBy} ${sort}`;
 
     if (limit && offset !== null) {
         studentsQuery += ` LIMIT ? OFFSET ?`;
+        queryParameters.push(limit,offset)
     }
 
     const countQuery = /*sql*/ `
@@ -68,20 +71,16 @@ async function readStudents(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
-        const searchPattern = `%${searchQuery}%`;
-        const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern]
         const [students, totalCount] = await Promise.all([
             mysqlQuery(studentsQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
-        console.log(students)
         res.status(200).send({
             students: students,
             studentCount: totalCount[0].totalStudentCount
         });
 
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -90,7 +89,37 @@ async function readStudent(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.params.studentId;
     try {
-        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`, [studentId], mysqlClient)
+        // const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`, [studentId], mysqlClient)
+        const student = await mysqlQuery(/*sql*/`SELECT 
+            s.*,
+            bk.blockCode,
+            b.floorNumber,
+            r.roomNumber,
+            c.courseName,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
+            DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
+            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            FROM student AS s
+            LEFT JOIN 
+            block AS bk ON bk.blockId = s.blockId
+            LEFT JOIN 
+            blockfloor AS b ON b.blockFloorId = s.blockFloorId
+            LEFT JOIN 
+            room AS r ON r.roomId = s.roomId
+            LEFT JOIN 
+            course AS c ON c.courseId = s.courseId
+            LEFT JOIN 
+            warden AS w ON w.wardenId = s.createdBy
+            LEFT JOIN 
+            warden AS w2 ON w2.wardenId = s.updatedBy
+            WHERE 
+            s.deletedAt IS NULL AND studentId = ?`, 
+            [studentId], mysqlClient)
         if (student.length === 0) {
             return res.status(404).send("StudentId not valid");
         }
