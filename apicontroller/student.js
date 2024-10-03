@@ -85,11 +85,10 @@ async function readStudents(req, res) {
     }
 }
 
-async function readStudent(req, res) {
+async function readStudentById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.params.studentId;
     try {
-        // const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`, [studentId], mysqlClient)
         const student = await mysqlQuery(/*sql*/`SELECT 
             s.*,
             bk.blockCode,
@@ -192,7 +191,7 @@ async function createStudent(req, res) {
     }
 }
 
-async function updateStudent(req, res) {
+async function updateStudentById(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
@@ -239,7 +238,7 @@ async function updateStudent(req, res) {
     }
 }
 
-async function deleteStudent(req, res) {
+async function deleteStudentById(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -431,8 +430,8 @@ function validateInsertItems(body, isUpdate = false) {
 
 module.exports = (app) => {
     app.get('/api/student', readStudents)
-    app.get('/api/student/:studentId', readStudent)
+    app.get('/api/student/:studentId', readStudentById)
     app.post('/api/student', createStudent)
-    app.put('/api/student/:studentId', updateStudent)
-    app.delete('/api/student/:studentId', deleteStudent)
+    app.put('/api/student/:studentId', updateStudentById)
+    app.delete('/api/student/:studentId', deleteStudentById)
 }

@@ -71,11 +71,10 @@ async function readRooms(req, res) {
     }
 }
 
-async function readRoom(req, res) {
+async function readRoomById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
     try {
-        // const room = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
         const room = await mysqlQuery(/*sql*/`
             SELECT 
             r.*,
@@ -144,7 +143,7 @@ async function createRoom(req, res) {
     }
 }
 
-async function updateRoom(req, res) {
+async function updateRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
@@ -195,7 +194,7 @@ async function updateRoom(req, res) {
     }
 }
 
-async function deleteRoom(req, res) {
+async function deleteRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -323,7 +322,6 @@ function getStudentCountByRoomId(roomId, mysqlClient) {
 }
 
 async function validateUpdateRoom(roomId, mysqlClient, body) {
-    // validate isActive
     if (body.isActive === 0) {
         var [studentRoom] = await getStudentCountByRoomId(roomId, mysqlClient)
         if (studentRoom.count > 0) {
@@ -335,8 +333,8 @@ async function validateUpdateRoom(roomId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/room', readRooms)
-    app.get('/api/room/:roomId', readRoom)
+    app.get('/api/room/:roomId', readRoomById)
     app.post('/api/room', createRoom)
-    app.put('/api/room/:roomId', updateRoom)
-    app.delete('/api/room/:roomId', deleteRoom)
+    app.put('/api/room/:roomId', updateRoomById)
+    app.delete('/api/room/:roomId', deleteRoomById)
 }

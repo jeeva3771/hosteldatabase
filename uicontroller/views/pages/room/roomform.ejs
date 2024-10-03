@@ -118,14 +118,14 @@
                     .catch(error => console.log('error', error));
             }
 
-            populateBlockCode()
-            populateFloorNumber()
+            // populateBlockCode()
+            // populateFloorNumber()
 
-            if (roomId) {
-                getRoom(roomId)
-            }
+            // if (roomId) {
+            //     getRoomById(roomId)
+            // }
 
-            function getRoom(roomId) {
+            function getRoomById(roomId) {
                 const requestOptions = {
                     method: "GET",
                 };
@@ -168,11 +168,32 @@
                 )
             }
 
+            // blockCode.addEventListener('input', toggleSubmitButton);
+            // floorNumber.addEventListener('input', toggleSubmitButton);
+            // roomNumber.addEventListener('input', toggleSubmitButton);
+            // roomCapacity.addEventListener('input', toggleSubmitButton);
+            // document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+            // document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+        function initializeForm() {
+        let promises = [populateBlockCode(), populateFloorNumber()];
+
+        if (roomId) {
+            promises.push(getRoomById(roomId));
+        }
+
+        Promise.all(promises)
+            .then(() => {
             blockCode.addEventListener('input', toggleSubmitButton);
             floorNumber.addEventListener('input', toggleSubmitButton);
             roomNumber.addEventListener('input', toggleSubmitButton);
             roomCapacity.addEventListener('input', toggleSubmitButton);
             document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
             document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+            })
+            .catch(error => console.error('Error initializing form:', error));
+    }
+
+    initializeForm();
+
         </script>
         

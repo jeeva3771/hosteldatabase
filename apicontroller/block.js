@@ -59,11 +59,10 @@ async function readBlocks(req, res) {
     }
 }
 
-async function readBlock(req, res) {
+async function readBlockById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
-        // const block = await mysqlQuery(/*sql*/`SELECT * FROM BLOCK WHERE blockId = ?`, [blockId], mysqlClient)
         const block = await mysqlQuery(/*sql*/`
              SELECT 
                 bk.*,
@@ -127,7 +126,7 @@ async function createBlock(req, res) {
     }
 }
 
-async function updateBlock(req, res) {
+async function updateBlockById(req, res) {
     const blockId = req.params.blockId;
     const updatedBy = req.session.data.wardenId;
     const values = []
@@ -181,7 +180,7 @@ async function updateBlock(req, res) {
     }
 }
 
-async function deleteBlock(req, res) {
+async function deleteBlockById(req, res) {
     const blockId = req.params.blockId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -292,8 +291,8 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
-    app.get('/api/block/:blockId', readBlock)
+    app.get('/api/block/:blockId', readBlockById)
     app.post('/api/block/', createBlock)
-    app.put('/api/block/:blockId', updateBlock)
-    app.delete('/api/block/:blockId', deleteBlock)
+    app.put('/api/block/:blockId', updateBlockById)
+    app.delete('/api/block/:blockId', deleteBlockById)
 }

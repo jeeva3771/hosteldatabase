@@ -1,14 +1,24 @@
+const { getUserProfile } = require('../utilityclient.js')
+
 function blockFloorPageUi(req, res) {
-    res.render('pages/blockfloor/blockfloorlist.ejs');
+    res.render('pages/blockfloor/blockfloorlist.ejs', {
+        user: getUserProfile(req.session)
+    });
 }
 
 function addBlockFloorUi(req, res) {
-    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: '' });
+    res.render('pages/blockfloor/blockfloorform.ejs', {
+        blockFloorId: '',
+        user: getUserProfile(req.session)
+    });
 }
 
 function editBlockFloorUi(req, res) {
     const blockFloorId = req.params.blockFloorId;
-    res.render('pages/blockfloor/blockfloorform.ejs', { blockFloorId: blockFloorId });
+    res.render('pages/blockfloor/blockfloorform.ejs', {
+        blockFloorId: blockFloorId,
+        user: getUserProfile(req.session)
+    });
 }
 
 module.exports = (app) => {

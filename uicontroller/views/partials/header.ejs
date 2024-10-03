@@ -14,6 +14,30 @@
       width: 90%;
       margin: 0 5%;
     }
+
+    .controlAlign {
+      padding-inline-start: 0%;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .icon-hover:hover {
+        fill: #007bff; 
+        cursor: pointer; 
+    }
+
+    .icon-hover:hover {
+        transform: scale(1.1);
+        transition: transform 0.2s ease;
+    }
+
+    .icon-hover:focus {
+        fill: #007bff;
+        transform: scale(1.1);
+    }
+
   </style>
 </head>
 
@@ -21,11 +45,12 @@
   <div class="container-main container">
     <% if(isMenuVisible===true) { %>
       <header>
-        <nav class="navbar navbar-expand-lg bg-body-tertiary">
-          <div class="container-fluid">
-            <a class="navbar-brand" href="/home">Home</a>
+        <nav class="navbar navbar-expand-lg bg-body-tertiary controlAlign">
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
               <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                  <a class="nav-link active" aria-current="page" href="/home">Home</a>
+                </li>
                 <li class="nav-item">
                   <a class="nav-link active" aria-current="page" href="/block">Block</a>
                 </li>
@@ -44,14 +69,17 @@
                 <li class="nav-item">
                   <a class="nav-link active" aria-current="page" href="/warden">Warden</a>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item hidden">
                   <a class="nav-link active" aria-current="page" href="/error">Errors</a>
                 </li>
               </ul>
-
-              <a href="/api/logout" class="btn btn-light mx-auto">Logout</a>
+              <div class="d-flex align-items-end ms-auto">
+                <span class="navbar-text me-2 gx-3">
+                  <%= user.name %>
+                </span>
+                <a href="/api/logout" class="btn btn-light">Logout</a>
+              </div>
             </div>
-          </div>
         </nav>
 
         <nav aria-label="breadcrumb">

@@ -1,22 +1,25 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Coursepage' }) %>
-        <div class="row my-2">
-            <div class="col-auto my-1">
-                <select class="form-select" id="limit" onchange="changeLimit()">
-                    <option value="5" href="#">5</option>
-                    <option value="10" href="#" selected>10</option>
-                    <option value="20" href="#">20</option>
-                    <option value="40" href="#">40</option>
-                </select>
-            </div>
-            <div class="col">
-                <form class="form-inline" onkeyup="handleSearch(event)">
-                    <input class="form-control mr-sm-2" id="searchInput" type="search" placeholder="Search" aria-label="Search">
-                </form>
-            </div>
-            <div class="col-auto">
-                <a class="btn btn-info" href="/course/add">Add</a>
-            </div>
+<div class="d-flex justify-content-between align-items-center my-2">
+    <h3 class="col-auto me-2 controlAlign">Course</h3>
+    <div class="d-flex align-items-center">
+        <div class="mx-1">
+            <select class="form-select" id="limit" onchange="changeLimit()">
+                <option value="5" href="#">5</option>
+                <option value="10" href="#" selected>10</option>
+                <option value="20" href="#">20</option>
+                <option value="40" href="#">40</option>
+            </select>
         </div>
+        <div class="mx-1">
+            <form onkeyup="handleSearch(event)">
+                <input class="form-control" id="searchInput" type="search" placeholder="Search" aria-label="Search">
+            </form>
+        </div>
+        <div class="mx-1">
+            <a class="btn btn-info" href="/course/add">Add</a>
+        </div>
+    </div>
+</div>
 
     <table class="table table-striped table-hover table-bordered">
         <thead>

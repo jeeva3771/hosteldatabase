@@ -13,7 +13,6 @@ async function readCourses(req, res) {
     const searchQuery = req.query.search || ''; 
     const searchPattern = `%${searchQuery}%`; 
 
-
     var coursesQuery = /*sql*/ `
         SELECT 
             c.*,
@@ -59,15 +58,10 @@ async function readCourses(req, res) {
     }
 }
 
-async function readCourse(req, res) {
+async function readCourseById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const courseId = req.params.courseId;
     try {
-        // const course = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
-        //     [courseId],
-        //     mysqlClient
-        // )
-
         const course = await mysqlQuery(/*sql*/`SELECT 
             c.*,
             w.firstName AS createdFirstName,
@@ -124,7 +118,7 @@ async function createCourse(req, res) {
     }
 }
 
-async function updateCourse(req, res) {
+async function updateCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
@@ -177,7 +171,7 @@ async function updateCourse(req, res) {
     }
 }
 
-async function deleteCourse(req, res) {
+async function deleteCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -246,8 +240,8 @@ function validateInsertItems(body, isUpdate = false) {
 
 module.exports = (app) => {
     app.get('/api/course', readCourses)
-    app.get('/api/course/:courseId', readCourse)
+    app.get('/api/course/:courseId', readCourseById)
     app.post('/api/course', createCourse)
-    app.put('/api/course/:courseId', updateCourse)
-    app.delete('/api/course/:courseId', deleteCourse)
+    app.put('/api/course/:courseId', updateCourseById)
+    app.delete('/api/course/:courseId', deleteCourseById)
 }

@@ -8,14 +8,6 @@ const ALLOWED_UPDATE_KEYS = [
     "superAdmin"
 ]
 
-function superAdminValidate(req, res, next) {
-    if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
-        return res.status(403).redirect('/error')
-    }
-    next();
-}
-
-
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
@@ -50,13 +42,6 @@ async function readWardens(req, res) {
         wardensQuery += ` LIMIT ? OFFSET ?`;
     }
 
-    // function superAdminValidate(req, res, next) {
-    //     if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
-    //         res.status(403).redirect('http://localhost:1000/home')
-    //     }
-    //     next();
-    // }
-
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
         FROM warden 
@@ -79,11 +64,10 @@ async function readWardens(req, res) {
     }
 }
 
-async function readWarden(req, res) {
+async function readWardenById(req, res) {
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
-        // const warden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
         const warden = await mysqlQuery(/*sql*/`
         SELECT 
                 w.*,
@@ -154,7 +138,7 @@ async function createWarden(req, res) {
     }
 }
 
-async function updateWarden(req, res) {
+async function updateWardenById(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
@@ -199,7 +183,7 @@ async function updateWarden(req, res) {
     }
 }
 
-async function deleteWarden(req, res) {
+async function deleteWardenById(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -348,22 +332,11 @@ async function validateWardenById(wardenId, mysqlClient) {
 }
 
 module.exports = (app) => {
-    app.get('/api/warden', superAdminValidate, readWardens)
-    app.get('/api/warden/:wardenId', superAdminValidate, readWarden)
-    app.post('/api/warden', superAdminValidate, createWarden)
-    app.put('/api/warden/:wardenId', superAdminValidate, updateWarden)
-    app.delete('/api/warden/:wardenId', superAdminValidate, deleteWarden)
+    app.get('/api/warden', readWardens)
+    app.get('/api/warden/:wardenId', readWardenById)
+    app.post('/api/warden', createWarden)
+    app.put('/api/warden/:wardenId', updateWardenById)
+    app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
-    app.get('/api/logout', logOut)
-
+   app.get('/api/logout', logOut)
 }
-
-// module.exports = (app) => {
-//     app.get('/api/warden', readWardens)
-//     app.get('/api/warden/:wardenId', readWarden)
-//     app.post('/api/warden', createWarden)
-//     app.put('/api/warden/:wardenId', updateWarden)
-//     app.delete('/api/warden/:wardenId', deleteWarden)
-//     app.post('/api/login', authentication)
-//    app.get('/api/logout', logOut)
-// }

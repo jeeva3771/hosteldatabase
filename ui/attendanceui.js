@@ -1,15 +1,25 @@
+const { getUserProfile } = require('../utilityclient.js')
+
 function attendancePageUi(req, res) {
-    res.render('pages/attendance/attendancelist.ejs');
+    res.render('pages/attendance/attendancelist.ejs', {
+        user: getUserProfile(req.session)
+    });
 }
 
 function addAttendanceUi(req, res) {
-    res.render('pages/attendance/attendanceform.ejs', { attendanceId: '' });
+    res.render('pages/attendance/attendanceform.ejs', {
+        attendanceId: '',
+        user: getUserProfile(req.session)
+    });
 }
 
 
 function editAttendanceUi(req, res) {
     const attendanceId = req.params.attendanceId;
-    res.render('pages/attendance/attendanceform.ejs', { attendanceId: attendanceId });
+    res.render('pages/attendance/attendanceform.ejs', {
+        attendanceId: attendanceId,
+        user: getUserProfile(req.session)
+    });
 }
 
 module.exports = (app) => {

@@ -63,8 +63,8 @@
             .catch(error => console.error('error', error));
     }
 
-    function populateBlockCode() {
-        fetch(`http://localhost:1000/api/block`)
+    async function populateBlockCode() {
+        return fetch(`http://localhost:1000/api/block`)
             .then(response => response.json())
             .then(responseData => {
                 const { blocks } = responseData
@@ -77,18 +77,37 @@
             })
             .catch(error => console.log('error', error));
     }
-    populateBlockCode()
+    // populateBlockCode()
 
-    if (blockFloorId) {
-        getBlockFloor(blockFloorId)
+    // if (blockFloorId) {
+    //     getBlockFloor(blockFloorId)
+    // }
+
+    function toggleSubmitButton() {
+        var selectedStatus = document.querySelector('input[name="status"]:checked');
+        submitButton.disabled = !(
+            blockCode.value !== 'Select' &&
+            floorNumber.value.length > 0 &&
+            selectedStatus !== null
+        )
     }
+    
+    // blockCode.addEventListener('input', toggleSubmitButton);
+    // floorNumber.addEventListener('input', toggleSubmitButton);
+    // document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    async function initializeForm() {
+        let promises = [populateBlockCode()];
 
-    function getBlockFloor(blockFloorId) {
+        if (blockFloorId) {
+            promises.push(getBlockFloor(blockFloorId));
+        }
+
+        async function getBlockFloor(blockFloorId) {
         const requestOptions = {
             method: "GET"
         };
 
-        fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
+        return fetch("http://localhost:1000/api/blockfloor/" + blockFloorId, requestOptions)
             .then((response) => response.json())
             .then((blockFloor) => {
                 blockCode.value = blockFloor.blockId
@@ -102,16 +121,14 @@
             .catch((error) => console.error(error));
     }
 
-    function toggleSubmitButton() {
-        var selectedStatus = document.querySelector('input[name="status"]:checked');
-        submitButton.disabled = !(
-            blockCode.value !== 'Select' &&
-            floorNumber.value.length > 0 &&
-            selectedStatus !== null
-        )
+        const [blocks, blockDetails] = await Promise.all(promises)
+        
+        blockCode.addEventListener('input', toggleSubmitButton);
+        floorNumber.addEventListener('input', toggleSubmitButton);
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+
     }
-    
-    blockCode.addEventListener('input', toggleSubmitButton);
-    floorNumber.addEventListener('input', toggleSubmitButton);
-    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+
+    initializeForm();
+
 </script>

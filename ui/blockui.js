@@ -1,14 +1,24 @@
+const { getUserProfile } = require('../utilityclient.js')
+
 function blockPageUi(req, res) {
-    res.render('pages/block/blocklist.ejs');
+    res.render('pages/block/blocklist.ejs', {
+        user: getUserProfile(req.session)
+    });
 }
 
 function addBlockUi(req, res) {
-    res.render('pages/block/blockform.ejs', { blockId: '' });
+    res.render('pages/block/blockform.ejs', {
+        blockId: '',
+        user: getUserProfile(req.session)
+    });
 }
 
 function editBlockUi(req, res) {
     const blockId = req.params.blockId;
-    res.render('pages/block/blockform.ejs', { blockId: blockId });
+    res.render('pages/block/blockform.ejs', {
+            blockId: blockId,
+            user: getUserProfile(req.session)
+        });
 }
 
 module.exports = (app) => {

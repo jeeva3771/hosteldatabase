@@ -1,18 +1,32 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendancepage' }) %>
 
-    <select class="form-select form-select-lg mb-3 pageCount" aria-label=".form-select-lg example" id="limit"
-        onchange="changeLimit()">
-        <option value="50" href="#">50</option>
-        <option value="100" href="#" selected>100</option>
-        <option value="150" href="#">150</option>
-        <option value="200" href="#">200</option>
-    </select>
-    <a class="btn btn-info" href="/attendance/add">Add</a>
+<div class="d-flex justify-content-between align-items-center my-2">
+    <h3 class="col-auto me-2 controlAlign">Attendance</h3>
+    <div class="d-flex align-items-center">
+        <div class="mx-1">
+            <select class="form-select" id="limit" onchange="changeLimit()">
+                <option value="50" href="#">50</option>
+                <option value="100" href="#" selected>100</option>
+                <option value="150" href="#">150</option>
+                <option value="200" href="#">200</option>
+            </select>
+        </div>
+        <div class="mx-1">
+            <form onkeyup="handleSearch(event)">
+                <input class="form-control" id="searchInput" type="search" placeholder="Search" aria-label="Search">
+            </form>
+        </div>
+        <div class="mx-1">
+            <a class="btn btn-info" href="/attendance/add">Add</a>
+        </div>
+    </div>
+</div>
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
                 <th scope="col">Sno</th>
                 <th scope="col" onclick="sortByColumn('studentId')">Student Name</th>
+                <th scope="col" onclick="sortByColumn('registerNumber')">Register Number</th>
                 <th scope="col" onclick="sortByColumn('checkInDate')">CheckIn Date</th>
                 <th scope="col" onclick="sortByColumn('isPresent')">Is Present</th>
                 <th scope="col" onclick="sortByColumn('wardenId')">Reviewed Warden</th>
@@ -38,6 +52,7 @@
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
+            var searchQuery = ''
             var tableData = document.getElementById("attendancesData");
             var limit = document.getElementById("limit").value;
             var paginationDom = document.getElementById("pagination");
@@ -57,6 +72,12 @@
                 attendancePage()
             }
 
+            function handleSearch(event) {
+                event.preventDefault();
+                searchQuery = document.getElementById("searchInput").value;
+                attendancePage();
+            }
+
             function sortByColumn(column, sortOrder) {
                 columnSortOrders[column] = sortOrder;
                 currentColumn = column;
@@ -70,7 +91,7 @@
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}` + url, requestOptions)
+                fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}` + url+ `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok ' + response.statusText);
@@ -86,10 +107,14 @@
                             trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
                             <td>${attendance.name}</td>
+                            <td>${attendance.registerNumber}</td>
                             <td>${attendance.checkIn}</td>
-                            <td>${attendance.isPresent}</td>
+                            <td>${attendance.isPresent === 1 ? 'Present' : 'Absent'}</td>
                             <td>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}</td>
                             <td>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-folder" viewBox="0 0 16 16" data-bs-toggle="modal" data-bs-target="#exampleModal" onclick="readAttendance(${attendance.attendanceId})">
+                                <path d="M.54 3.87.5 3a2 2 0 0 1 2-2h3.672a2 2 0 0 1 1.414.586l.828.828A2 2 0 0 0 9.828 3h3.982a2 2 0 0 1 1.992 2.181l-.637 7A2 2 0 0 1 13.174 14H2.826a2 2 0 0 1-1.991-1.819l-.637-7a2 2 0 0 1 .342-1.31zM2.19 4a1 1 0 0 0-.996 1.09l.637 7a1 1 0 0 0 .995.91h10.348a1 1 0 0 0 .995-.91l.637-7A1 1 0 0 0 13.81 4zm4.69-1.707A1 1 0 0 0 6.172 2H2.5a1 1 0 0 0-1 .981l.006.139q.323-.119.684-.12h5.396z"/>
+                                </svg>
                                 <a href="/attendance/${attendance.attendanceId}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
@@ -108,6 +133,130 @@
                         paginationDom.innerHTML = paginationHtml;
                     })
                     .catch((error) => console.error(error));
+            }
+
+            function readAttendance(attendanceId) {
+                var myHeaders = new Headers();
+                var requestOptions = {
+                    method: 'GET',
+                    headers: myHeaders
+                };
+
+                fetch("http://localhost:1000/api/attendance/" + attendanceId, requestOptions)
+                    .then(response => response.json())
+                    .then(attendance => {
+
+                        const existingModal = document.getElementById('attendanceModal');
+                        if (existingModal) {
+                            existingModal.remove();
+                        }
+                        const modalHtml = `
+                        <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">X</button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Name</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.name}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Register Number</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.registerNumber}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>CheckIn Date</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.checkIn}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Block Code</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.blockCode}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Floor Number</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.floorNumber}
+                                            </div>
+                                        </div>
+                                         <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Room Number</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.roomNumber}
+                                            </div>
+                                        </div>
+                                           <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Is present</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.isPresent === 1 ? 'Present' : 'Absent'}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Reviewed Warden	</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Created At</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.createdTimeStamp}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>updated At</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.updatedTimeStamp}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>updated By</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${attendance.updatedWardenFirstName !== null ? attendance.updatedWardenFirstName : '---'} ${attendance.updatedWardenLastName !== null ? attendance.updatedWardenLastName : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>`;
+                        document.body.insertAdjacentHTML('beforeend', modalHtml);
+                        var modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+                        modal.show();
+
+                    })
+                    .catch(error => console.log('error', error));
             }
 
             window.addEventListener('load', () => {

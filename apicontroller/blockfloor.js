@@ -66,16 +66,11 @@ async function readBlockFloors(req, res) {
     }
 }
 
-async function readBlockFloor(req, res) {
+async function readBlockFloorById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockFloorId = req.params.blockfloorId;
 
     try {
-        // const blockFloor = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`,
-        //     [blockFloorId],
-        //     mysqlClient
-        // )
-
         const blockFloor = await mysqlQuery(/*sql*/`
             SELECT 
             b.*,
@@ -140,7 +135,7 @@ async function createBlockFloor(req, res) {
     }
 }
 
-async function updateBlockFloor(req, res) {
+async function updateBlockFloorById(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
     const values = []
@@ -197,7 +192,7 @@ async function updateBlockFloor(req, res) {
     }
 }
 
-async function deleteBlockFloor(req, res) {
+async function deleteBlockFloorById(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -307,8 +302,8 @@ async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
-    app.get('/api/blockfloor/:blockfloorId', readBlockFloor)
+    app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
     app.post('/api/blockfloor', createBlockFloor)
-    app.put('/api/blockfloor/:blockfloorId', updateBlockFloor)
-    app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloor)
+    app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
+    app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloorById)
 }
