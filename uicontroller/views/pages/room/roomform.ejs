@@ -1,5 +1,5 @@
 <%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Room' }) %>
-    <h2>Room</h2>
+    <h2>Room form</h2>
     <div class="form-group">
         <label for="blockCode">Block Code</label>
         <select class="form-control" id="blockCode">
@@ -52,12 +52,34 @@
             var floorNumber = document.getElementById('floorNumber');
             var roomNumber = document.getElementById('roomNumber');
             var roomCapacity = document.getElementById('roomCapacity');
+            var selectedStatus = document.querySelectorAll('input[name="status"]');
             var submitButton = document.getElementById('submitButton');
             var roomId = document.getElementById('roomId').value;
 
+            // function getSelectedStatus() {
+            //     let selectedStatusValue = null;
+            //     selectedStatus.forEach(radio => {
+            //         if (radio.checked) {
+            //             selectedStatusValue = parseInt(radio.value);
+            //         }
+            //     });
+            //     return selectedStatusValue;
+            // }
+
+            function getSelectedRadioValue(radioName) {
+                const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+                let selectedValue = null;
+                radios.forEach(radio => {
+                    if (radio.checked) {
+                        selectedValue = parseInt(radio.value);
+                    }
+                });
+                return selectedValue;
+            }
+
             function saveOrUpdateRoom() {
-                var selectedStatus = document.querySelector('input[name="status"]:checked');
-                var isAirConditioner = document.querySelector('input[name="isAirConditioner"]:checked');
+                const selectedStatusValue = getSelectedRadioValue('status');
+                const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
 
                 var myHeaders = new Headers();
                 myHeaders.append("Content-Type", "application/json");
@@ -67,8 +89,8 @@
                     "blockFloorId": floorNumber.value,
                     "roomNumber": parseInt(roomNumber.value),
                     "roomCapacity": parseInt(roomCapacity.value),
-                    "isActive": parseInt(selectedStatus.value),
-                    "isAirConditioner": parseInt(isAirConditioner.value)
+                    "isActive": selectedStatusValue,
+                    "isAirConditioner": selectedAirConditionerValue
                 });
 
                 var requestOptions = {
@@ -88,51 +110,70 @@
                     .catch(error => console.error('error', error));
             }
 
-            function populateBlockCode() {
-                fetch("http://localhost:1000/api/block")
-                    .then(response => response.json())
-                    .then(responseData => {
-                        const { blocks } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        for (var i = 0; i < blocks.length; i++) {
-                            var opt = blocks[i]
-                            optionsList += `<option value="${opt.blockId}">${opt.blockCode}</option>`
-                        }
-                        blockCode.innerHTML = optionsList
-                    })
-                    .catch(error => console.log('error', error));
+            function toggleSubmitButton() {
+                const selectedStatusValue = getSelectedRadioValue('status');
+                const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
+
+                submitButton.disabled = !(
+                    blockCode.value !== 'Select' &&
+                    floorNumber.value !== 'Select' &&
+                    roomNumber.value.length > 0 &&
+                    roomCapacity.value.length > 0 &&
+                    selectedStatusValue !== null &&
+                    selectedAirConditionerValue !== null
+                )
             }
 
-            function populateFloorNumber() {
-                fetch("http://localhost:1000/api/blockfloor")
-                    .then(response => response.json())
-                    .then(responseData => {
+            async function initializeForm() {
+                await populateBlockCode();
+                await populateFloorNumber();
+
+                if (roomId) {
+                    await getRoomById(roomId);
+                }
+
+                async function populateBlockCode() {
+                    try {
+                        const response = await fetch('http://localhost:1000/api/block');
+                        const responseData = await response.json();
+                        const { blocks } = responseData;
+
+                        let optionsList = '<option selected>Select</option>';
+                        blocks.forEach(block => {
+                            optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
+                        });
+                        blockCode.innerHTML = optionsList;
+                    } catch (error) {
+                        console.log('Error fetching block codes:', error);
+                    }
+                }
+
+                async function populateFloorNumber() {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/blockfloor")
+                        const responseData = await response.json();
                         const { blockFloors } = responseData
                         var optionsList = '<option selected>Select</option>'
-                        for (var i = 0; i < blockFloors.length; i++) {
-                            var opt = blockFloors[i]
-                            optionsList += `<option value="${opt.blockFloorId}">${opt.floorNumber}</option>`
-                        }
+                        blockFloors.forEach(blockFloor => {
+                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`
+                        })
                         floorNumber.innerHTML = optionsList
-                    })
-                    .catch(error => console.log('error', error));
-            }
+                    } catch (error) {
+                        console.log('Error fetching floor Number:', error);
+                    }
+                }
 
-            // populateBlockCode()
-            // populateFloorNumber()
+                blockCode.addEventListener('input', toggleSubmitButton);
+                floorNumber.addEventListener('input', toggleSubmitButton);
+                roomNumber.addEventListener('input', toggleSubmitButton);
+                roomCapacity.addEventListener('input', toggleSubmitButton);
+                document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+                document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+                async function getRoomById(roomId) {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/room/" + roomId);
+                        const room = await response.json();
 
-            // if (roomId) {
-            //     getRoomById(roomId)
-            // }
-
-            function getRoomById(roomId) {
-                const requestOptions = {
-                    method: "GET",
-                };
-
-                fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
-                    .then((response) => response.json())
-                    .then((room) => {
                         blockCode.value = room.blockId
                         floorNumber.value = room.blockFloorId
                         roomNumber.value = room.roomNumber
@@ -149,51 +190,12 @@
                         } else {
                             document.getElementById('notAir').checked = true;
                         }
-
-                    })
-                    .catch((error) => console.error(error));
+                    } catch (error) {
+                        console.error('Error fetching room details:', error);
+                    }
+                }
             }
 
-            function toggleSubmitButton() {
-                var selectedStatus = document.querySelector('input[name="status"]:checked');
-                var isAirConditioner = document.querySelector('input[name="isAirConditioner"]:checked');
-
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value.length > 0 &&
-                    roomCapacity.value.length > 0 &&
-                    selectedStatus !== null &&
-                    isAirConditioner !== null
-                )
-            }
-
-            // blockCode.addEventListener('input', toggleSubmitButton);
-            // floorNumber.addEventListener('input', toggleSubmitButton);
-            // roomNumber.addEventListener('input', toggleSubmitButton);
-            // roomCapacity.addEventListener('input', toggleSubmitButton);
-            // document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            // document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-        function initializeForm() {
-        let promises = [populateBlockCode(), populateFloorNumber()];
-
-        if (roomId) {
-            promises.push(getRoomById(roomId));
-        }
-
-        Promise.all(promises)
-            .then(() => {
-            blockCode.addEventListener('input', toggleSubmitButton);
-            floorNumber.addEventListener('input', toggleSubmitButton);
-            roomNumber.addEventListener('input', toggleSubmitButton);
-            roomCapacity.addEventListener('input', toggleSubmitButton);
-            document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            })
-            .catch(error => console.error('Error initializing form:', error));
-    }
-
-    initializeForm();
+            initializeForm();
 
         </script>
-        
