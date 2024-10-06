@@ -23,17 +23,17 @@
       display: none;
     }
 
-    .icon-hover:hover {
+    .focus:hover {
       fill: #007bff;
       cursor: pointer;
     }
 
-    .icon-hover:hover {
+    .focus:hover {
       transform: scale(1.1);
       transition: transform 0.2s ease;
     }
 
-    .icon-hover:focus {
+    .focus:focus {
       fill: #007bff;
       transform: scale(1.1);
     }
@@ -62,35 +62,35 @@
     <% if(isMenuVisible===true) { %>
       <header>
         <nav class="navbar navbar-expand-lg bg-body-tertiary controlAlign">
-          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <div class="container-fluid">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/home">Home</a>
+                <a class="nav-link active focus" aria-current="page" href="/home">Home</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/block">Block</a>
+                <a class="nav-link active focus" aria-current="page" href="/block">Block</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/blockfloor">Blockfloor</a>
+                <a class="nav-link active focus" aria-current="page" href="/blockfloor">Blockfloor</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/room">Room</a>
+                <a class="nav-link active focus" aria-current="page" href="/room">Room</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/student">Student</a>
+                <a class="nav-link active focus" aria-current="page" href="/student">Student</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/course">Course</a>
+                <a class="nav-link active focus" aria-current="page" href="/course">Course</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/warden">Warden</a>
+                <a class="nav-link active focus" aria-current="page" href="/warden">Warden</a>
               </li>
               <li class="nav-item hidden">
                 <a class="nav-link active" aria-current="page" href="/error">Errors</a>
               </li>
             </ul>
             <div class="d-flex align-items-end ms-auto">
-              <span class="navbar-text me-2 gx-3">
+              <span class="navbar-text">
                 <%= user.name %>
               </span>
               <a href="/api/logout" class="btn btn-light">Logout</a>
