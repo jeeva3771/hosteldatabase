@@ -128,39 +128,92 @@ async function readAttendanceById(req, res) {
     }
 }
 
-async function createAttendance(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const {
-        studentId,
-        roomId,
-        blockFloorId,
-        blockId,
-        checkInDate = new Date().toISOString().slice(0, 10),
-        isPresent
-    } = req.body
-    const wardenId = req.session.data.wardenId
+// async function createAttendance(req, res) {
+//     const mysqlClient = req.app.mysqlClient
+//     const {
+//         studentId,
+//         roomId,
+//         blockFloorId,
+//         blockId,
+//         checkInDate = new Date().toISOString().slice(0, 10),
+//         isPresent
+//     } = req.body
+//     const wardenId = req.session.data.wardenId
 
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert);
+//     const isValidInsert = validateInsertItems(req.body);
+//     if (isValidInsert.length > 0) {
+//         return res.status(400).send(isValidInsert);
+//     }
+
+//     try {
+//         const dayAttendance = await mysqlQuery(/*sql*/`INSERT INTO 
+//             attendance(studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId)
+//             VALUES(?,?,?,?,?,?,?)`,
+//             [studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId],
+//             mysqlClient
+//         )
+//         if (dayAttendance.affectedRows === 0) {
+//             res.status(400).send("no insert was made")
+//         } else {
+//             res.status(201).send('insert successfull')
+//         }
+//     } catch (error) {
+//         res.status(500).send(error.message)
+//     }
+// }
+
+async function createAttendance(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const { blockId, blockFloorId, roomId, attendance, checkInDate = new Date().toISOString().slice(0, 10) } = req.body;
+    const wardenId = req.session.data.wardenId;
+
+    if (!blockId || !blockFloorId || !roomId) {
+        return res.status(400).send('Block ID, Block Floor ID, and Room ID are required.');
+    }
+
+    if (!attendance || Object.keys(attendance).length === 0) {
+        return res.status(400).send('Attendance data is missing.');
     }
 
     try {
-        const dayAttendance = await mysqlQuery(/*sql*/`INSERT INTO 
-            attendance(studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId)
-            VALUES(?,?,?,?,?,?,?)`,
-            [studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId],
-            mysqlClient
-        )
-        if (dayAttendance.affectedRows === 0) {
-            res.status(400).send("no insert was made")
-        } else {
-            res.status(201).send('insert successfull')
+        const block = await mysqlQuery(/*sql*/ `SELECT * FROM block WHERE blockId = ?`, [blockId], mysqlClient);
+        if (block.length === 0) {
+            return res.status(404).send('Block not found.');
         }
+
+        const blockFloor = await mysqlQuery(/*sql*/ `SELECT * FROM blockfloor WHERE blockFloorId = ? AND blockId = ?`, [blockFloorId, blockId], mysqlClient);
+        if (blockFloor.length === 0) {
+            return res.status(404).send('Block floor not found for the specified block.');
+        }
+
+        const room = await mysqlQuery(/*sql*/ `SELECT * FROM room WHERE roomId = ? AND blockId = ? AND blockFloorId = ?`, [roomId, blockId, blockFloorId], mysqlClient);
+        if (room.length === 0) {
+            return res.status(404).send('Room not found for the specified block and block floor.');
+        }
+
+        const students = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE roomId = ?`, [roomId], mysqlClient);
+        if (students.length === 0) {
+            return res.status(404).send('No students found for the specified room.');
+        }
+
+        for (const student of students) {
+            const isPresent = attendance[student.studentId]; 
+            if (typeof isPresent !== 'undefined') {
+                await mysqlQuery(/*sql*/`
+                    INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON DUPLICATE KEY UPDATE isPresent = ?, checkInDate = ?`,
+                    [student.studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId],
+                    mysqlClient
+                );
+            }
+        }
+        res.status(201).send('Attendance successfully recorded.');
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
+
 
 async function updateAttendanceById(req, res) {
     const mysqlClient = req.app.mysqlClient
@@ -243,6 +296,7 @@ function validateInsertItems(body, isUpdate = false) {
         roomId,
         blockFloorId,
         blockId,
+        checkInDate,
         isPresent
     } = body
 
@@ -268,7 +322,7 @@ function validateInsertItems(body, isUpdate = false) {
         if (isNaN(blockFloorId) || blockFloorId <= 0) {
             errors.push('blockFloorId is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('blockFloorId is missing')
     }
 
@@ -276,7 +330,7 @@ function validateInsertItems(body, isUpdate = false) {
         if (isNaN(blockId) || blockId <= 0) {
             errors.push('blockId is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('blockId is missing')
     }
 
@@ -284,8 +338,22 @@ function validateInsertItems(body, isUpdate = false) {
         if (![0, 1].includes(isPresent)) {
             errors.push('isPresent is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('isPresent is missing')
+    }
+
+    if (checkInDate !== undefined) {
+        const date = new Date(checkInDate);
+        if (isNaN(date.getTime())) {
+            errors.push('checkInDate is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('checkInDate cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('checkInDate is missing')
     }
     return errors
 }

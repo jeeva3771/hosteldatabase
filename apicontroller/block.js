@@ -30,7 +30,12 @@ async function readBlocks(req, res) {
         LEFT JOIN 
             warden AS w2 ON w2.wardenId = bk.updatedBy
         WHERE 
-            bk.deletedAt IS NULL AND bk.blockCode LIKE ? 
+            bk.deletedAt IS NULL AND 
+            (bk.blockCode LIKE ? OR 
+            w.firstName LIKE ? OR 
+            w.lastName LIKE ? OR 
+            w2.firstName LIKE ? OR 
+            w2.lastName LIKE ?)
         ORDER BY 
         ${orderBy} ${sort}`;
 
@@ -45,7 +50,7 @@ async function readBlocks(req, res) {
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -106,7 +111,7 @@ async function createBlock(req, res) {
     }
 
     try {
-        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? `,
+        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
             [blockCode],
             mysqlClient
         );
@@ -142,13 +147,24 @@ async function updateBlockById(req, res) {
 
     updates.push("updatedBy = ?")
     values.push(updatedBy, blockId)
-
     const mysqlClient = req.app.mysqlClient
+    const blockCode = req.body.blockCode;
 
     try {
         const block = await validateBlockById(blockId, mysqlClient);
         if (!block) {
             return res.status(404).send("Block not found or already deleted");
+        }
+
+        if (blockCode) {
+            const isBlockUnique = await mysqlQuery(/*sql*/`
+                SELECT * FROM block 
+                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
+                [blockCode, blockId], mysqlClient);
+
+            if (isBlockUnique.length > 0) {
+                return res.status(409).send("blockCode already exists");
+            }
         }
 
         const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
@@ -237,14 +253,13 @@ function validateInsertItems(body, isUpdate = false) {
         isActive
     } = body
 
-
     const errors = []
 
     if (blockCode !== undefined) {
         if (blockCode <= 0) {
             errors.push("blockCode is invalid")
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push("blockCode is missing")
     }
 
@@ -252,7 +267,7 @@ function validateInsertItems(body, isUpdate = false) {
         if (blockLocation <= 0) {
             errors.push("location is invalid")
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push("location is missing")
     }
 
@@ -260,7 +275,7 @@ function validateInsertItems(body, isUpdate = false) {
         if (![0, 1].includes(isActive)) {
             errors.push("isActive is invalid")
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push("isActive is missing")
     }
     return errors

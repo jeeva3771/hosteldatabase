@@ -13,20 +13,16 @@ function mysqlQuery(sql, options, mysqlClient) {
     })
 }
 
-function readAuthenticationName(req, res) {
-    console.log(req.session.data)
-    var sessionData = req.session.data
-    return sessionData
+function getUserProfile(session) {
+    return {
+        name: `${session.data.firstName} ${session.data.lastName}`
+    }
 }
 
 module.exports = {
     mysqlQuery,
-    readAuthenticationName
+    getUserProfile
 }
-
-// module.exports.mysqlQuery = mysqlQuery;
-// module.exports.readAuthenticationName = readAuthenticationName;
-
 
 
 
