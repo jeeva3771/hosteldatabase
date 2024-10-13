@@ -82,6 +82,7 @@ async function readAttendances(req, res) {
 async function readAttendanceById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const attendanceId = req.params.attendanceId;
+
     try {
         const attendance = await mysqlQuery(/*sql*/`
              SELECT 
@@ -115,8 +116,8 @@ async function readAttendanceById(req, res) {
             warden AS w2 ON w2.wardenId = a.updatedBy 
         WHERE 
             attendanceId = ?`,
-        [attendanceId],
-        mysqlClient
+            [attendanceId],
+            mysqlClient
         );
 
         if (attendance.length === 0) {
@@ -128,143 +129,79 @@ async function readAttendanceById(req, res) {
     }
 }
 
-// async function createAttendance(req, res) {
-//     const mysqlClient = req.app.mysqlClient
-//     const {
-//         studentId,
-//         roomId,
-//         blockFloorId,
-//         blockId,
-//         checkInDate = new Date().toISOString().slice(0, 10),
-//         isPresent
-//     } = req.body
-//     const wardenId = req.session.data.wardenId
-
-//     const isValidInsert = validateInsertItems(req.body);
-//     if (isValidInsert.length > 0) {
-//         return res.status(400).send(isValidInsert);
-//     }
-
-//     try {
-//         const dayAttendance = await mysqlQuery(/*sql*/`INSERT INTO 
-//             attendance(studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId)
-//             VALUES(?,?,?,?,?,?,?)`,
-//             [studentId, roomId, blockFloorId, blockId, checkInDate, isPresent, wardenId],
-//             mysqlClient
-//         )
-//         if (dayAttendance.affectedRows === 0) {
-//             res.status(400).send("no insert was made")
-//         } else {
-//             res.status(201).send('insert successfull')
-//         }
-//     } catch (error) {
-//         res.status(500).send(error.message)
-//     }
-// }
-
-async function createAttendance(req, res) {
+ async function readRoomStudents (req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const { blockId, blockFloorId, roomId, attendance, checkInDate = new Date().toISOString().slice(0, 10) } = req.body;
-    const wardenId = req.session.data.wardenId;
-
-    if (!blockId || !blockFloorId || !roomId) {
-        return res.status(400).send('Block ID, Block Floor ID, and Room ID are required.');
-    }
-
-    if (!attendance || Object.keys(attendance).length === 0) {
-        return res.status(400).send('Attendance data is missing.');
-    }
+    const { roomId } = req.params;
+    const { checkIn } = req.query; 
 
     try {
-        const block = await mysqlQuery(/*sql*/ `SELECT * FROM block WHERE blockId = ?`, [blockId], mysqlClient);
-        if (block.length === 0) {
-            return res.status(404).send('Block not found.');
-        }
+        const studentsWithAttendance = await mysqlQuery(
+            /*sql*/ `
+            SELECT s.studentId, s.name, a.isPresent, a.checkInDate
+            FROM student AS s
+            LEFT JOIN attendance AS a ON s.studentId = a.studentId AND a.roomId = ? AND a.checkInDate = ?
+            WHERE s.roomId = ?`,
+            [roomId, checkIn],
+            mysqlClient
+        );
 
-        const blockFloor = await mysqlQuery(/*sql*/ `SELECT * FROM blockfloor WHERE blockFloorId = ? AND blockId = ?`, [blockFloorId, blockId], mysqlClient);
-        if (blockFloor.length === 0) {
-            return res.status(404).send('Block floor not found for the specified block.');
-        }
-
-        const room = await mysqlQuery(/*sql*/ `SELECT * FROM room WHERE roomId = ? AND blockId = ? AND blockFloorId = ?`, [roomId, blockId, blockFloorId], mysqlClient);
-        if (room.length === 0) {
-            return res.status(404).send('Room not found for the specified block and block floor.');
-        }
-
-        const students = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE roomId = ?`, [roomId], mysqlClient);
-        if (students.length === 0) {
+        if (studentsWithAttendance.length === 0) {
             return res.status(404).send('No students found for the specified room.');
         }
 
-        for (const student of students) {
-            const isPresent = attendance[student.studentId]; 
-            if (typeof isPresent !== 'undefined') {
-                await mysqlQuery(/*sql*/`
+        res.json(studentsWithAttendance);
+    } catch (error) {
+        res.status(500).send('Error fetching student and attendance data: ' + error.message);
+    }
+};
+
+
+
+async function createAttendance(req, res) {
+        const mysqlClient = req.app.mysqlClient;
+        const { blockId, blockFloorId, roomId } = req.params;
+        const { checkInDate, isPresent } = req.body;
+        const wardenId = req.session.data.wardenId;
+
+    
+        try {
+            const errors = await validateInsertItems(req.params, req.body, mysqlClient);
+            if (errors.length > 0) {
+                return res.status(400).send(errors); 
+            }
+            
+            const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE roomId = ?`,
+                [roomId],
+                mysqlClient
+            );
+
+            if (students.length === 0) {
+                return res.status(404).send('No students found for the specified room.');
+            }
+    
+            const attendancePromises = students.map((student) => {
+                console.log(student)
+                return mysqlQuery(
+                    /*sql*/ `
                     INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
-                    ON DUPLICATE KEY UPDATE isPresent = ?, checkInDate = ?`,
+                    ON DUPLICATE KEY UPDATE
+                        checkInDate = VALUES(checkInDate),
+                        isPresent = VALUES(isPresent),
+                        wardenId = VALUES(wardenId)
+                    `,
                     [student.studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId],
                     mysqlClient
                 );
-            }
+            });
+    
+            await Promise.all(attendancePromises);
+    
+            res.status(201).send('Attendance successfully recorded for all students in the room.');
+        } catch (error) {
+            res.status(500).send(error.message);
         }
-        res.status(201).send('Attendance successfully recorded.');
-    } catch (error) {
-        res.status(500).send(error.message);
     }
-}
-
-
-async function updateAttendanceById(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const attendanceId = req.params.attendanceId;
-    const updatedBy = req.session.data.wardenId;
-
-    const values = []
-    const updates = []
-
-    ALLOWED_UPDATE_KEYS.forEach(key => {
-        const keyValue = req.body[key]
-        if (keyValue !== undefined) {
-            values.push(keyValue)
-            updates.push(` ${key} = ? `)
-        }
-    })
-
-    updates.push('updatedBy = ?')
-    values.push(updatedBy, attendanceId)
-
-    try {
-        const attendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ? `,
-            [attendanceId],
-            mysqlClient
-        )
-        if (attendance.length === 0) {
-            return res.status(404).send('attendanceId not found')
-        }
-
-        const isValidInsert = validateInsertItems(req.body, true);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
-        }
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE attendance SET ${updates.join(', ')} WHERE attendanceId = ? `,
-            values, mysqlClient)
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("attendanceId not found or no changes made")
-        }
-
-        const getUpdatedAttendance = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE attendanceId = ? `,
-            [attendanceId],
-            mysqlClient)
-        res.status(200).send({
-            status: 'successfull',
-            data: getUpdatedAttendance[0]
-        })
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
 
 async function attendanceListById(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -290,31 +227,25 @@ async function attendanceListById(req, res) {
     }
 }
 
-function validateInsertItems(body, isUpdate = false) {
+async function validateInsertItems(params, body, mysqlClient) {
     const {
-        studentId,
         roomId,
         blockFloorId,
-        blockId,
+        blockId
+    } = params
+
+    const {
         checkInDate,
         isPresent
     } = body
 
     const errors = []
 
-    if (studentId !== undefined) {
-        if (isNaN(studentId) || studentId <= 0) {
-            errors.push('studentId is invalid')
-        }
-    } else if (!isUpdate) {
-        errors.push('studentId is missing')
-    }
-
     if (roomId !== undefined) {
         if (isNaN(roomId) || roomId <= 0) {
             errors.push('roomId is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('roomId is missing')
     }
 
@@ -355,13 +286,18 @@ function validateInsertItems(body, isUpdate = false) {
     } else {
         errors.push('checkInDate is missing')
     }
+
+    const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE blockId = ? AND blockFloorId = ? AND  roomId = ?`, [blockId, blockFloorId, roomId], mysqlClient);
+    if (isValidateEntry.length === 0) {
+        errors.push('RoomId or BlockFloorId or BlockId is not valid');
+    }
     return errors
 }
 
 module.exports = (app) => {
     app.get('/api/attendance', readAttendances)
     app.get('/api/attendance/:attendanceId', readAttendanceById)
-    app.post('/api/attendance', createAttendance)
-    app.put('/api/attendance/:attendanceId', updateAttendanceById)
+    app.get('/api/attendance/student/:roomId', readRoomStudents)
+    app.post('/api/attendance/:blockId/:blockFloorId/:roomId', createAttendance)
     app.get('/api/attendance/student/:studentId', attendanceListById)
 }

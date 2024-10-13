@@ -18,7 +18,6 @@ const blockFloor = require('./apicontroller/blockfloor.js')
 const room = require('./apicontroller/room.js')
 const student = require('./apicontroller/student.js')
 const attendance = require('./apicontroller/attendance.js')
-// const utilityClient = require('./utilityclient.js')
 
 //uicontroller
 const homeUi = require('./ui/homeui.js')
@@ -96,7 +95,6 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
-        // utilityClient(app)
 
         app.listen(1000, () => {
             logger.info('listen 1000port')

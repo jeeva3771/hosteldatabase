@@ -307,7 +307,7 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
     app.get('/api/block/:blockId', readBlockById)
-    app.post('/api/block/', createBlock)
+    app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)
 }

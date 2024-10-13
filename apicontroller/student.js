@@ -128,6 +128,25 @@ async function readStudentById(req, res) {
     }
 }
 
+async function readStudentsByRoomId(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const roomId = req.params.roomId;
+    try {
+        const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE roomId = ? AND deletedAt IS NULL`,
+            [roomId],
+            mysqlClient
+        )
+
+        if (students.length === 0) {
+            return res.status(404).send("RoomId not valid");
+        }
+    
+       res.status(200).send(students)
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 async function createStudent(req, res) {
     const {
         roomId,
@@ -431,6 +450,7 @@ function validateInsertItems(body, isUpdate = false) {
 module.exports = (app) => {
     app.get('/api/student', readStudents)
     app.get('/api/student/:studentId', readStudentById)
+    app.get('/api/student/room/:roomId',readStudentsByRoomId)
     app.post('/api/student', createStudent)
     app.put('/api/student/:studentId', updateStudentById)
     app.delete('/api/student/:studentId', deleteStudentById)

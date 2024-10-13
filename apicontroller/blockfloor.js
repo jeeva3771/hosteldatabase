@@ -41,7 +41,7 @@ async function readBlockFloors(req, res) {
 
     if (limit && offset !== null) {
         blockFloorsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit,offset);
+        queryParameters.push(limit, offset);
     }
 
     const countQuery = /*sql*/ `
@@ -92,14 +92,33 @@ async function readBlockFloorById(req, res) {
               b.deletedAt IS NULL AND blockFloorId = ?`,
             [blockFloorId],
             mysqlClient
-            )
-            
+        )
+
         if (blockFloor.length === 0) {
-            return res.status(404).send("blockFloorId not valid");
+            return res.status(404).send("BlockFloorId not valid");
         }
         res.status(200).send(blockFloor[0])
     }
     catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function readBlockFloorsByBlockId(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const blockId = req.params.blockId;
+    try {
+        const blockFloors = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
+            [blockId],
+            mysqlClient
+        )
+
+        if (blockFloors.length === 0) {
+            return res.status(404).send("BlockId not valid");
+        }
+    
+       res.status(200).send(blockFloors)
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
@@ -303,6 +322,7 @@ async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
     app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
+    app.get('/api/blockfloor/block/:blockId', readBlockFloorsByBlockId)
     app.post('/api/blockfloor', createBlockFloor)
     app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
     app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloorById)

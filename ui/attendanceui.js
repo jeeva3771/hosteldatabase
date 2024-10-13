@@ -8,16 +8,6 @@ function attendancePageUi(req, res) {
 
 function addAttendanceUi(req, res) {
     res.render('pages/attendance/attendanceform.ejs', {
-        attendanceId: '',
-        user: getUserProfile(req.session)
-    });
-}
-
-
-function editAttendanceUi(req, res) {
-    const attendanceId = req.params.attendanceId;
-    res.render('pages/attendance/attendanceform.ejs', {
-        attendanceId: attendanceId,
         user: getUserProfile(req.session)
     });
 }
@@ -25,5 +15,4 @@ function editAttendanceUi(req, res) {
 module.exports = (app) => {
     app.get('/attendance', attendancePageUi)
     app.get('/attendance/add', addAttendanceUi)
-    app.get('/attendance/:attendanceId', editAttendanceUi)
 }
