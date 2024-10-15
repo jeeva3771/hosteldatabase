@@ -147,8 +147,6 @@ async function readAttendanceById(req, res) {
     }
 };
 
-
-
 async function createAttendance(req, res) {
         const mysqlClient = req.app.mysqlClient;
         const { blockId, blockFloorId, roomId } = req.params;
@@ -213,9 +211,9 @@ async function attendanceListById(req, res) {
             [startDate, endDate, studentId],
             mysqlClient
         )
-        return res.status(200).send(attendanceList)
+        res.status(200).send(attendanceList)
     } catch (error) {
-        return res.status(500).send(error.message)
+        res.status(500).send(error.message)
     }
 }
 

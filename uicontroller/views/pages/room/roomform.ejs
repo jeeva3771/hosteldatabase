@@ -132,7 +132,17 @@
                     await getRoomById(roomId);
                 }
 
-                async function populateBlockCode() {
+                blockCode.addEventListener('input', populateFloorNumber);
+                floorNumber.addEventListener('input', toggleSubmitButton);
+                roomNumber.addEventListener('input', toggleSubmitButton);
+                roomCapacity.addEventListener('input', toggleSubmitButton);
+                document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+                document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+            }
+
+            initializeForm();
+
+            async function populateBlockCode() {
                     try {
                         const response = await fetch('http://localhost:1000/api/block');
                         const responseData = await response.json();
@@ -149,32 +159,39 @@
                 }
 
                 async function populateFloorNumber() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/blockfloor")
-                        const responseData = await response.json();
-                        const { blockFloors } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        blockFloors.forEach(blockFloor => {
-                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`
-                        })
-                        floorNumber.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching floor Number:', error);
-                    }
-                }
+                try {
+                    const blockId = blockCode.value;
 
-                blockCode.addEventListener('input', toggleSubmitButton);
-                floorNumber.addEventListener('input', toggleSubmitButton);
-                roomNumber.addEventListener('input', toggleSubmitButton);
-                roomCapacity.addEventListener('input', toggleSubmitButton);
-                document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-                document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-                async function getRoomById(roomId) {
+                    if (blockId === 'Select' || blockId === '') {
+                        floorNumber.innerHTML = '<option selected>Select a Floor</option>';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
+                    const blockFloors = await response.json();
+
+                    if (blockFloors.length === 0) {
+                        floorNumber.innerHTML = '<option selected>No floors available</option>';
+                        return;
+                    }
+
+                    let optionsList = '<option selected>Select a Floor</option>';
+                    blockFloors.forEach(blockFloor => {
+                        optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
+                    });
+                    floorNumber.innerHTML = optionsList;
+                } catch (error) {
+                    console.log('Error fetching floor numbers:', error);
+                }
+            }
+
+            async function getRoomById(roomId) {
                     try {
                         const response = await fetch("http://localhost:1000/api/room/" + roomId);
                         const room = await response.json();
 
                         blockCode.value = room.blockId
+                        await populateFloorNumber()
                         floorNumber.value = room.blockFloorId
                         roomNumber.value = room.roomNumber
                         roomCapacity.value = room.roomCapacity
@@ -194,8 +211,6 @@
                         console.error('Error fetching room details:', error);
                     }
                 }
-            }
 
-            initializeForm();
 
         </script>

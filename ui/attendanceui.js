@@ -3,7 +3,8 @@ const { getUserProfile } = require('../utilityclient.js')
 function attendancePageUi(req, res) {
     res.render('pages/attendance/attendancelist.ejs', {
         user: getUserProfile(req.session),
-        bred : [ {name:'Home', link:'/home'},
+        breadcrumb : [ 
+            {name:'Home', link:'/home'},
             {name:'Attendance', link:'/attendance'}
         ]
         });
@@ -12,10 +13,10 @@ function attendancePageUi(req, res) {
 function addAttendanceUi(req, res) {
     res.render('pages/attendance/attendanceform.ejs', {
         user: getUserProfile(req.session),
-        bred : [ 
+        breadcrumb : [ 
             {name:'Home', link:'/home'},
             {name:'Attendance', link:'/attendance'},
-            {name:'Add', link:'/attendance/add'}
+            {name:'form', link:'/attendance/add'}
         ]
     });
 }

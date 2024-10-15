@@ -1,119 +1,252 @@
-<!DOCTYPE html>
-<html>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Student' }) %>
 
-<head>
-  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script> -->
+    <h2>Student form</h2>
+    <div class="form-group">
+        <label for="studentName">Name</label>
+        <input type="text" class="form-control" id="studentName">
+    </div>
+    <div class="form-group">
+        <label for="registerNum">RegisterNumber</label>
+        <input type="text" class="form-control" id="registerNum">
+    </div>
+    <div class="form-group">
+        <label for="dob">DOB</label>
+        <input type="date" class="form-control dateLabel" id="dob">
+    </div>
+    <div class="form-group">
+        <label for="course">CourseName</label>
+        <select class="form-control" id="course">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="email">EmailId</label>
+        <input type="email" class="form-control" id="email">
+    </div>
+    <div class="form-group">
+        <label for="studNum">PhoneNumber</label>
+        <input type="number" class="form-control" id="studNum">
+    </div>
+    <div class="form-group">
+        <label for="fatherName">FatherName</label>
+        <input type="text" class="form-control" id="fatherName">
+    </div>
+    <div class="form-group">
+        <label for="fatherNum">FatherNumber</label>
+        <input type="number" class="form-control" id="fatherNum">
+    </div>
+    <div class="form-group">
+        <label for="address">Address</label>
+        <input type="text" class="form-control" id="address">
+    </div>
+    <div class="form-group">
+        <label for="blockCode">BlockCode</label>
+        <select class="form-control" id="blockCode">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="floorNumber">FloorNumber</label>
+        <select class="form-control" id="floorNumber">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="roomNumber">RoomNumber</label>
+        <select class="form-control" id="roomNumber">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="joinedDate">JoinedDate</label>
+        <input type="date" class="form-control dateLabel" id="joinedDate">
+    </div>
+    <div class="submission">
+        <input type="hidden" id="studentId" value="<%=studentId %>" />
+        <button onclick="saveOrUpdateStudent()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+    </div>
+    <%- include('../../partials/footer.ejs') %>
+        <script>
+            var studentName = document.getElementById('studentName');
+            var registerNum = document.getElementById('registerNum');
+            var dob = document.getElementById('dob');
+            var course = document.getElementById('course');
+            var emailId = document.getElementById('email');
+            var studNum = document.getElementById('studNum');
+            var fatherName = document.getElementById('fatherName');
+            var fatherNum = document.getElementById('fatherNum');
+            var address = document.getElementById('address');
+            var blockCode = document.getElementById('blockCode');
+            var floorNumber = document.getElementById('floorNumber');
+            var roomNumber = document.getElementById('roomNumber');
+            var joinedDate = document.getElementById('joinedDate');
+            var submitButton = document.getElementById('submitButton');
+            var studentId = document.getElementById('studentId').value;
 
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  
-  <title>
-    <%=title %>
-  </title>
-  <style>
-    .container-main {
-      width: 90%;
-      margin: 0 5%;
-    }
+            const today = new Date().toISOString().split('T')[0];
+            joinedDate.value = today;
 
-    .controlAlign {
-      padding-inline-start: 0%;
-    }
+            function saveOrUpdateStudent() {
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
 
-    .hidden {
-      display: none;
-    }
+                var raw = JSON.stringify({
+                    "name": studentName.value,
+                    "registerNumber": registerNum.value,
+                    "dob": dob.value,
+                    "courseId": course.value,
+                    "emailId": emailId.value,
+                    "phoneNumber": studNum.value,
+                    "fatherName": fatherName.value,
+                    "fatherNumber": fatherNum.value,
+                    "address": address.value,
+                    "blockId": blockCode.value,
+                    "blockFloorId": floorNumber.value,
+                    "roomId": roomNumber.value,
+                    "joinedDate": joinedDate.value
+                });
 
-    .focus:hover {
-      fill: #007bff;
-      cursor: pointer;
-    }
+                var requestOptions = {
+                    method: studentId ? 'PUT' : 'POST',
+                    headers: myHeaders,
+                    body: raw
+                };
 
-    .focus:hover {
-      transform: scale(1.1);
-      transition: transform 0.2s ease;
-    }
+                let url = "http://localhost:1000/api/student";
+                if (studentId) {
+                    url = url + '/' + studentId
+                }
 
-    .focus:focus {
-      fill: #007bff;
-      transform: scale(1.1);
-    }
+                fetch(url, requestOptions)
+                    .then(response => response.text())
+                    .then(students => window.location = '/student')
+                    .catch(error => console.error('error', error));
+            }
 
-    .sortIcon:hover {
-      fill: #060607;
-      cursor: pointer;
-    }
+            function toggleSubmitButton() {
+                submitButton.disabled = !(
+                    studentName.value.length > 0 &&
+                    registerNum.value.length > 0 &&
+                    dob.value !== '' &&
+                    course.value !== 'Select' &&
+                    emailId.value.length > 0 &&
+                    studNum.value.length > 0 &&
+                    fatherName.value.length > 0 &&
+                    fatherNum.value.length > 0 &&
+                    address.value.length > 0 &&
+                    blockCode.value !== 'Select' &&
+                    floorNumber.value !== 'Select' &&
+                    roomNumber.value !== 'Select' &&
+                    joinedDate.value !== ''
+                )
+            }
+
+            async function initializeForm() {
+
+                await populateCourse()
+                await populateBlockCode();
+                await populateFloorNumber();
+                await populateRoomNumber()
+
+                if (studentId) {
+                    await getStudentById(studentId);
+                }
+
+                async function populateCourse() {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/course")
+                        const responseData = await response.json()
+                        const { courses } = responseData
+                        var optionsList = '<option selected>Select</option>'
+                        courses.forEach(course => {
+                            optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
+                        })
+                        course.innerHTML = optionsList
+                    } catch (error) {
+                        console.log('Error fetching course:', error);
+                    }
+                }
+
+                async function populateBlockCode() {
+                    try {
+                        const response = await fetch('http://localhost:1000/api/block');
+                        const responseData = await response.json();
+                        const { blocks } = responseData;
+
+                        let optionsList = '<option selected>Select</option>';
+                        blocks.forEach(block => {
+                            optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
+                        });
+                        blockCode.innerHTML = optionsList;
+                    } catch (error) {
+                        console.log('Error fetching block codes:', error);
+                    }
+                }
+
+                async function populateFloorNumber() {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/blockfloor")
+                        const responseData = await response.json();
+                        const { blockFloors } = responseData
+                        var optionsList = '<option selected>Select</option>'
+                        blockFloors.forEach(blockFloor => {
+                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`
+                        })
+                        floorNumber.innerHTML = optionsList
+                    } catch (error) {
+                        console.log('Error fetching floor Number:', error);
+                    }
+                }
+
+                async function populateRoomNumber() {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/room")
+                        const responseData = await response.json()
+                        const { rooms } = responseData
+                        var optionsList = '<option selected>Select</option>'
+                        rooms.forEach(room => {
+                            optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`
+                        })
+                        roomNumber.innerHTML = optionsList
+                    } catch (error) {
+                        console.log('Error fetching room Number:', error);
+                    }
+                }
+
+                studentName.addEventListener('input', toggleSubmitButton);
+                registerNum.addEventListener('input', toggleSubmitButton);
+                dob.addEventListener('input', toggleSubmitButton);
+                course.addEventListener('change', toggleSubmitButton);
+                emailId.addEventListener('input', toggleSubmitButton);
+                studNum.addEventListener('input', toggleSubmitButton);
+                fatherName.addEventListener('input', toggleSubmitButton);
+                fatherNum.addEventListener('change', toggleSubmitButton);
+                address.addEventListener('change', toggleSubmitButton);
+                blockCode.addEventListener('input', toggleSubmitButton);
+                floorNumber.addEventListener('input', toggleSubmitButton);
+                roomNumber.addEventListener('input', toggleSubmitButton);
+                joinedDate.addEventListener('input', toggleSubmitButton);
 
 
-    .sortIcon:hover {
-      fill: #060607;
-      transform: scale(1.1);
-      transition: transform 0.2s ease;
-    }
+                async function getStudentById(studentId) {
+                    try {
+                        const response = await fetch("http://localhost:1000/api/student/" + studentId);
+                        const student = await response.json();
+                        studentName.value = student.name
+                        registerNum.value = student.registerNumber
+                        dob.value = student.dob.split('T')[0]
+                        course.value = student.courseId
+                        emailId.value = student.emailId
+                        studNum.value = student.phoneNumber
+                        fatherName.value = student.fatherName
+                        fatherNum.value = student.fatherNumber
+                        address.value = student.address
+                        blockCode.value = student.blockId
+                        floorNumber.value = student.blockFloorId
+                        roomNumber.value = student.roomId
+                        joinedDate.value = student.joinedDate.split('T')[0]
+                    } catch (error) {
+                        console.error('Error fetching student details:', error);
+                    }
+                }
+            }
 
-    .sortIcon:focus {
-      fill: #060607;
-      transform: scale(1.5);
-    }
-  </style>
-</head>
+            initializeForm();
 
-<body>
-  <div class="container-main container">
-    <% if(isMenuVisible===true) { %>
-      <header>
-        <nav class="navbar navbar-expand-lg bg-body-tertiary navbar-light controlAlign">
-          <div class="container-fluid">
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-              <li class="nav-item">
-                <a class="nav-link active focus" aria-current="page" href="/home">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link active focus" aria-current="page" href="/student">Student</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link active focus" aria-current="page" href="/attendance">Attendance</a>
-              </li>
-              <li class="nav-item hidden">
-                <a class="nav-link active" aria-current="page" href="/error">Errors</a>
-              </li>
-              <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                  Structure
-                </a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="/block">Block</a></li>
-                  <li><a class="dropdown-item" href="/blockfloor">Blockfloor</a></li>
-                  <li><a class="dropdown-item" href="/room">Room</a></li>
-                  <li><a class="dropdown-item" href="/course">Course</a></li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="/warden">Warden</a></li>
-                </ul>
-              </li>
-            </ul>
-            <div class="d-flex align-items-end ms-auto">
-              <span class="navbar-text">
-                <%= user.name %>
-              </span>
-              <a href="/api/logout" class="btn btn-light">Logout</a>
-            </div>
-          </div>
-        </nav>
-
-        <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
-          <ol class="breadcrumb">
-            <% for (let i = 0; i < bred.length; i++) { %>
-              <% if (i === bred.length - 1) { %>
-                <li class="breadcrumb-item active" aria-current="page"><%= bred[i].name %></li>
-              <% } else { %>
-                <li class="breadcrumb-item"><a href="<%= bred[i].link %>"><%= bred[i].name %></a></li>
-              <% } %>
-            <% } %>
-          </ol>
-        </nav>
-        </header>
-      <% } %></div>
+        </script>

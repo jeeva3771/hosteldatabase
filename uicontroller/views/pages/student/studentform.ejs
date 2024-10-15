@@ -148,67 +148,6 @@
                     await getStudentById(studentId);
                 }
 
-                async function populateCourse() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/course")
-                        const responseData = await response.json()
-                        const { courses } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        courses.forEach(course => {
-                            optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
-                        })
-                        course.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching course:', error);
-                    }
-                }
-
-                async function populateBlockCode() {
-                    try {
-                        const response = await fetch('http://localhost:1000/api/block');
-                        const responseData = await response.json();
-                        const { blocks } = responseData;
-
-                        let optionsList = '<option selected>Select</option>';
-                        blocks.forEach(block => {
-                            optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
-                        });
-                        blockCode.innerHTML = optionsList;
-                    } catch (error) {
-                        console.log('Error fetching block codes:', error);
-                    }
-                }
-
-                async function populateFloorNumber() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/blockfloor")
-                        const responseData = await response.json();
-                        const { blockFloors } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        blockFloors.forEach(blockFloor => {
-                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`
-                        })
-                        floorNumber.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching floor Number:', error);
-                    }
-                }
-
-                async function populateRoomNumber() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/room")
-                        const responseData = await response.json()
-                        const { rooms } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        rooms.forEach(room => {
-                            optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`
-                        })
-                        roomNumber.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching room Number:', error);
-                    }
-                }
-
                 studentName.addEventListener('input', toggleSubmitButton);
                 registerNum.addEventListener('input', toggleSubmitButton);
                 dob.addEventListener('input', toggleSubmitButton);
@@ -218,35 +157,127 @@
                 fatherName.addEventListener('input', toggleSubmitButton);
                 fatherNum.addEventListener('change', toggleSubmitButton);
                 address.addEventListener('change', toggleSubmitButton);
-                blockCode.addEventListener('input', toggleSubmitButton);
-                floorNumber.addEventListener('input', toggleSubmitButton);
+                blockCode.addEventListener('input', populateFloorNumber);
+                floorNumber.addEventListener('input', populateRoomNumber);
                 roomNumber.addEventListener('input', toggleSubmitButton);
                 joinedDate.addEventListener('input', toggleSubmitButton);
 
-
-                async function getStudentById(studentId) {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/student/" + studentId);
-                        const student = await response.json();
-                        studentName.value = student.name
-                        registerNum.value = student.registerNumber
-                        dob.value = student.dob.split('T')[0]
-                        course.value = student.courseId
-                        emailId.value = student.emailId
-                        studNum.value = student.phoneNumber
-                        fatherName.value = student.fatherName
-                        fatherNum.value = student.fatherNumber
-                        address.value = student.address
-                        blockCode.value = student.blockId
-                        floorNumber.value = student.blockFloorId
-                        roomNumber.value = student.roomId
-                        joinedDate.value = student.joinedDate.split('T')[0]
-                    } catch (error) {
-                        console.error('Error fetching student details:', error);
-                    }
-                }
             }
 
             initializeForm();
+
+
+            async function populateCourse() {
+                try {
+                    const response = await fetch("http://localhost:1000/api/course")
+                    const responseData = await response.json()
+                    const { courses } = responseData
+                    var optionsList = '<option selected>Select</option>'
+                    courses.forEach(course => {
+                        optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
+                    })
+                    course.innerHTML = optionsList
+                } catch (error) {
+                    console.log('Error fetching course:', error);
+                }
+            }
+
+            async function populateBlockCode() {
+                try {
+                    const response = await fetch('http://localhost:1000/api/block');
+                    const responseData = await response.json();
+                    const { blocks } = responseData;
+
+                    let optionsList = '<option selected>Select</option>';
+                    blocks.forEach(block => {
+                        optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
+                    });
+                    blockCode.innerHTML = optionsList;
+                    await populateFloorNumber()
+                } catch (error) {
+                    console.log('Error fetching block codes:', error);
+                }
+            }
+
+            async function populateFloorNumber() {
+                try {
+                    const blockId = blockCode.value;
+
+                    if (blockId === 'Select' || blockId === '') {
+                        floorNumber.innerHTML = '<option selected>Select a Floor</option>';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
+                    const blockFloors = await response.json();
+
+                    if (blockFloors.length === 0) {
+                        floorNumber.innerHTML = '<option selected>No floors available</option>';
+                        return;
+                    }
+
+                    let optionsList = '<option selected>Select a Floor</option>';
+                    blockFloors.forEach(blockFloor => {
+                        optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
+                    });
+                    floorNumber.innerHTML = optionsList;
+                    await populateRoomNumber()
+
+                } catch (error) {
+                    console.log('Error fetching floor numbers:', error);
+                }
+            }
+
+            async function populateRoomNumber() {
+                try {
+                    const blockFloorId = floorNumber.value;
+
+                    if (blockFloorId === 'Select' || blockFloorId === '') {
+                        roomNumber.innerHTML = '<option selected></option>';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:1000/api/room/blockfloor/${blockFloorId}`);
+                    const rooms = await response.json();
+
+                    if (rooms.length === 0) {
+                        roomNumber.innerHTML = '<option selected>No rooms available</option>';
+                        return;
+                    }
+
+                    let optionsList = '<option selected>Select a Room</option>';
+                    rooms.forEach(room => {
+                        optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`;
+                    });
+                    roomNumber.innerHTML = optionsList;
+
+                } catch (error) {
+                    console.log('Error fetching room numbers:', error);
+                }
+            }
+
+            async function getStudentById(studentId) {
+                try {
+                    const response = await fetch("http://localhost:1000/api/student/" + studentId);
+                    const student = await response.json();
+                    studentName.value = student.name
+                    registerNum.value = student.registerNumber
+                    dob.value = student.dob.split('T')[0]
+                    course.value = student.courseId
+                    emailId.value = student.emailId
+                    studNum.value = student.phoneNumber
+                    fatherName.value = student.fatherName
+                    fatherNum.value = student.fatherNumber
+                    address.value = student.address
+                    blockCode.value = student.blockId
+                    await populateFloorNumber();
+                    floorNumber.value = student.blockFloorId;
+                    await populateRoomNumber();
+                    roomNumber.value = student.roomId;
+                    joinedDate.value = student.joinedDate.split('T')[0]
+                } catch (error) {
+                    console.error('Error fetching student details:', error);
+                }
+            }
 
         </script>
