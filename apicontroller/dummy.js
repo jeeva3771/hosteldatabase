@@ -1,285 +1,119 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
-    <h2 class="text-center mb-4">Attendance Form</h2>
-    <div class="row justify-content-center">
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="blockCode">Block Code</label>
-                <select class="form-control" id="blockCode"></select>
+<!DOCTYPE html>
+<html>
+
+<head>
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.2/js/bootstrap.min.js"></script> -->
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  
+  <title>
+    <%=title %>
+  </title>
+  <style>
+    .container-main {
+      width: 90%;
+      margin: 0 5%;
+    }
+
+    .controlAlign {
+      padding-inline-start: 0%;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .focus:hover {
+      fill: #007bff;
+      cursor: pointer;
+    }
+
+    .focus:hover {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+
+    .focus:focus {
+      fill: #007bff;
+      transform: scale(1.1);
+    }
+
+    .sortIcon:hover {
+      fill: #060607;
+      cursor: pointer;
+    }
+
+
+    .sortIcon:hover {
+      fill: #060607;
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+
+    .sortIcon:focus {
+      fill: #060607;
+      transform: scale(1.5);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container-main container">
+    <% if(isMenuVisible===true) { %>
+      <header>
+        <nav class="navbar navbar-expand-lg bg-body-tertiary navbar-light controlAlign">
+          <div class="container-fluid">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a class="nav-link active focus" aria-current="page" href="/home">Home</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active focus" aria-current="page" href="/student">Student</a>
+              </li>
+              <li class="nav-item">
+                <a class="nav-link active focus" aria-current="page" href="/attendance">Attendance</a>
+              </li>
+              <li class="nav-item hidden">
+                <a class="nav-link active" aria-current="page" href="/error">Errors</a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  Structure
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="/block">Block</a></li>
+                  <li><a class="dropdown-item" href="/blockfloor">Blockfloor</a></li>
+                  <li><a class="dropdown-item" href="/room">Room</a></li>
+                  <li><a class="dropdown-item" href="/course">Course</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" href="/warden">Warden</a></li>
+                </ul>
+              </li>
+            </ul>
+            <div class="d-flex align-items-end ms-auto">
+              <span class="navbar-text">
+                <%= user.name %>
+              </span>
+              <a href="/api/logout" class="btn btn-light">Logout</a>
             </div>
-            <div class="form-group">
-                <label for="floorNumber">Floor Number</label>
-                <select class="form-control" id="floorNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="roomNumber">Room Number</label>
-                <select class="form-control" id="roomNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="checkIn">Check-in Date</label>
-                <input type="date" class="form-control" id="checkIn">
-            </div>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="studentList">Students :</label>
-        <ul id="studentList" class="list-group"></ul>
-    </div>
-    <div class="text-center">
-        <input type="hidden" id="attendanceId" value="<%=attendanceId %>" />
-        <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
-            disabled>Submit</button>
-    </div>
+          </div>
+        </nav>
 
-    <%- include('../../partials/footer.ejs') %>
-        <script>
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var roomNumber = document.getElementById('roomNumber');
-            var checkIn = document.getElementById('checkIn');
-            var studentList = document.getElementById('studentList');
-            var submitButton = document.getElementById('submitButton');
-            var attendanceId = document.getElementById('attendanceId').value;
-            const today = new Date().toISOString().split('T')[0];
-            checkIn.value = today;
-
-            function getSelectedStatus(studentId) {
-                const presentRadio = document.getElementById('present_' + studentId);
-                const absentRadio = document.getElementById('absent_' + studentId);
-
-                return presentRadio.checked ? 1 : absentRadio.checked ? 0 : null;
-            }
-
-            async function populateStudentList() {
-                try {
-                    const response = await fetch('http://localhost:1000/api/student?blockId=' + blockCode.value + '&floorNumber=' + floorNumber.value + '&roomId=' + roomNumber.value);
-                    const students = await response.json();
-
-                    studentList.innerHTML = '';
-                    students.forEach(student => {
-                        const li = document.createElement('li');
-                        li.innerHTML = `
-                <span>${student.name}</span>
-                <div class="form-check float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}">
-                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}">
-                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                </div>`;
-                        studentList.appendChild(li);
-                    });
-                } catch (error) {
-                    console.log('Error fetching student list:', error);
-                }
-            }
-
-            function saveOrUpdateAttendance() {
-                const students = document.querySelectorAll('#studentList li');
-                let studentAttendanceData = [];
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    const isPresentValue = getSelectedStatus(studentId);
-
-                    studentAttendanceData.push({
-                        "studentId": studentId,
-                        "isPresent": isPresentValue
-                    });
-                });
-
-                var myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
-
-                for (var i = 0; i < studentAttendanceData.length; i++) {
-                    var raw = JSON.stringify({
-                        "blockId": blockCode.value,
-                        "blockFloorId": floorNumber.value,
-                        "roomId": roomNumber.value,
-                        "checkInDate": checkIn.value,
-                        "studentId": studentAttendanceData[i].studentId,
-                        "isPresent": studentAttendanceData[i].isPresent
-                    });
-
-                    var requestOptions = {
-                        method: 'POST',
-                        headers: myHeaders,
-                        body: raw
-                    };
-
-                    let url = `http://localhost:1000/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
-                    if (attendanceId) {
-                        url += `/${attendanceId}`;
-                    }
-
-                    fetch(url, requestOptions)
-                        .then(response => response.text())
-                        .then((attendanceData) => window.location = '/attendance')
-                        .catch(error => console.error('error', error));
-                }
-            }
-
-            function toggleSubmitButton() {
-                const students = document.querySelectorAll('#studentList li');
-                let allStatusSelected = true;
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    if (getSelectedStatus(studentId) === null) {
-                        allStatusSelected = false;
-                    }
-                });
-
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value !== 'Select' &&
-                    checkIn.value !== '' &&
-                    allStatusSelected
-                );
-            }
-
-            async function initializeForm() {
-                await populateBlockCode();
-                await populateFloorNumber();
-                await populateRoomNumber();
-                if (attendanceId) {
-                    await getAttendanceById(attendanceId);
-                }
-
-                async function populateBlockCode() {
-                    try {
-                        const response = await fetch('http://localhost:1000/api/block');
-                        const responseData = await response.json();
-                        const { blocks } = responseData;
-
-                        let optionsList = '<option selected>Select a Block</option>';
-                        blocks.forEach(block => {
-                            optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
-                        });
-                        blockCode.innerHTML = optionsList;
-                    } catch (error) {
-                        console.log('Error fetching block codes:', error);
-                    }
-                }
-
-                async function populateFloorNumber() {
-                    try {
-                        const blockId = blockCode.value;
-                        if (blockId === 'Select') {
-                            floorNumber.innerHTML = '<option selected></option>';
-                            return;
-                        }
-
-                        const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
-                        const blockFloors = await response.json();
-
-                        if (blockFloors.length === 0) {
-                            floorNumber.innerHTML = '<option selected>No floors available</option>';
-                            return;
-                        }
-
-                        let optionsList = '<option selected>Select a Floor</option>';
-                        blockFloors.forEach(blockFloor => {
-                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
-                        });
-                        floorNumber.innerHTML = optionsList;
-                    } catch (error) {
-                        console.log('Error fetching floor numbers:', error);
-                    }
-                }
-
-                async function populateRoomNumber() {
-                    try {
-                        const blockFloorId = floorNumber.value;
-                        if (blockFloorId === 'Select') {
-                            roomNumber.innerHTML = '<option selected>Select a Room</option>';
-                            return;
-                        }
-
-                        const response = await fetch(`http://localhost:1000/api/room/blockfloor/${blockFloorId}`);
-                        const rooms = await response.json();
-
-                        if (rooms.length === 0) {
-                            roomNumber.innerHTML = '<option selected>No rooms available</option>';
-                            return;
-                        }
-
-                        let optionsList = '<option selected>Select a Room</option>';
-                        rooms.forEach(room => {
-                            optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`;
-                        });
-                        roomNumber.innerHTML = optionsList;
-
-                    } catch (error) {
-                        console.log('Error fetching room numbers:', error);
-                    }
-                }
-
-                async function populateStudentList() {
-                    try {
-                        const roomId = roomNumber.value;
-                        if (roomId === 'Select') {
-                            studentList.innerHTML = '';
-                            return;
-                        }
-
-                        const response = await fetch(`http://localhost:1000/api/student/room/${roomId}`);
-                        const students = await response.json();
-
-                        if (students.length === 0) {
-                            studentList.innerHTML = '<li class="list-group-item">No students available</li>';
-                            return;
-                        }
-
-                        studentList.innerHTML = '';
-                        students.forEach(student => {
-                            const li = document.createElement('li');
-                            li.classList.add('list-group-item');
-                            li.innerHTML = `
-                                <span>${student.name}</span>
-                                <div class="form-check form-check-inline float-right">
-                                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}">
-                                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                                </div>
-                                <div class="form-check form-check-inline float-right">
-                                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}">
-                                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                                </div>`
-                            studentList.appendChild(li);
-                        });
-
-                    } catch (error) {
-                        console.log('Error fetching student list:', error);
-                    }
-                }
-                blockCode.addEventListener('change', populateFloorNumber);
-                floorNumber.addEventListener('change', populateRoomNumber);
-                roomNumber.addEventListener('change', populateStudentList);
-                studentList.addEventListener('change', toggleSubmitButton);
-
-                async function getAttendanceById(attendanceId) {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/attendance?attendanceId=");
-                        const attendance = await response.json();
-                        // studentName.value = attendance.studentId;
-                        roomNumber.value = roomId;
-                        floorNumber.value = blockFloorId;
-                        blockCode.value = blockId;
-                        checkIn.value = checkIn;
-                        attendance.students.forEach(student => {
-                            if (student.isPresent === 1) {
-                                document.getElementById('present_' + student.studentId).checked = true;
-                            } else if (student.isPresent === 0) {
-                                document.getElementById('absent_' + student.studentId).checked = true;
-                            }
-                        });
-                    } catch (error) {
-                        console.error('Error fetching Attendance details:', error);
-                    }
-                }
-            }
-
-            initializeForm();
-        </script>
-
-        const urlParams = new URLSearchParams(window.location.search);
-const myParam = urlParams.get('blockId');
+        <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <% for (let i = 0; i < bred.length; i++) { %>
+              <% if (i === bred.length - 1) { %>
+                <li class="breadcrumb-item active" aria-current="page"><%= bred[i].name %></li>
+              <% } else { %>
+                <li class="breadcrumb-item"><a href="<%= bred[i].link %>"><%= bred[i].name %></a></li>
+              <% } %>
+            <% } %>
+          </ol>
+        </nav>
+        </header>
+      <% } %></div>

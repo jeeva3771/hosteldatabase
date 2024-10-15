@@ -1,13 +1,5 @@
 const { mysqlQuery } = require('../utilityclient.js')
 
-const ALLOWED_UPDATE_KEYS = [
-    "studentId",
-    "roomId",
-    "blockFloorId",
-    "blockId",
-    "checkInDate",
-    "isPresent"
-]
 async function readAttendances(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
@@ -141,7 +133,7 @@ async function readAttendanceById(req, res) {
             FROM student AS s
             LEFT JOIN attendance AS a ON s.studentId = a.studentId AND a.roomId = ? AND a.checkInDate = ?
             WHERE s.roomId = ?`,
-            [roomId, checkIn],
+            [roomId, checkIn, roomId],
             mysqlClient
         );
 
@@ -149,7 +141,7 @@ async function readAttendanceById(req, res) {
             return res.status(404).send('No students found for the specified room.');
         }
 
-        res.json(studentsWithAttendance);
+        res.status(200).send(studentsWithAttendance);
     } catch (error) {
         res.status(500).send('Error fetching student and attendance data: ' + error.message);
     }
@@ -217,7 +209,7 @@ async function attendanceListById(req, res) {
             return res.status(404).send('studentId is invalid')
         }
 
-        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE DATE >= ? AND DATE <= ? AND studentId = ? `,
+        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE checkInDate >= ? AND checkInDate <= ? AND studentId = ? `,
             [startDate, endDate, studentId],
             mysqlClient
         )

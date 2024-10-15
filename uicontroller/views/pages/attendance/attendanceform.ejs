@@ -1,11 +1,6 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
-<nav aria-label="breadcrumb">
-    <ol class="breadcrumb">
-      <li class="breadcrumb-item"><a href="/home">Home</a></li>
-      <li class="breadcrumb-item"><a href="/student">Attendance</a></li>
-      <li class="breadcrumb-item"><a href="/student/add">Take Attendance</a></li>
-    </ol>
-</nav>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' , bred: [ {name:'home',
+    link:'/home'}, {name:'attendance', link:'/student'} ] }) %>
+
     <h2 class="text-center mb-4">Attendance Form</h2>
     <div class="row justify-content-center">
         <div class="col-md-3">
@@ -47,7 +42,7 @@
             var submitButton = document.getElementById('submitButton');
             const today = new Date().toISOString().split('T')[0];
             checkIn.value = today;
-        
+
             function convertToISO(checkIn) {
                 let [year, month, day] = checkIn.split('-');
                 day = day.replace(/\D/g, '');
@@ -82,29 +77,6 @@
                 const absentRadio = document.getElementById('absent_' + studentId);
 
                 return presentRadio.checked ? 1 : absentRadio.checked ? 0 : null;
-            }
-
-            async function populateStudentList() {
-                try {
-                    const response = await fetch('http://localhost:1000/api/student?blockId=' + blockCode.value + '&floorNumber=' + floorNumber.value + '&roomId=' + roomNumber.value);
-                    const students = await response.json();
-
-                    studentList.innerHTML = '';
-                    students.forEach(student => {
-                        const li = document.createElement('li');
-                        li.innerHTML = `
-                <span>${student.name}</span>
-                <div class="form-check float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}">
-                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}">
-                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                </div>`;
-                        studentList.appendChild(li);
-                    });
-                } catch (error) {
-                    console.log('Error fetching student list:', error);
-                }
             }
 
             function saveOrUpdateAttendance() {
@@ -173,6 +145,7 @@
                 await populateBlockCode();
                 await populateFloorNumber();
                 await populateRoomNumber();
+                await populateStudentList()
 
                 blockCode.addEventListener('change', populateFloorNumber);
                 floorNumber.addEventListener('change', populateRoomNumber);
@@ -267,15 +240,13 @@
 
                     if (myParam) {
                         roomNumber.value = myParam;
+                        await populateStudentList
                     }
 
                 } catch (error) {
                     console.log('Error fetching room numbers:', error);
                 }
             }
-
-
-
 
             async function populateStudentList() {
                 try {
@@ -285,7 +256,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/student/room/${roomId}`);
+                    const response = await fetch(`http://localhost:1000/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
                     const students = await response.json();
 
                     if (students.length === 0) {
@@ -295,18 +266,22 @@
 
                     studentList.innerHTML = '';
                     students.forEach(student => {
+                        const isPresentChecked = student.isPresent === 1 ? 'checked' : '';
+                        const isAbsentChecked = student.isPresent === 0 ? 'checked' : '';
+
                         const li = document.createElement('li');
                         li.classList.add('list-group-item');
                         li.innerHTML = `
-                                <span>${student.name}</span>
-                                <div class="form-check form-check-inline float-right">
-                                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}">
-                                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                                </div>
-                                <div class="form-check form-check-inline float-right">
-                                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}">
-                                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                                </div>`
+                <span>${student.name}</span>
+                <div class="form-check form-check-inline float-right">
+                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}" ${isPresentChecked}>
+                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
+                </div>
+                <div class="form-check form-check-inline float-right">
+                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}" ${isAbsentChecked}>
+                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
+                </div>`;
+
                         studentList.appendChild(li);
                     });
 
@@ -314,6 +289,5 @@
                     console.log('Error fetching student list:', error);
                 }
             }
-
-            initializeForm();
-        </script>
+ initializeForm();
+    </script>
