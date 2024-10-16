@@ -1,5 +1,5 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Studentpage' }) %>
-
+<div class="contentMain">
 <div class="d-flex justify-content-between align-items-center my-2">
     <h3 class="col-auto me-2 controlAlign">Student</h3>
     <div class="d-flex align-items-center">
@@ -26,9 +26,9 @@
             <tr>
                 <th scope="col">Sno</th>
                 <th scope="col" onclick="sortByColumn('name')">Name</th>
-                <th scope="col" onclick="sortByColumn('registerNumber')">RegisterNumber</th>
-                <th scope="col" onclick="sortByColumn('joinedDate')">JoinedDate</th>
-                <th scope="col" onclick="sortByColumn('createdBy')">CreatedBy</th>
+                <th scope="col" onclick="sortByColumn('registerNumber')">Register Number</th>
+                <th scope="col" onclick="sortByColumn('joinedDate')">Joined Date</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">Created By</th>
                 <th scope="col">Action</th>
             </tr>
         </thead>
@@ -48,6 +48,8 @@
         <ul class="pagination justify-content-center" id="pagination">
         </ul>
     </nav>
+    </div>
+    
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
@@ -227,7 +229,7 @@
                                         </div>
                                          <div class="row">
                                             <div class="col-sm-4">
-                                                <strong>Email</strong>
+                                                <strong>Email Id</strong>
                                             </div>
                                             <div class="col-sm-8">
                                                 <strong> : </strong>${student.emailId}

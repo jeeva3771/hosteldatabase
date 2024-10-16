@@ -15,6 +15,8 @@ async function readBlockFloors(req, res) {
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, searchPattern]
+    const status = req.query.isActive;
+    console.log(status)
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -35,9 +37,15 @@ async function readBlockFloors(req, res) {
               warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
-            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
-            ORDER BY 
-             ${orderBy} ${sort}`;
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)`;
+
+    if (status !== undefined) {
+        console.log('Adding');
+        blockFloorsQuery += ` AND b.isActive = 1`;
+        console.log('Adding isActive condition');
+    }
+
+    blockFloorsQuery += ` ORDER BY ${orderBy} ${sort}`;
 
     if (limit && offset !== null) {
         blockFloorsQuery += ` LIMIT ? OFFSET ?`;
@@ -61,7 +69,6 @@ async function readBlockFloors(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -108,7 +115,8 @@ async function readBlockFloorsByBlockId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.params.blockId;
     try {
-        const blockFloors = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
+        const blockFloors = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockId = ? 
+        AND isActive = 1 AND deletedAt IS NULL`,
             [blockId],
             mysqlClient
         )
@@ -116,9 +124,10 @@ async function readBlockFloorsByBlockId(req, res) {
         if (blockFloors.length === 0) {
             return res.status(404).send("BlockId not valid");
         }
-    
-       res.status(200).send(blockFloors)
+
+        res.status(200).send(blockFloors)
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }

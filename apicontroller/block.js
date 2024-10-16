@@ -12,8 +12,9 @@ async function readBlocks(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'bk.blockCode';
     const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || ''; 
+    const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
+    const status = req.query.isActive;
 
     var blocksQuery = /*sql*/`
         SELECT 
@@ -35,9 +36,13 @@ async function readBlocks(req, res) {
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
             w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)
-        ORDER BY 
-        ${orderBy} ${sort}`;
+            w2.lastName LIKE ?)`
+
+    if (status !== undefined) {
+        blocksQuery += ` AND bk.isActive = 1`;
+    }
+
+    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
 
     if (limit && offset !== null) {
         blocksQuery += ` LIMIT ? OFFSET ?`;
@@ -97,7 +102,7 @@ async function readBlockById(req, res) {
 }
 
 async function createBlock(req, res) {
-    const mysqlClient = req.app.mysqlClient;    
+    const mysqlClient = req.app.mysqlClient;
     const {
         blockCode,
         blockLocation,
@@ -141,7 +146,7 @@ async function updateBlockById(req, res) {
         const keyValue = req.body[key]
         if (keyValue !== undefined) {
             values.push(keyValue)
-            updates.push(` ${ key } = ? `)
+            updates.push(` ${key} = ? `)
         }
     })
 
@@ -172,12 +177,12 @@ async function updateBlockById(req, res) {
             return res.status(409).send("students in block shift to another block");
         }
 
-        const isValidInsert = validateInsertItems(req.body, true);
+        const isValidInsert = validateInsertItems(req.body, true, blockId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${ updates.join(', ') } WHERE blockId = ? AND deletedAt IS NULL`,
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
             values, mysqlClient
         )
         if (isUpdate.affectedRows === 0) {
@@ -246,7 +251,7 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-function validateInsertItems(body, isUpdate = false) {
+async function validateInsertItems(body, isUpdate = false, blockId, mysqlClient) {
     const {
         blockCode,
         blockLocation,
@@ -257,10 +262,23 @@ function validateInsertItems(body, isUpdate = false) {
 
     if (blockCode !== undefined) {
         if (blockCode <= 0) {
-            errors.push("blockCode is invalid")
+            errors.push("BockCode is invalid")
+        } else if (!isUpdate) {
+            try {
+            var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
+            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
+            console.log(isValidBlockCode)
+            console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
+                if (isValidBlockCode[0].count > 0) {
+                    errors.push("BlockCode is already Exits")
+                }
+            } catch (error) {
+                console.log(error)
+            }
+                        
         }
     } else {
-        errors.push("blockCode is missing")
+        errors.push("BlockCode is missing")
     }
 
     if (blockLocation !== undefined) {

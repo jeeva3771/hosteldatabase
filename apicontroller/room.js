@@ -47,7 +47,7 @@ async function readRooms(req, res) {
 
     if (limit && offset !== null) {
         roomsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit,offset);
+        queryParameters.push(limit, offset);
     }
 
     const countQuery = /*sql*/ `
@@ -113,7 +113,8 @@ async function readRoomsByBlockFloorId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockFloorId = req.params.blockfloorId;
     try {
-        const rooms = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE blockFloorId = ? AND deletedAt IS NULL`,
+        const rooms = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE blockFloorId = ? 
+        AND isActive = 1 AND deletedAt IS NULL`,
             [blockFloorId],
             mysqlClient
         )
@@ -121,8 +122,8 @@ async function readRoomsByBlockFloorId(req, res) {
         if (rooms.length === 0) {
             return res.status(404).send("BlockFloorId not valid");
         }
-    
-       res.status(200).send(rooms)
+
+        res.status(200).send(rooms)
     } catch (error) {
         res.status(500).send(error.message)
     }
@@ -353,7 +354,7 @@ async function validateUpdateRoom(roomId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/room', readRooms)
     app.get('/api/room/:roomId', readRoomById)
-    app.get('/api/room/blockfloor/:blockfloorId',readRoomsByBlockFloorId)
+    app.get('/api/room/blockfloor/:blockfloorId', readRoomsByBlockFloorId)
     app.post('/api/room', createRoom)
     app.put('/api/room/:roomId', updateRoomById)
     app.delete('/api/room/:roomId', deleteRoomById)

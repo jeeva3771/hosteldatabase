@@ -1,4 +1,5 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Wardenpage' }) %>
+<div class="contentMain">
     <div class="d-flex justify-content-between align-items-center my-2">
         <h3 class="col-auto me-2 controlAlign">Warden</h3>
         <div class="d-flex align-items-center">
@@ -50,6 +51,7 @@
 
         </ul>
     </nav>
+</div>
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
@@ -190,7 +192,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <strong>Email</strong>
+                                                <strong>Email Id</strong>
                                             </div>
                                             <div class="col-sm-8">
                                                 <strong> : </strong>${warden.emailId}

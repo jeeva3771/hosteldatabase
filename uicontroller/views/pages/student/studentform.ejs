@@ -6,7 +6,7 @@
         <input type="text" class="form-control" id="studentName">
     </div>
     <div class="form-group">
-        <label for="registerNum">RegisterNumber</label>
+        <label for="registerNum">Register Number</label>
         <input type="text" class="form-control" id="registerNum">
     </div>
     <div class="form-group">
@@ -14,24 +14,24 @@
         <input type="date" class="form-control dateLabel" id="dob">
     </div>
     <div class="form-group">
-        <label for="course">CourseName</label>
+        <label for="course">Course Name</label>
         <select class="form-control" id="course">
         </select>
     </div>
     <div class="form-group">
-        <label for="email">EmailId</label>
+        <label for="email">Email Id</label>
         <input type="email" class="form-control" id="email">
     </div>
     <div class="form-group">
-        <label for="studNum">PhoneNumber</label>
+        <label for="studNum">Phone Number</label>
         <input type="number" class="form-control" id="studNum">
     </div>
     <div class="form-group">
-        <label for="fatherName">FatherName</label>
+        <label for="fatherName">Father Name</label>
         <input type="text" class="form-control" id="fatherName">
     </div>
     <div class="form-group">
-        <label for="fatherNum">FatherNumber</label>
+        <label for="fatherNum">Father Number</label>
         <input type="number" class="form-control" id="fatherNum">
     </div>
     <div class="form-group">
@@ -39,22 +39,22 @@
         <input type="text" class="form-control" id="address">
     </div>
     <div class="form-group">
-        <label for="blockCode">BlockCode</label>
+        <label for="blockCode">Block Code</label>
         <select class="form-control" id="blockCode">
         </select>
     </div>
     <div class="form-group">
-        <label for="floorNumber">FloorNumber</label>
+        <label for="floorNumber">Floor Number</label>
         <select class="form-control" id="floorNumber">
         </select>
     </div>
     <div class="form-group">
-        <label for="roomNumber">RoomNumber</label>
+        <label for="roomNumber">Room Number</label>
         <select class="form-control" id="roomNumber">
         </select>
     </div>
     <div class="form-group">
-        <label for="joinedDate">JoinedDate</label>
+        <label for="joinedDate">Joined Date</label>
         <input type="date" class="form-control dateLabel" id="joinedDate">
     </div>
     <div class="submission">
@@ -172,7 +172,7 @@
                     const response = await fetch("http://localhost:1000/api/course")
                     const responseData = await response.json()
                     const { courses } = responseData
-                    var optionsList = '<option selected>Select</option>'
+                    var optionsList = '<option>Select a Course</option>'
                     courses.forEach(course => {
                         optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
                     })
@@ -184,11 +184,11 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block');
+                    const response = await fetch('http://localhost:1000/api/block?isActive=1');
                     const responseData = await response.json();
                     const { blocks } = responseData;
 
-                    let optionsList = '<option selected>Select</option>';
+                    let optionsList = '<option selected>Select a Block</option>';
                     blocks.forEach(block => {
                         optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
                     });

@@ -277,7 +277,10 @@ async function validateInsertItems(params, body, mysqlClient) {
         errors.push('checkInDate is missing')
     }
 
-    const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE blockId = ? AND blockFloorId = ? AND  roomId = ?`, [blockId, blockFloorId, roomId], mysqlClient);
+    const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE blockId = ? AND blockFloorId = ? AND  roomId = ?`,
+        [blockId, blockFloorId, roomId],
+        mysqlClient
+    );
     if (isValidateEntry.length === 0) {
         errors.push('RoomId or BlockFloorId or BlockId is not valid');
     }

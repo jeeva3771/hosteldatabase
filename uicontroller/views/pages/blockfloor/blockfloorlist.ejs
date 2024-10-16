@@ -1,6 +1,7 @@
 <%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Blockfloorpage' }) %>
+<div class="contentMain">
     <div class="d-flex justify-content-between align-items-center my-2">
-        <h3 class="col-auto me-2 controlAlign">Blockfloor</h3>
+        <h3 class="col-auto me-2 controlAlign">Block floor</h3>
         <div class="d-flex align-items-center">
             <div class="mx-1">
                 <select class="form-select" id="limit" onchange="changeLimit()">
@@ -47,6 +48,7 @@
         <ul class="pagination justify-content-center" id="pagination">
         </ul>
     </nav>
+</div>
     <%- include('../../partials/footer.ejs') %>
     <script>
         var currentPage = 1

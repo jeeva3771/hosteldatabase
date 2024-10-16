@@ -1,5 +1,5 @@
 <%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Blockfloor' }) %>
-    <h2>Blockfloor form</h2>
+    <h2>Block floor form</h2>
     <div class="form-group">
         <label for="blockCode">Block Code</label>
         <select class="form-control" id="blockCode">
@@ -93,11 +93,11 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block');
+                    const response = await fetch('http://localhost:1000/api/block?isActive=1');
                     const responseData = await response.json();
                     const { blocks } = responseData;
 
-                    let optionsList = '<option selected>Select</option>';
+                    let optionsList = '<option selected>Select a Block</option>';
                     blocks.forEach(block => {
                         optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
                     });
@@ -109,7 +109,7 @@
 
             async function getBlockFloorById(blockFloorId) {
                 try {
-                    const response = await fetch("http://localhost:1000/api/blockfloor/" + blockFloorId);
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/${blockFloorId}`);
                     const blockFloor = await response.json();
 
                     blockCode.value = blockFloor.blockId;

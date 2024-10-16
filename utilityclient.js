@@ -15,7 +15,7 @@ function mysqlQuery(sql, options, mysqlClient) {
 
 function getUserProfile(session) {
     return {
-        name: `${session.data.firstName} ${session.data.lastName}`
+        name: `${session.data.firstName.charAt(0).toUpperCase()}${session.data.firstName.slice(1)}${session.data.lastName}`
     }
 }
 

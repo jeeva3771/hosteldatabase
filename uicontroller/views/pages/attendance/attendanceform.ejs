@@ -1,6 +1,4 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' , bred: [ {name:'home',
-    link:'/home'}, {name:'attendance', link:'/student'} ] }) %>
-
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
     <h2 class="text-center mb-4">Attendance Form</h2>
     <div class="row justify-content-center">
         <div class="col-md-3">
@@ -21,16 +19,16 @@
                 <input type="date" class="form-control" id="checkIn">
             </div>
         </div>
+        <div class="form-group">
+            <label for="studentList">Students :</label>
+            <ul id="studentList" class="list-group"></ul>
+        </div>
+        <div class="text-center">
+            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
+                disabled>Submit</button>
+        </div>
     </div>
-    <div class="form-group">
-        <label for="studentList">Students :</label>
-        <ul id="studentList" class="list-group"></ul>
-    </div>
-    <div class="text-center">
-        <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
-            disabled>Submit</button>
-    </div>
-
+    
     <%- include('../../partials/footer.ejs') %>
         <script>
             const urlParams = new URLSearchParams(window.location.search);
@@ -157,7 +155,7 @@
             async function populateBlockCode() {
                 try {
                     const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` : 'http://localhost:1000/api/block';
+                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` : 'http://localhost:1000/api/block?isActive=1';
                     const response = await fetch(url);
                     const responseData = await response.json();
                     const { blocks } = responseData;
@@ -187,7 +185,7 @@
                     const blockId = blockCode.value;
 
                     if (blockId === 'Select' || blockId === '') {
-                        floorNumber.innerHTML = '<option selected>Select a Floor</option>';
+                        floorNumber.innerHTML = '';
                         return;
                     }
 
@@ -221,7 +219,7 @@
                     const blockFloorId = floorNumber.value;
 
                     if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML = '<option selected></option>';
+                        roomNumber.innerHTML ='';
                         return;
                     }
 
