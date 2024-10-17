@@ -103,6 +103,7 @@ async function readBlockById(req, res) {
 
 async function createBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
+
     const {
         blockCode,
         blockLocation,
@@ -110,28 +111,51 @@ async function createBlock(req, res) {
     } = req.body
     const createdBy = req.session.data.wardenId;
 
-    const isValidInsert = validateInsertItems(req.body);
+    const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
     if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert)
     }
 
     try {
-        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
-            [blockCode],
-            mysqlClient
-        );
-        if (existingBlockCode.length > 0) {
-            return res.status(409).send("blockCode already exists");
-        }
+        // const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
+        //     [blockCode],
+        //     mysqlClient
+        // );
+        // if (existingBlockCode.length > 0) {
+        //     return res.status(409).send("blockCode already exists");
+        // }
+
+        // const existingBlockCode = await mysqlQuery(/*sql*/`
+        //     SELECT * FROM block WHERE blockCode = ?`,
+        //     [blockCode], mysqlClient
+        // );
+
+        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt === null) {
+        //     return res.status(409).send("blockCode already exists");
+        // }
+
+        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt !== null) {
+        //     const restoreBlock = await mysqlQuery(/*sql*/`
+        //         UPDATE block SET deletedAt = NULL, blockLocation = ?, isActive = ?,createdAt = NOW(), createdBy = ?
+        //         WHERE blockCode = ?`,
+        //         [blockLocation, isActive, createdBy, blockCode], mysqlClient);
+        //         console.log(restoreBlock.affectedRows)
+        //     if (restoreBlock.affectedRows === 0) {
+        //         return res.status(400).send("Block restoration failed. No changes were made.");
+        //     }
+        //     return res.status(200).send("Soft-deleted block restored successfully.");
+        // }
 
         const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
             [blockCode, blockLocation, isActive, createdBy], mysqlClient)
+
         if (newBlock.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -161,23 +185,23 @@ async function updateBlockById(req, res) {
             return res.status(404).send("Block not found or already deleted");
         }
 
-        if (blockCode) {
-            const isBlockUnique = await mysqlQuery(/*sql*/`
-                SELECT * FROM block 
-                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
-                [blockCode, blockId], mysqlClient);
+        // if (blockCode) {
+        //     const isBlockUnique = await mysqlQuery(/*sql*/`
+        //         SELECT * FROM block 
+        //         WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
+        //         [blockCode, blockId], mysqlClient);
 
-            if (isBlockUnique.length > 0) {
-                return res.status(409).send("blockCode already exists");
-            }
-        }
+        //     if (isBlockUnique.length > 0) {
+        //         return res.status(409).send("blockCode already exists");
+        //     }
+        // }
 
         const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
         if (!isValid) {
             return res.status(409).send("students in block shift to another block");
         }
 
-        const isValidInsert = validateInsertItems(req.body, true, blockId, mysqlClient);
+        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
@@ -233,7 +257,7 @@ async function deleteBlockById(req, res) {
 
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
+        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
             if (err) {
                 return reject(err)
             }
@@ -251,52 +275,58 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body, isUpdate = false, blockId, mysqlClient) {
-    const {
-        blockCode,
-        blockLocation,
-        isActive
-    } = body
+async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
+    const { blockCode, blockLocation, isActive } = body;
+    console.log(blockCode)
+    const errors = [];
 
-    const errors = []
+    try {
+        if (blockCode !== undefined) {
+            if (blockCode.length < 1) {
+                errors.push("BlockCode is invalid");
+            } else {
+                // Construct query for checking existing blockCode
+                let query;
+                let params;
 
-    if (blockCode !== undefined) {
-        if (blockCode <= 0) {
-            errors.push("BockCode is invalid")
-        } else if (!isUpdate) {
-            try {
-            var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
-            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
-            console.log(isValidBlockCode)
-            console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
-                if (isValidBlockCode[0].count > 0) {
-                    errors.push("BlockCode is already Exits")
+                if (isUpdate === true) {
+                    // When updating, check if blockCode exists for another blockId
+                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
+                    params = [blockCode, blockId];
+                } else {
+                    // When inserting, check if blockCode already exists
+                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
+                    params = [blockCode];
                 }
-            } catch (error) {
-                console.log(error)
+
+                const isValidBlockCode = await mysqlQuery(query, params, mysqlClient);
+                if (isValidBlockCode[0].count > 0) {
+                    errors.push("BlockCode already exists");
+                }
             }
-                        
+        } else {
+            errors.push("BlockCode is missing");
         }
-    } else {
-        errors.push("BlockCode is missing")
-    }
 
-    if (blockLocation !== undefined) {
-        if (blockLocation <= 0) {
-            errors.push("location is invalid")
+        if (blockLocation !== undefined) {
+            if (blockLocation.length < 1) {
+                errors.push("location is invalid")
+            }
+        } else {
+            errors.push("location is missing")
         }
-    } else {
-        errors.push("location is missing")
-    }
 
-    if (isActive !== undefined) {
-        if (![0, 1].includes(isActive)) {
-            errors.push("isActive is invalid")
+        if (isActive !== undefined) {
+            if (![0, 1].includes(isActive)) {
+                errors.push("isActive is invalid")
+            }
+        } else {
+            errors.push("isActive is missing")
         }
-    } else {
-        errors.push("isActive is missing")
+        return errors
+    } catch (error) {
+        console.log(error)
     }
-    return errors
 }
 
 function getBlockFloorCountByBlockId(blockId, mysqlClient) {

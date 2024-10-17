@@ -121,9 +121,9 @@ async function readBlockFloorsByBlockId(req, res) {
             mysqlClient
         )
 
-        if (blockFloors.length === 0) {
-            return res.status(404).send("BlockId not valid");
-        }
+        // if (blockFloors.length === 0) {
+        //     return res.status(404).send("No block floors found for the provided blockId");
+        // }
 
         res.status(200).send(blockFloors)
     } catch (error) {

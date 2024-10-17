@@ -247,7 +247,7 @@
 
                 fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
                     .then(response => response.text())
-                    .then(deleted =>
+                    .then(deleted => 
                         window.location = '/course'
                     )
                     .catch(error => console.log('error', error));

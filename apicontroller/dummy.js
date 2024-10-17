@@ -1,252 +1,693 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Student' }) %>
+const { mysqlQuery } = require('../utilityclient.js')
+const ALLOWED_UPDATE_KEYS = [
+    "blockCode",
+    "blockLocation",
+    "isActive"
+]
 
-    <h2>Student form</h2>
-    <div class="form-group">
-        <label for="studentName">Name</label>
-        <input type="text" class="form-control" id="studentName">
-    </div>
-    <div class="form-group">
-        <label for="registerNum">RegisterNumber</label>
-        <input type="text" class="form-control" id="registerNum">
-    </div>
-    <div class="form-group">
-        <label for="dob">DOB</label>
-        <input type="date" class="form-control dateLabel" id="dob">
-    </div>
-    <div class="form-group">
-        <label for="course">CourseName</label>
-        <select class="form-control" id="course">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="email">EmailId</label>
-        <input type="email" class="form-control" id="email">
-    </div>
-    <div class="form-group">
-        <label for="studNum">PhoneNumber</label>
-        <input type="number" class="form-control" id="studNum">
-    </div>
-    <div class="form-group">
-        <label for="fatherName">FatherName</label>
-        <input type="text" class="form-control" id="fatherName">
-    </div>
-    <div class="form-group">
-        <label for="fatherNum">FatherNumber</label>
-        <input type="number" class="form-control" id="fatherNum">
-    </div>
-    <div class="form-group">
-        <label for="address">Address</label>
-        <input type="text" class="form-control" id="address">
-    </div>
-    <div class="form-group">
-        <label for="blockCode">BlockCode</label>
-        <select class="form-control" id="blockCode">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="floorNumber">FloorNumber</label>
-        <select class="form-control" id="floorNumber">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="roomNumber">RoomNumber</label>
-        <select class="form-control" id="roomNumber">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="joinedDate">JoinedDate</label>
-        <input type="date" class="form-control dateLabel" id="joinedDate">
-    </div>
-    <div class="submission">
-        <input type="hidden" id="studentId" value="<%=studentId %>" />
-        <button onclick="saveOrUpdateStudent()" class="btn btn-success" id="submitButton" disabled>Submit</button>
-    </div>
-    <%- include('../../partials/footer.ejs') %>
-        <script>
-            var studentName = document.getElementById('studentName');
-            var registerNum = document.getElementById('registerNum');
-            var dob = document.getElementById('dob');
-            var course = document.getElementById('course');
-            var emailId = document.getElementById('email');
-            var studNum = document.getElementById('studNum');
-            var fatherName = document.getElementById('fatherName');
-            var fatherNum = document.getElementById('fatherNum');
-            var address = document.getElementById('address');
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var roomNumber = document.getElementById('roomNumber');
-            var joinedDate = document.getElementById('joinedDate');
-            var submitButton = document.getElementById('submitButton');
-            var studentId = document.getElementById('studentId').value;
+async function readBlocks(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'bk.blockCode';
+    const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const status = req.query.isActive;
 
-            const today = new Date().toISOString().split('T')[0];
-            joinedDate.value = today;
+    var blocksQuery = /*sql*/`
+        SELECT 
+            bk.*,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            FROM block AS bk
+        LEFT JOIN 
+            warden AS w ON w.wardenId = bk.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = bk.updatedBy
+        WHERE 
+            bk.deletedAt IS NULL AND 
+            (bk.blockCode LIKE ? OR 
+            w.firstName LIKE ? OR 
+            w.lastName LIKE ? OR 
+            w2.firstName LIKE ? OR 
+            w2.lastName LIKE ?)`
 
-            function saveOrUpdateStudent() {
-                var myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
+    if (status !== undefined) {
+        blocksQuery += ` AND bk.isActive = 1`;
+    }
 
-                var raw = JSON.stringify({
-                    "name": studentName.value,
-                    "registerNumber": registerNum.value,
-                    "dob": dob.value,
-                    "courseId": course.value,
-                    "emailId": emailId.value,
-                    "phoneNumber": studNum.value,
-                    "fatherName": fatherName.value,
-                    "fatherNumber": fatherNum.value,
-                    "address": address.value,
-                    "blockId": blockCode.value,
-                    "blockFloorId": floorNumber.value,
-                    "roomId": roomNumber.value,
-                    "joinedDate": joinedDate.value
-                });
+    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
 
-                var requestOptions = {
-                    method: studentId ? 'PUT' : 'POST',
-                    headers: myHeaders,
-                    body: raw
-                };
+    if (limit && offset !== null) {
+        blocksQuery += ` LIMIT ? OFFSET ?`;
+    }
 
-                let url = "http://localhost:1000/api/student";
-                if (studentId) {
-                    url = url + '/' + studentId
-                }
+    const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalBlockCount 
+        FROM block 
+        WHERE deletedAt IS NULL`;
 
-                fetch(url, requestOptions)
-                    .then(response => response.text())
-                    .then(students => window.location = '/student')
-                    .catch(error => console.error('error', error));
+    try {
+        const [blocks, totalCount] = await Promise.all([
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            blocks: blocks,
+            blockCount: totalCount[0].totalBlockCount
+        });
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function readBlockById(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const blockId = req.params.blockId;
+    try {
+        const block = await mysqlQuery(/*sql*/`
+             SELECT 
+                bk.*,
+                w.firstName AS createdFirstName,
+                w.lastName AS createdLastName,
+                w2.firstName AS updatedFirstName,
+                w2.lastName AS updatedLastName,
+                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+                FROM block AS bk
+            LEFT JOIN 
+                warden AS w ON w.wardenId = bk.createdBy
+            LEFT JOIN 
+                warden AS w2 ON w2.wardenId = bk.updatedBy
+            WHERE 
+                bk.deletedAt IS NULL AND blockId = ?`,
+            [blockId],
+            mysqlClient
+        )
+        if (block.length === 0) {
+            return res.status(404).send("blockId not valid");
+        }
+        res.status(200).send(block[0])
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function createBlock(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const {
+        blockCode,
+        blockLocation,
+        isActive
+    } = req.body
+    const createdBy = req.session.data.wardenId;
+
+    const isValidInsert = validateInsert(req.body);
+    if (isValidInsert.length > 0) {
+        return res.status(400).send(isValidInsert)
+    }
+
+    try {
+        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
+            [blockCode],
+            mysqlClient
+        );
+        if (existingBlockCode.length > 0) {
+            return res.status(409).send("blockCode already exists");
+        }
+
+        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
+            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
+        if (newBlock.affectedRows === 0) {
+            res.status(400).send("no insert was made")
+        } else {
+            res.status(201).send('insert successfully')
+        }
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function updateBlockById(req, res) {
+    const blockId = req.params.blockId;
+    const updatedBy = req.session.data.wardenId;
+    const values = []
+    const updates = []
+
+    ALLOWED_UPDATE_KEYS.forEach((key) => {
+        const keyValue = req.body[key]
+        if (keyValue !== undefined) {
+            values.push(keyValue)
+            updates.push(` ${key} = ? `)
+        }
+    })
+
+    updates.push("updatedBy = ?")
+    values.push(updatedBy, blockId)
+    const mysqlClient = req.app.mysqlClient
+    const blockCode = req.body.blockCode;
+
+    try {
+        const block = await validateBlockById(blockId, mysqlClient);
+        if (!block) {
+            return res.status(404).send("Block not found or already deleted");
+        }
+
+        if (blockCode) {
+            const isBlockUnique = await mysqlQuery(/*sql*/`
+                SELECT * FROM block 
+                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
+                [blockCode, blockId], mysqlClient);
+
+            if (isBlockUnique.length > 0) {
+                return res.status(409).send("blockCode already exists");
             }
+        }
 
-            function toggleSubmitButton() {
-                submitButton.disabled = !(
-                    studentName.value.length > 0 &&
-                    registerNum.value.length > 0 &&
-                    dob.value !== '' &&
-                    course.value !== 'Select' &&
-                    emailId.value.length > 0 &&
-                    studNum.value.length > 0 &&
-                    fatherName.value.length > 0 &&
-                    fatherNum.value.length > 0 &&
-                    address.value.length > 0 &&
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value !== 'Select' &&
-                    joinedDate.value !== ''
-                )
+        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
+        if (!isValid) {
+            return res.status(409).send("students in block shift to another block");
+        }
+
+        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
+            values, mysqlClient
+        )
+        if (isUpdate.affectedRows === 0) {
+            res.status(204).send("Block not found or no changes made")
+        }
+
+        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
+            [blockId], mysqlClient)
+        res.status(200).send({
+            status: 'successfull',
+            data: getUpdatedBlock[0]
+        })
+    }
+    catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function deleteBlockById(req, res) {
+    const blockId = req.params.blockId;
+    const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
+
+    try {
+        const isValid = await validateBlockById(blockId, mysqlClient)
+        if (!isValid) {
+            return res.status(404).send("blockId is not defined")
+        }
+
+        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
+            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
+            [deletedBy, blockId],
+            mysqlClient)
+        if (deletedBlock.affectedRows === 0) {
+            return res.status(404).send("Block not found or already deleted")
+        }
+
+        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
+        res.status(200).send({
+            status: 'deleted',
+            data: getDeletedBlock[0]
+        });
+    }
+    catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+function getBlockById(blockId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
+            if (err) {
+                return reject(err)
             }
+            resolve(block.length ? block[0] : null)
 
-            async function initializeForm() {
+        })
+    })
+}
 
-                await populateCourse()
-                await populateBlockCode();
-                await populateFloorNumber();
-                await populateRoomNumber()
+async function validateBlockById(blockId, mysqlClient) {
+    var block = await getBlockById(blockId, mysqlClient)
+    if (block !== null) {
+        return true
+    }
+    return false
+}
 
-                if (studentId) {
-                    await getStudentById(studentId);
+async function validateInsert(body, isUpdate = false, blockId, mysqlClient) {
+    const {
+        blockCode,
+        blockLocation,
+        isActive
+    } = body
+
+    const errors = []
+
+    if (blockCode !== undefined) {
+        if (blockCode.length < 1) {
+            errors.push("BockCode is invalid")
+        } else if (!isUpdate) {
+            try {
+            var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
+            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
+            // console.log(isValidBlockCode)
+            // console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
+                if (isValidBlockCode[count] > 0) {
+                    errors.push("BlockCode is already Exits")
                 }
+            } catch (error) {
+                console.log(error)
+            }                    
+        }
+    } else {
+        errors.push("BlockCode is missing")
+    }
 
-                async function populateCourse() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/course")
-                        const responseData = await response.json()
-                        const { courses } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        courses.forEach(course => {
-                            optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
-                        })
-                        course.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching course:', error);
-                    }
+    if (blockLocation !== undefined) {
+        if (blockLocation <= 0) {
+            errors.push("location is invalid")
+        }
+    } else {
+        errors.push("location is missing")
+    }
+
+    if (isActive !== undefined) {
+        if (![0, 1].includes(isActive)) {
+            errors.push("isActive is invalid")
+        }
+    } else {
+        errors.push("isActive is missing")
+    }
+    return errors
+}
+
+function getBlockFloorCountByBlockId(blockId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
+            [blockId],
+            (err, blockIdCount) => {
+                if (err) {
+                    return reject(err)
                 }
+                resolve(blockIdCount)
+            })
+    })
+}
 
-                async function populateBlockCode() {
-                    try {
-                        const response = await fetch('http://localhost:1000/api/block');
-                        const responseData = await response.json();
-                        const { blocks } = responseData;
+async function validateUpdateBlock(blockId, mysqlClient, body) {
+    if (body.isActive === 0) {
+        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
+        if (blockFloorBlock.count > 0) {
+            return false
+        }
+    }
+    return true
+}
 
-                        let optionsList = '<option selected>Select</option>';
-                        blocks.forEach(block => {
-                            optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
-                        });
-                        blockCode.innerHTML = optionsList;
-                    } catch (error) {
-                        console.log('Error fetching block codes:', error);
+module.exports = (app) => {
+    app.get('/api/block', readBlocks)
+    app.get('/api/block/:blockId', readBlockById)
+    app.post('/api/block', createBlock)
+    app.put('/api/block/:blockId', updateBlockById)
+    app.delete('/api/block/:blockId', deleteBlockById)
+}
+
+
+>>>>>>>>>>>>>>
+
+
+const { mysqlQuery } = require('../utilityclient.js')
+const ALLOWED_UPDATE_KEYS = [
+    "blockCode",
+    "blockLocation",
+    "isActive"
+]
+
+async function readBlocks(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const limit = req.query.limit ? parseInt(req.query.limit) : null;
+    const page = req.query.page ? parseInt(req.query.page) : null;
+    const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby || 'bk.blockCode';
+    const sort = req.query.sort || 'ASC';
+    const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const status = req.query.isActive;
+
+    var blocksQuery = /*sql*/`
+        SELECT 
+            bk.*,
+            w.firstName AS createdFirstName,
+            w.lastName AS createdLastName,
+            w2.firstName AS updatedFirstName,
+            w2.lastName AS updatedLastName,
+            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            FROM block AS bk
+        LEFT JOIN 
+            warden AS w ON w.wardenId = bk.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = bk.updatedBy
+        WHERE 
+            bk.deletedAt IS NULL AND 
+            (bk.blockCode LIKE ? OR 
+            w.firstName LIKE ? OR 
+            w.lastName LIKE ? OR 
+            w2.firstName LIKE ? OR 
+            w2.lastName LIKE ?)`
+
+    if (status !== undefined) {
+        blocksQuery += ` AND bk.isActive = 1`;
+    }
+
+    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
+
+    if (limit && offset !== null) {
+        blocksQuery += ` LIMIT ? OFFSET ?`;
+    }
+
+    const countQuery = /*sql*/ `
+        SELECT COUNT(*) AS totalBlockCount 
+        FROM block 
+        WHERE deletedAt IS NULL`;
+
+    try {
+        const [blocks, totalCount] = await Promise.all([
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(countQuery, [], mysqlClient)
+        ]);
+
+        res.status(200).send({
+            blocks: blocks,
+            blockCount: totalCount[0].totalBlockCount
+        });
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function readBlockById(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const blockId = req.params.blockId;
+    try {
+        const block = await mysqlQuery(/*sql*/`
+             SELECT 
+                bk.*,
+                w.firstName AS createdFirstName,
+                w.lastName AS createdLastName,
+                w2.firstName AS updatedFirstName,
+                w2.lastName AS updatedLastName,
+                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+                FROM block AS bk
+            LEFT JOIN 
+                warden AS w ON w.wardenId = bk.createdBy
+            LEFT JOIN 
+                warden AS w2 ON w2.wardenId = bk.updatedBy
+            WHERE 
+                bk.deletedAt IS NULL AND blockId = ?`,
+            [blockId],
+            mysqlClient
+        )
+        if (block.length === 0) {
+            return res.status(404).send("blockId not valid");
+        }
+        res.status(200).send(block[0])
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function createBlock(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+   
+    const {
+        blockCode,
+        blockLocation,
+        isActive
+    } = req.body
+    const createdBy = req.session.data.wardenId;
+
+    const isValidInsert = validateInsert(req.body);
+    if (isValidInsert.length > 0) {
+        return res.status(400).send(isValidInsert)
+    }
+
+    try {
+        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
+            [blockCode],
+            mysqlClient
+        );
+        if (existingBlockCode.length > 0) {
+            return res.status(409).send("blockCode already exists");
+        }
+
+        // const existingBlockCode = await mysqlQuery(/*sql*/`
+        //     SELECT * FROM block WHERE blockCode = ?`,
+        //     [blockCode], mysqlClient
+        // );
+
+        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt === null) {
+        //     return res.status(409).send("blockCode already exists");
+        // }
+
+        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt !== null) {
+        //     const restoreBlock = await mysqlQuery(/*sql*/`
+        //         UPDATE block SET deletedAt = NULL, blockLocation = ?, isActive = ?,createdAt = NOW(), createdBy = ?
+        //         WHERE blockCode = ?`,
+        //         [blockLocation, isActive, createdBy, blockCode], mysqlClient);
+        //         console.log(restoreBlock.affectedRows)
+        //     if (restoreBlock.affectedRows === 0) {
+        //         return res.status(400).send("Block restoration failed. No changes were made.");
+        //     }
+        //     return res.status(200).send("Soft-deleted block restored successfully.");
+        // }
+
+        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
+            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
+           
+        if (newBlock.affectedRows === 0) {
+            res.status(400).send("no insert was made")
+        } else {
+            res.status(201).send('insert successfully')
+        }
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function updateBlockById(req, res) {
+    const blockId = req.params.blockId;
+    const updatedBy = req.session.data.wardenId;
+    const values = []
+    const updates = []
+
+    ALLOWED_UPDATE_KEYS.forEach((key) => {
+        const keyValue = req.body[key]
+        if (keyValue !== undefined) {
+            values.push(keyValue)
+            updates.push(` ${key} = ? `)
+        }
+    })
+
+    updates.push("updatedBy = ?")
+    values.push(updatedBy, blockId)
+    const mysqlClient = req.app.mysqlClient
+    const blockCode = req.body.blockCode;
+
+    try {
+        const block = await validateBlockById(blockId, mysqlClient);
+        if (!block) {
+            return res.status(404).send("Block not found or already deleted");
+        }
+
+        if (blockCode) {
+            const isBlockUnique = await mysqlQuery(/*sql*/`
+                SELECT * FROM block 
+                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
+                [blockCode, blockId], mysqlClient);
+
+            if (isBlockUnique.length > 0) {
+                return res.status(409).send("blockCode already exists");
+            }
+        }
+
+        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
+        if (!isValid) {
+            return res.status(409).send("students in block shift to another block");
+        }
+
+        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
+            values, mysqlClient
+        )
+        if (isUpdate.affectedRows === 0) {
+            res.status(204).send("Block not found or no changes made")
+        }
+
+        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
+            [blockId], mysqlClient)
+        res.status(200).send({
+            status: 'successfull',
+            data: getUpdatedBlock[0]
+        })
+    }
+    catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function deleteBlockById(req, res) {
+    const blockId = req.params.blockId;
+    const mysqlClient = req.app.mysqlClient;
+    const deletedBy = req.session.data.wardenId;
+
+    try {
+        const isValid = await validateBlockById(blockId, mysqlClient)
+        if (!isValid) {
+            return res.status(404).send("blockId is not defined")
+        }
+
+        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
+            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
+            [deletedBy, blockId],
+            mysqlClient)
+        if (deletedBlock.affectedRows === 0) {
+            return res.status(404).send("Block not found or already deleted")
+        }
+
+        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
+        res.status(200).send({
+            status: 'deleted',
+            data: getDeletedBlock[0]
+        });
+    }
+    catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+function getBlockById(blockId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
+            if (err) {
+                return reject(err)
+            }
+            resolve(block.length ? block[0] : null)
+
+        })
+    })
+}
+
+async function validateBlockById(blockId, mysqlClient) {
+    var block = await getBlockById(blockId, mysqlClient)
+    if (block !== null) {
+        return true
+    }
+    return false
+}
+
+async function validateInsert(body, isUpdate = false, blockId, mysqlClient) {
+    const {
+        blockCode,
+        blockLocation,
+        isActive
+    } = body
+
+    const errors = []
+    try {
+        if (blockCode !== undefined) {
+            if (blockCode.length < 1) {
+                errors.push("BockCode is invalid")
+            } else if (!isUpdate) {
+                try {
+                    var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
+            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
+                    // console.log(isValidBlockCode)
+                    // console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
+                    if (isValidBlockCode[count] > 0) {
+                        errors.push("BlockCode is already Exits")
                     }
-                }
-
-                async function populateFloorNumber() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/blockfloor")
-                        const responseData = await response.json();
-                        const { blockFloors } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        blockFloors.forEach(blockFloor => {
-                            optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`
-                        })
-                        floorNumber.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching floor Number:', error);
-                    }
-                }
-
-                async function populateRoomNumber() {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/room")
-                        const responseData = await response.json()
-                        const { rooms } = responseData
-                        var optionsList = '<option selected>Select</option>'
-                        rooms.forEach(room => {
-                            optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`
-                        })
-                        roomNumber.innerHTML = optionsList
-                    } catch (error) {
-                        console.log('Error fetching room Number:', error);
-                    }
-                }
-
-                studentName.addEventListener('input', toggleSubmitButton);
-                registerNum.addEventListener('input', toggleSubmitButton);
-                dob.addEventListener('input', toggleSubmitButton);
-                course.addEventListener('change', toggleSubmitButton);
-                emailId.addEventListener('input', toggleSubmitButton);
-                studNum.addEventListener('input', toggleSubmitButton);
-                fatherName.addEventListener('input', toggleSubmitButton);
-                fatherNum.addEventListener('change', toggleSubmitButton);
-                address.addEventListener('change', toggleSubmitButton);
-                blockCode.addEventListener('input', toggleSubmitButton);
-                floorNumber.addEventListener('input', toggleSubmitButton);
-                roomNumber.addEventListener('input', toggleSubmitButton);
-                joinedDate.addEventListener('input', toggleSubmitButton);
-
-
-                async function getStudentById(studentId) {
-                    try {
-                        const response = await fetch("http://localhost:1000/api/student/" + studentId);
-                        const student = await response.json();
-                        studentName.value = student.name
-                        registerNum.value = student.registerNumber
-                        dob.value = student.dob.split('T')[0]
-                        course.value = student.courseId
-                        emailId.value = student.emailId
-                        studNum.value = student.phoneNumber
-                        fatherName.value = student.fatherName
-                        fatherNum.value = student.fatherNumber
-                        address.value = student.address
-                        blockCode.value = student.blockId
-                        floorNumber.value = student.blockFloorId
-                        roomNumber.value = student.roomId
-                        joinedDate.value = student.joinedDate.split('T')[0]
-                    } catch (error) {
-                        console.error('Error fetching student details:', error);
-                    }
+                } catch (error) {
+                    console.log(error)
                 }
             }
+        } else {
+            errors.push("BlockCode is missing")
+        }
 
-            initializeForm();
+        if (blockLocation !== undefined) {
+            if (blockLocation <= 0) {
+                errors.push("location is invalid")
+            }
+        } else {
+            errors.push("location is missing")
+        }
 
-        </script>
+        if (isActive !== undefined) {
+            if (![0, 1].includes(isActive)) {
+                errors.push("isActive is invalid")
+            }
+        } else {
+            errors.push("isActive is missing")
+        }
+        return errors
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+function getBlockFloorCountByBlockId(blockId, mysqlClient) {
+    return new Promise((resolve, reject) => {
+        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
+            [blockId],
+            (err, blockIdCount) => {
+                if (err) {
+                    return reject(err)
+                }
+                resolve(blockIdCount)
+            })
+    })
+}
+
+async function validateUpdateBlock(blockId, mysqlClient, body) {
+    if (body.isActive === 0) {
+        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
+        if (blockFloorBlock.count > 0) {
+            return false
+        }
+    }
+    return true
+}
+
+module.exports = (app) => {
+    app.get('/api/block', readBlocks)
+    app.get('/api/block/:blockId', readBlockById)
+    app.post('/api/block', createBlock)
+    app.put('/api/block/:blockId', updateBlockById)
+    app.delete('/api/block/:blockId', deleteBlockById)
+}
+
+

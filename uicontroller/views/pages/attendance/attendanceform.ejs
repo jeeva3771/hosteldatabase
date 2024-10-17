@@ -28,7 +28,7 @@
                 disabled>Submit</button>
         </div>
     </div>
-    
+
     <%- include('../../partials/footer.ejs') %>
         <script>
             const urlParams = new URLSearchParams(window.location.search);
@@ -162,12 +162,27 @@
 
                     blockCode.innerHTML = '<option selected>Select a Block</option>';
 
-                    blocks.forEach(block => {
+                    const blockFloorsPromises = blocks.map(async (block) => {
                         const option = document.createElement('option');
                         option.value = block.blockId;
                         option.textContent = block.blockCode;
-                        blockCode.appendChild(option);
+
+                        try {
+                            const blockFloorsResponse = await fetch(`http://localhost:1000/api/blockfloor/${block.blockId}`);
+                            const blockFloors = await blockFloorsResponse.json();
+
+                            if (blockFloors.length === 0) {
+                                option.disabled = true;
+                            }
+                        } catch (error) {
+                            option.disabled = true;
+                        }
+
+                        return option; 
                     });
+
+                    const options = await Promise.all(blockFloorsPromises);
+                    options.forEach(option => blockCode.appendChild(option));
 
                     if (myParam) {
                         blockCode.value = myParam;
@@ -177,6 +192,7 @@
                     console.log('Error fetching block codes:', error);
                 }
             }
+
 
 
             async function populateFloorNumber() {
@@ -197,8 +213,7 @@
                         return;
                     }
 
-                    let optionsList = '<option selected>Select a Floor</option>';
-                    blockFloors.forEach(blockFloor => {
+                    let optionsList = '<option selected>Select a Floor</option>'; blockFloors.forEach(blockFloor => {
                         optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
                     });
                     floorNumber.innerHTML = optionsList;
@@ -207,6 +222,7 @@
                         floorNumber.value = myParam;
                         await populateRoomNumber
                     }
+
 
                 } catch (error) {
                     console.log('Error fetching floor numbers:', error);
@@ -219,7 +235,7 @@
                     const blockFloorId = floorNumber.value;
 
                     if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML ='';
+                        roomNumber.innerHTML = '';
                         return;
                     }
 
@@ -288,5 +304,5 @@
                     console.log('Error fetching student list:', error);
                 }
             }
- initializeForm();
+            initializeForm();
         </script>
