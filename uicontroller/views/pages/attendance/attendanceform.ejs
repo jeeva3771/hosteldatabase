@@ -113,8 +113,7 @@
                     let url = `http://localhost:1000/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
 
                     fetch(url, requestOptions)
-                        .then(response => response.text())
-                        .then((attendanceData) => window.location = '/attendance')
+                        .then(() => window.location = '/attendance')
                         .catch(error => console.error('error', error));
                 }
             }
@@ -152,37 +151,40 @@
 
             }
 
+            initializeForm();
+
             async function populateBlockCode() {
                 try {
                     const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` : 'http://localhost:1000/api/block?isActive=1';
+                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` :
+                        'http://localhost:1000/api/block/blockFloor/blockCodeCount';
                     const response = await fetch(url);
                     const responseData = await response.json();
-                    const { blocks } = responseData;
+                    const activeOptions = [];
+                    const disabledOptions = [];
 
                     blockCode.innerHTML = '<option selected>Select a Block</option>';
 
-                    const blockFloorsPromises = blocks.map(async (block) => {
+                    responseData.forEach(block => {
                         const option = document.createElement('option');
                         option.value = block.blockId;
                         option.textContent = block.blockCode;
-
-                        try {
-                            const blockFloorsResponse = await fetch(`http://localhost:1000/api/blockfloor/${block.blockId}`);
-                            const blockFloors = await blockFloorsResponse.json();
-
-                            if (blockFloors.length === 0) {
-                                option.disabled = true;
-                            }
-                        } catch (error) {
+                        if (block.floorCount === 0) {
                             option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
                         }
-
-                        return option; 
                     });
 
-                    const options = await Promise.all(blockFloorsPromises);
-                    options.forEach(option => blockCode.appendChild(option));
+                    activeOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
 
                     if (myParam) {
                         blockCode.value = myParam;
@@ -192,8 +194,6 @@
                     console.log('Error fetching block codes:', error);
                 }
             }
-
-
 
             async function populateFloorNumber() {
                 try {
@@ -205,15 +205,16 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?${blockId}`);
                     const blockFloors = await response.json();
 
                     if (blockFloors.length === 0) {
-                        floorNumber.innerHTML = '<option selected>No floors available</option>';
+                        floorNumber.innerHTML = '';
                         return;
                     }
 
-                    let optionsList = '<option selected>Select a Floor</option>'; blockFloors.forEach(blockFloor => {
+                    let optionsList = '<option selected>Select a Floor</option>'; 
+                    blockFloors.forEach(blockFloor => {
                         optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
                     });
                     floorNumber.innerHTML = optionsList;
@@ -304,5 +305,5 @@
                     console.log('Error fetching student list:', error);
                 }
             }
-            initializeForm();
+            
         </script>

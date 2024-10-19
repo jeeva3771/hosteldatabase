@@ -1,3 +1,6 @@
+
+
+
 const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
@@ -24,7 +27,8 @@ async function readBlocks(req, res) {
             w2.firstName AS updatedFirstName,
             w2.lastName AS updatedLastName,
             DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp,
+            (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL) AS floorCount 
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy
@@ -101,6 +105,27 @@ async function readBlockById(req, res) {
     }
 }
 
+async function readBlockFloorBlockCodeCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    try {
+        var blockFloorBlockCodeCount = await mysqlQuery(/*sql*/`SELECT 
+                blockId, 
+                blockCode,(SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId 
+                AND b.deletedAt IS NULL) AS floorCount FROM block bk WHERE isActive = 1 AND deletedAt IS NULL`,
+                [], 
+                mysqlClient
+            )
+
+        if (blockFloorBlockCodeCount.length === 0) {
+            return res.status(404).send('No blocks found');
+        }
+
+        res.status(200).send(blockFloorBlockCodeCount);
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 async function createBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
@@ -117,35 +142,6 @@ async function createBlock(req, res) {
     }
 
     try {
-        // const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
-        //     [blockCode],
-        //     mysqlClient
-        // );
-        // if (existingBlockCode.length > 0) {
-        //     return res.status(409).send("blockCode already exists");
-        // }
-
-        // const existingBlockCode = await mysqlQuery(/*sql*/`
-        //     SELECT * FROM block WHERE blockCode = ?`,
-        //     [blockCode], mysqlClient
-        // );
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt === null) {
-        //     return res.status(409).send("blockCode already exists");
-        // }
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt !== null) {
-        //     const restoreBlock = await mysqlQuery(/*sql*/`
-        //         UPDATE block SET deletedAt = NULL, blockLocation = ?, isActive = ?,createdAt = NOW(), createdBy = ?
-        //         WHERE blockCode = ?`,
-        //         [blockLocation, isActive, createdBy, blockCode], mysqlClient);
-        //         console.log(restoreBlock.affectedRows)
-        //     if (restoreBlock.affectedRows === 0) {
-        //         return res.status(400).send("Block restoration failed. No changes were made.");
-        //     }
-        //     return res.status(200).send("Soft-deleted block restored successfully.");
-        // }
-
         const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
             [blockCode, blockLocation, isActive, createdBy], mysqlClient)
 
@@ -184,17 +180,6 @@ async function updateBlockById(req, res) {
         if (!block) {
             return res.status(404).send("Block not found or already deleted");
         }
-
-        // if (blockCode) {
-        //     const isBlockUnique = await mysqlQuery(/*sql*/`
-        //         SELECT * FROM block 
-        //         WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
-        //         [blockCode, blockId], mysqlClient);
-
-        //     if (isBlockUnique.length > 0) {
-        //         return res.status(409).send("blockCode already exists");
-        //     }
-        // }
 
         const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
         if (!isValid) {
@@ -236,8 +221,12 @@ async function deleteBlockById(req, res) {
             return res.status(404).send("blockId is not defined")
         }
 
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
-            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
+        const deletedBlock = await mysqlQuery(/*sql*/` UPDATE block 
+            SET blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
+                deletedAt = NOW(), 
+                deletedBy = ? 
+            WHERE blockId = ? 
+            AND deletedAt IS NULL`,
             [deletedBy, blockId],
             mysqlClient)
         if (deletedBlock.affectedRows === 0) {
@@ -251,6 +240,7 @@ async function deleteBlockById(req, res) {
         });
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -285,17 +275,14 @@ async function validateInsert(body, isUpdate = false, blockId = null, mysqlClien
             if (blockCode.length < 1) {
                 errors.push("BlockCode is invalid");
             } else {
-                // Construct query for checking existing blockCode
                 let query;
                 let params;
 
                 if (isUpdate === true) {
-                    // When updating, check if blockCode exists for another blockId
-                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
+                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
                     params = [blockCode, blockId];
                 } else {
-                    // When inserting, check if blockCode already exists
-                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
+                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
                     params = [blockCode];
                 }
 
@@ -355,6 +342,7 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
     app.get('/api/block/:blockId', readBlockById)
+    app.get('/api/block/blockFloor/blockCodeCount', readBlockFloorBlockCodeCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)

@@ -90,7 +90,8 @@
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/block?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
+                fetch(`http://localhost:1000/api/block?limit=${limit}&page=${pageNo}` + url + 
+                `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
                         const { blocks, blockCount } = responseData;

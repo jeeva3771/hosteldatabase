@@ -224,6 +224,8 @@ async function authentication(req, res) {
         if (user.length > 0) {
             req.session.isLogged = true
             req.session.data = user[0]
+
+            console.log(req.session)
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
