@@ -1,0 +1,601 @@
+create database hosteldatabase;
+
+SELECT * FROM student WHERE name = 'admin' /*' AND password = 'password' */
+
+create table block (
+	blockId int auto_increment primary key,
+    blockCode varchar(255), 
+    location varchar(255),
+    isActive tinyint(1),
+    createdAt timestamp default current_timestamp,
+    createdBy int, 
+    updatedAt timestamp default current_timestamp on update current_timestamp,
+    updatedBy int, 
+    deletedAt timestamp,
+    deletedBy int
+);
+ALTER TABLE block ADD UNIQUE (blockCode);
+insert into block (blockCode,location,isActive) values ('A-Block','North',1);
+update block set isActive = 0 where blockId = 1;
+
+create table blockfloor (
+	blockFloorId int auto_increment primary key,
+	blockId int, 
+	floorNumber int,
+    isActive tinyint(1),
+	createdAt timestamp default current_timestamp,
+	createdBy int, 
+	updatedAt timestamp default current_timestamp on update current_timestamp, 
+	updatedBy int, 
+	deletedAt timestamp, 
+	deletedBy int,
+    constraint fk_blockfloor_blockId foreign key (blockId)
+    references block(blockId)
+)
+
+select * from blockfloor;
+
+create table room (
+	roomId int auto_increment primary key, 
+	blockFloorId int,
+	blockId int, 
+	roomNumber int, 
+	roomCapacity int, 
+	isAc tinyint(1), 
+	createdAt timestamp default current_timestamp,
+	createdBy int, 
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy int, 
+	deletedAt timestamp, 
+	deletedBy int,
+    constraint fk_room_blockFloorId foreign key (blockFloorId)
+    references blockfloor(blockFloorId),
+    constraint fk_room_blockId foreign key (blockId)
+    references block(blockId)
+);
+
+select * from room;
+
+
+create table student (
+	studentId int auto_increment,
+	roomId int, 
+	blockFloorId int, 
+	blockId int, 
+	name varchar(255), 
+	registerNumber varchar(255), 
+	dob date, 
+	courseId int, 
+	joinedDate date, 
+	phoneNumber int(10), 
+	emailId varchar(255), 
+	fatherName varchar(255), 
+	fatherNumber int(10), 
+	address varchar(255), 
+	createdAt timestamp default current_timestamp,
+	createdBy int, 
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy int, 
+	deletedAt timestamp, 
+	deletedBy int,
+    primary key(studentId, emailId),
+    constraint fk_studenId_roomId foreign key (roomId)
+    references room(roomId),
+    constraint fk_studenId_blockFloorId foreign key (blockFloorId)
+    references blockfloor(blockFloorId),
+    constraint fk_studentId_blockId foreign key (blockId)
+    references block(blockId),
+    constraint fk_studentId_courseId foreign key (courseId)
+    references course(courseId)
+);
+
+select * from student;
+
+create table course (
+	courseId int auto_increment primary key,
+	courseName varchar(255)
+);
+drop table course;
+
+select * from course;
+
+create table attendance (
+	attendanceId int auto_increment primary key,
+	studentId int, 
+	roomId int, 
+	blockFloorId int, 
+	blockId int, 
+	date date, 
+	isPresent tinyint(1), 
+	wardenId int, 
+	createdAt timestamp default current_timestamp,
+    constraint fk_attendance_wardenId foreign key (wardenId)
+    references warden(wardenId)
+);
+select * from attendance;
+
+create table warden (
+	wardenId int auto_increment primary key,
+	name varchar(255), 
+	dob date, 
+	username varchar(255), 
+	password varchar(255), 
+	createdAt timestamp default current_timestamp,
+	createdBy int,
+	updatedAt timestamp default current_timestamp on update current_timestamp,
+	updatedBy int, 
+	deletedAt timestamp,
+	deletedBy int
+);
+select * from warden;
+alter table block
+add constraint fk_block_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+alter table block
+add constraint fk_block_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table block
+add constraint fk_block_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table student
+add constraint fk_student_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+alter table student
+add constraint fk_student_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table student
+add constraint fk_student_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table block
+drop foreign key fk_deletedBy;
+
+alter table blockfloor
+add constraint fk_blockfloor_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+alter table blockfloor
+add constraint fk_blockfloor_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table blockfloor
+add constraint fk_blockfloor_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+
+alter table room
+add constraint fk_room_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+
+
+alter table room
+add constraint fk_room_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table room
+add constraint fk_room_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+
+insert into course (courseName)values ('BCOM');
+
+alter table attendance
+add constraint fk_attendance_studentId
+foreign key (studentId) references student(studentId);
+
+update course set courseName = 'BSC' where courseId = 1;
+select * from course;
+select * from course where courseId = 1;
+delete from course where courseId = 3;
+update course set deletedBy = null where courseId = 4
+
+alter table warden
+add constraint fk_warden_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table warden
+add constraint fk_warden_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table warden
+add constraint fk_warden_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+
+select * from block;
+select * from warden;
+select * from warden where deletedAt is null;
+insert into warden (name,dob,username,password,createdBy) values ('RamKumar','1999-10-09','ram','ramram','1');
+select * from blockfloor;
+
+select * from room;
+insert into room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAc,createdBy) values(1,1,6,5,1,1,6);
+ALTER TABLE room
+ADD COLUMN isActive TINYINT(1) AFTER roomCapacity;
+select * from blockfloor;
+
+insert into blockfloor(blockId,floorNumber,isActive,createdBy) values (1,22,1,6);
+update blockfloor set blockId = 2 where blockFloorId = 1;
+
+select * from blockfloor where blockfloorId = 1;
+update blockfloor set deletedAt = now(),deletedBy = 8 where blockfloorId = 8 and deletedAt is null
+
+update blockfloor set blockId=1 where blockFloorId = 1;
+
+update warden set name = "jamesDon" where wardenId = 6;
+
+select * from student;
+select now();
+
+ALTER TABLE student MODIFY COLUMN fatherNumber varchar(10);
+ALTER TABLE student MODIFY COLUMN phoneNumber varchar(10);
+
+select * from course;
+
+
+update block set deletedAt = now() where blockId = 3;
+select * from block where deletedAt is Null;
+update blockFloor set deletedAt = now() where blockFloorId = 1;
+
+select * from attendance where attendanceId = 1;
+
+select * from block where deletedAt is Null and isActive = 1;
+
+select * from student where roomId = 1;
+
+select count(*) from student where roomId = 1 and deletedAt is null;
+
+select count(*) as count from student where roomId = 1 and deletedAt is null;
+
+select * from room where roomId = 2000;
+
+update room set blockfloorId = 4 where roomId = 14 and deletedAt is null;
+
+alter table blockfloor MODIFY  blockCode unique;
+update room set deletedAt = now(),deletedBy = 6 where roomId = 16 and deletedAt is null;
+
+ALTER TABLE attendance
+ADD COLUMN updateAt int;
+
+
+ALTER TABLE attendance
+RENAME COLUMN updateAt TO updatedAt;
+
+ALTER TABLE attendance
+
+ADD COLUMN updatedBy int
+
+alter table attendance
+add constraint fk_attendance_updatedAt
+foreign key (updatedAt) references warden(wardenId);
+
+alter table attendance
+add constraint fk_attendance_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+select * from student where deletedAt is null;
+
+
+ALTER TABLE room
+RENAME COLUMN isAc TO isAirConditioner;
+
+select * from course;
+ALTER TABLE course
+ADD COLUMN createdAt timestamp default current_timestamp AFTER courseName;
+
+ALTER TABLE course
+ADD COLUMN createdBy int AFTER createdAt;
+
+ALTER TABLE course
+ADD COLUMN updatedAt timestamp default current_timestamp on update current_timestamp AFTER createdBy;
+
+ALTER TABLE course
+ADD COLUMN updatedBy int AFTER updatedAt;
+
+ALTER TABLE course
+ADD COLUMN deletedAt timestamp AFTER updatedBy;
+
+ALTER TABLE course
+ADD COLUMN deletedBy int AFTER deletedAt;
+
+alter table course
+add constraint fk_course_createdBy
+foreign key (createdBy) references warden(wardenId);
+
+alter table course
+add constraint fk_course_updatedBy
+foreign key (updatedBy) references warden(wardenId);
+
+alter table course
+add constraint fk_course_deletedBy
+foreign key (deletedBy) references warden(wardenId);
+
+SELECT * FROM attendance;
+
+ALTER TABLE attendance
+DROP FOREIGN KEY fk_attendance_updatedAt;
+
+ALTER TABLE attendance
+MODIFY COLUMN updatedAt timestamp default current_timestamp on update current_timestamp;
+
+insert into warden (name, dob, username, password) values('boopathi','2000-10-09','boop','boop00');
+SELECT * FROM warden;
+
+SELECT * FROM warden WHERE username = 0 AND password = "prem234"
+
+ALTER TABLE warden
+RENAME COLUMN username to emailId;
+
+ALTER TABLE warden
+ADD CONSTRAINT UC_warden_emailId UNIQUE (emailId);
+
+ALTER TABLE course
+ADD CONSTRAINT UC_course_courseName UNIQUE (courseName);
+
+SELECT emailId, COUNT(*) 
+FROM warden 
+GROUP BY emailId 
+HAVING COUNT(*) > 1;
+
+SELECT * FROM hosteldatabase.attendance;
+select studentId from attendance where attendanceId = 2;
+select count(*) as count from attendance where studentId = 2
+
+SELECT * FROM attendance WHERE studentId = 6 AND date >= "2024-01-01"  AND date <= "2024-08-11"
+SELECT * FROM attendance WHERE studentId = 6 AND date >= "8"  AND date <= "10"
+
+select * from attendance where MONTH(date) = 8 AND YEAR(date) = 2024 AND studentId = 6
+
+select * from attendance where date >= "2024-01-01"  AND date <= "2024-08-11" AND studentId = 6
+
+ALTER TABLE student
+ADD CONSTRAINT UC_student_phoneNumber UNIQUE (phoneNumber);
+
+ALTER TABLE student
+ADD CONSTRAINT UC_student_registerNumber UNIQUE (registerNumber);
+
+ALTER TABLE student
+ADD CONSTRAINT UC_student_fatherNumber UNIQUE (fatherNumber);
+
+ALTER TABLE attendance
+RENAME COLUMN date TO checkInDate;
+
+select c.*, w.name
+from course as c
+inner join warden as w on w.wardenId = c.createdBy
+
+select c.*, w.name
+from course as c
+inner join warden as w on w.wardenId = c.createdBy
+	
+    
+SELECT 
+    c.*,
+    w.name AS createdBy,
+    w2.name AS updatedBy,
+    DATE_FORMAT(c.createdAt, "%m/%d/%Y %T") AS createdAt,
+    DATE_FORMAT(c.updatedAt, "%m/%d/%Y %T") AS updatedAt,
+    c.createdBy,
+    c.updatedBy
+FROM 
+    course AS c
+INNER JOIN 
+    warden AS w ON w.wardenId = c.createdBy
+INNER JOIN 
+    warden AS w2 ON w2.wardenId = c.updatedBy;
+    
+SELECT 
+    c.*,
+    w.name AS createdBy,
+    w2.name AS updatedBy,
+    DATE_FORMAT(c.createdAt, "%m/%d/%Y %T") AS createdAt,
+    DATE_FORMAT(c.updatedAt, "%m/%d/%Y %T") AS updatedAt,
+    c.createdBy,
+    c.updatedBy,
+    (SELECT COUNT(*) FROM course) AS totalCourses
+FROM 
+    course AS c
+LEFT JOIN 
+    warden AS w ON w.wardenId = c.createdBy
+LEFT JOIN 
+    warden AS w2 ON w2.wardenId = c.updatedBy;
+
+SELECT 
+            c.*,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(c.createdAt, "%d-%m-%Y %T") AS createdAt,
+            DATE_FORMAT(c.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+            (SELECT COUNT(*) FROM course) AS totalCourses
+        FROM 
+            course AS c 
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = c.updatedBy
+        WHERE 
+            c.deletedAt IS NULL
+        ORDER BY
+            c.courseName ASC limit 3
+            
+SELECT * FROM block;
+SELECT 
+	b.*,
+    w.name AS created,
+    w2.name AS updated,
+    DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
+	DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+	(SELECT COUNT(*) FROM block) AS totalBlock
+    FROM block AS b
+    LEFT JOIN 
+       warden AS w ON w.wardenId = b.createdBy
+	LEFT JOIN 
+     warden AS w2 ON w2.wardenId = b.updatedBy
+    WHERE 
+      b.deletedAt 
+    IS NULL LIMIT 4 
+    
+select 
+	b.*,
+    bk.blockCode,
+    w.name AS created,
+    w2.name AS updated,
+    DATE_FORMAT(b.createdAt, "%d-%m-%Y %T") AS createdAt,
+	DATE_FORMAT(b.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+    (SELECT COUNT(*) FROM blockfloor) AS totalBlockFloor
+    FROM blockfloor AS b
+    LEFT JOIN 
+	   block AS bk ON bk.blockId = b.blockId
+    LEFT JOIN 
+       warden AS w ON w.wardenId = b.createdBy
+	LEFT JOIN 
+     warden AS w2 ON w2.wardenId = b.updatedBy
+    WHERE 
+      b.deletedAt 
+    IS NULL 
+    
+select * from room
+
+select 
+	r.*,
+    b.floorNumber,
+    bk.blockCode,
+    w.name AS created,
+    w2.name AS updated,
+    DATE_FORMAT(r.createdAt, "%d-%m-%Y %T") AS createdAt,
+	DATE_FORMAT(r.updatedAt, "%d-%m-%Y %T") AS updatedAt,
+    (SELECT COUNT(*) FROM room) AS totalRoom
+    FROM room AS r
+    LEFT JOIN 
+	   blockfloor AS b ON b.blockFloorId = r.blockFloorId
+    LEFT JOIN 
+	   block AS bk ON bk.blockId = r.blockId
+    LEFT JOIN 
+       warden AS w ON w.wardenId = r.createdBy
+	LEFT JOIN 
+     warden AS w2 ON w2.wardenId = b.updatedBy
+    WHERE 
+      r.deletedAt IS NULL 
+	ORDER BY 
+	  r.blockId ASC LIMIT 10 OFFSET 0
+    
+select 
+	w.*,
+    ww.name AS created,
+    ww2.name AS updated,
+    DATE_FORMAT(w.dob, "%d-%m-%Y") AS dob,
+    DATE_FORMAT(w.createdAt, "%d-%m-%Y %T") AS created,
+	DATE_FORMAT(w.updatedAt, "%d-%m-%Y %T") AS updated,
+    (SELECT COUNT(*) FROM warden) AS totalWardens
+    FROM warden AS w
+    LEFT JOIN
+       warden AS ww ON ww.wardenId = w.createdBy
+	LEFT JOIN 
+     warden AS ww2 ON ww2.wardenId = w.updatedBy
+    WHERE 
+      w.deletedAt IS NULL 
+	ORDER BY 
+	  w.name ASC LIMIT 10 OFFSET 0
+      
+select * from student;
+
+select 
+	s.*,
+    bk.blockCode AS blockCode,
+    b.floorNumber AS floorNumber,
+    r.roomNumber AS roomNumber,
+    c.courseName,
+    w.name AS created,
+    w2.name AS updated,
+    DATE_FORMAT(s.dob, "%Y-%m-%d") AS dob,
+    DATE_FORMAT(s.joinedDate, "%Y-%m-%d") AS joinedDate,
+    DATE_FORMAT(s.createdAt, "%Y-%m-%d %T") AS createdAt,
+	DATE_FORMAT(s.updatedAt, "%Y-%m-%d %T") AS updatedAt,
+    (SELECT COUNT(*) FROM student) AS totalStudents
+    FROM student AS s
+    LEFT JOIN 
+	   block AS bk ON bk.blockId = s.blockId
+	LEFT JOIN 
+	   blockfloor AS b ON b.blockFloorId = s.blockFloorId
+	LEFT JOIN 
+	   room AS r ON r.roomId = s.roomId
+	LEFT JOIN 
+	   course AS c ON c.courseId = s.courseId
+    LEFT JOIN 
+       warden AS w ON w.wardenId = s.createdBy
+	LEFT JOIN 
+     warden AS w2 ON w2.wardenId = s.updatedBy
+    WHERE 
+      s.deletedAt IS NULL 
+	ORDER BY 
+	  s.blockId ASC LIMIT 10 OFFSET 0;
+    
+    select * from attendance;
+
+    
+    select 
+	a.*,
+    s.name,
+    r.roomNumber,
+    b.floorNumber,
+    bk.blockCode,
+    ww.name AS created,
+    ww2.name AS updated,
+    DATE_FORMAT(a.createdAt, "%Y-%m-%d %T") AS created,
+	DATE_FORMAT(a.updatedAt, "%Y-%m-%d %T") AS updated,
+    (SELECT COUNT(*) FROM attendance) AS totalAttendances
+    FROM attendance AS a
+    LEFT JOIN
+       student AS s ON s.studentId = a.studentId
+	LEFT JOIN 
+       room AS r ON r.roomId = s.roomId  
+    LEFT JOIN 
+       blockfloor AS b ON b.blockFloorId = s.blockFloorId 
+	LEFT JOIN 
+       block AS bk ON bk.blockId = s.blockId
+    LEFT JOIN
+       warden AS ww ON ww.wardenId = a.wardenId
+	LEFT JOIN 
+       warden AS ww2 ON ww2.wardenId = a.updatedBy
+	ORDER BY 
+	  a.studentId ASC 
+	LIMIT 10 OFFSET 0
+    
+    
+    SELECT 
+            c.*,
+            w.name AS created,
+            w2.name AS updated,
+            DATE_FORMAT(c.createdAt, "%Y-%m-%d %T") AS createdAt,
+            DATE_FORMAT(c.updatedAt, "%Y-%m-%d %T") AS updatedAt
+        FROM 
+            course AS c 
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = c.updatedBy
+        WHERE 
+            c.deletedAt IS NULL
+        ORDER BY 
+            c.courseName ASC, c.createdAt ASC
+
+
+ALTER TABLE warden
+add COLUMN globalAdmin TINYINT(1) default 0;
+
+ALTER TABLE warden
+RENAME COLUMN globalAdmin to SuperAdmin;
+
+CREATE UNIQUE INDEX attendance_unq_studentId_checkInDate ON attendance(studentId, checkInDate);
+
+ALTER TABLE blockFloor 
+ADD CONSTRAINT unique_block_floor UNIQUE (blockId, floorNumber);
+
+ALTER TABLE room 
+ADD CONSTRAINT unique_room UNIQUE (blockId, blockFloorId, roomNumber);
