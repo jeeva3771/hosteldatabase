@@ -1,7 +1,5 @@
 create database hosteldatabase;
 
-SELECT * FROM student WHERE name = 'admin' /*' AND password = 'password' */
-
 create table block (
 	blockId int auto_increment primary key,
     blockCode varchar(255), 
