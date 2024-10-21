@@ -5,10 +5,10 @@ const pinoReqLogger = require('pino-http')();
 const path = require('path');
 
 var cookieParser = require('cookie-parser');
-// var session = require('express-session');
-var bodyParser = require('body-parser');
-// var FileStore = require('session-file-store')(session);
-// var fileStoreOptions = {};
+var session = require('express-session');
+// var bodyParser = require('body-parser');
+var FileStore = require('session-file-store')(session);
+var fileStoreOptions = {};
 
 //apicontroller
 const course = require('./apicontroller/course.js')
@@ -33,34 +33,34 @@ const app = express()
 app.use(express.json())
 app.use(pinoReqLogger)
 app.use(cookieParser());
-// app.use(session({
-//     store: new FileStore(fileStoreOptions),
-//     secret: 'keyboard',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//         maxAge: (1000 * 60 * 15)
-//     }
-// }));
+app.use(session({
+    store: new FileStore(fileStoreOptions),
+    secret: 'keyboard',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: (1000 * 60 * 15)
+    }
+}));
 
-// app.use((req, res, next) => {
-//     if (req.originalUrl === '/api/login' && req.method === 'POST') {
-//         return next();
-//     }
+app.use((req, res, next) => {
+    if (req.originalUrl === '/api/login' && req.method === 'POST') {
+        return next();
+    }
 
-//     if (req.originalUrl !== '/login') {
-//         if (req.session.isLogged !== true) {
-//             return res.status(401).redirect('http://localhost:1000/login')
-//         }
-//     } else {
-//         if (req.session.isLogged === true) {
-//             return res.status(200).redirect('http://localhost:1000/home')
-//         }
-//     }
-//     return next()
-// })
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged !== true) {
+            return res.status(401).redirect('http://localhost:1000/login')
+        }
+    } else {
+        if (req.session.isLogged === true) {
+            return res.status(200).redirect('http://localhost:1000/home')
+        }
+    }
+    return next()
+})
 
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.set('view engine', 'ejs');

@@ -111,23 +111,62 @@ async function readBlockFloorById(req, res) {
     }
 }
 
-async function readRoomBlockFloorCount(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    try {
-        var roomBlockFloorCount = await mysqlQuery(/*sql*/`SELECT 
-            blockFloorId, 
-            floorNumber,(SELECT COUNT(*) FROM room r WHERE r.floorNumber = b.floorNumber 
-            AND r.deletedAt IS NULL) AS RoomCount FROM blockfloor b WHERE b.isActive = 1 AND b.deletedAt IS NULL`,
-            [], 
-            mysqlClient
-        )
+// async function readRoomBlockFloorCount(req, res) {
+//     const mysqlClient = req.app.mysqlClient;
+//     const blockId = req.query.blockId;
+//     try {
+//         var roomBlockFloorCount = await mysqlQuery(/*sql*/`SELECT 
+//             blockFloorId, 
+//             floorNumber,
+//             (SELECT COUNT(*)
+//             FROM room AS r
+//             WHERE r.blockFloorId = b.blockFloorId
+//             AND r.deletedAt IS NULL) AS roomCount
+//             FROM blockfloor AS b
+//             WHERE b.blockId = ? AND b.isActive = 1
+//             AND b.deletedAt IS NULL`,
+//             [blockId], 
+//             mysqlClient
+//         )
 
-    if (roomBlockFloorCount.length === 0) {
-        return res.status(404).send('No blockfloors found');
-    }
+//     if (roomBlockFloorCount.length === 0) {
+//         return res.status(404).send('No blockfloors found');
+//     }
+//         res.status(200).send(roomBlockFloorCount)
+//     } catch (error) {
+//         res.status(500).send(error.message)
+//     }
+// }
+
+
+
+async function readRoomBlockFloorCountOrFloorCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const blockId = req.query.blockId;
+    const includeBlockFloor = req.query.blockFloor === 'true';
+    try {
+        let sqlQuery = /*sql*/`SELECT 
+            blockFloorId, 
+            floorNumber`;
+
+        if (includeBlockFloor) {
+            sqlQuery += `, (SELECT COUNT(*)
+            FROM room AS r
+            WHERE r.blockFloorId = b.blockFloorId
+            AND r.deletedAt IS NULL) AS roomCount`;
+        }
+
+        sqlQuery += ` FROM blockfloor AS b
+            WHERE b.blockId = ? AND b.isActive = 1
+            AND b.deletedAt IS NULL`;
+
+        const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
+
+        if (roomBlockFloorCount.length === 0) {
+            return res.status(404).send('No BlockFloors found');
+        }
         res.status(200).send(roomBlockFloorCount)
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -331,7 +370,7 @@ async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
     app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
-    app.get('/api/blockfloor/room/floorCount', readRoomBlockFloorCount)
+    app.get('/api/blockfloor/room/floorCount', readRoomBlockFloorCountOrFloorCount)
     app.post('/api/blockfloor', createBlockFloor)
     app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
     app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloorById)

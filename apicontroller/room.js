@@ -109,25 +109,39 @@ async function readRoomById(req, res) {
     }
 }
 
-async function readRoomsByBlockFloorId(req, res) {
+async function readStudentOrRoomNumberCountByRoomId(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const blockFloorId = req.params.blockfloorId;
-    try {
-        const rooms = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE blockFloorId = ? 
-        AND isActive = 1 AND deletedAt IS NULL`,
-            [blockFloorId],
-            mysqlClient
-        )
+    const blockFloorId = req.query.blockFloorId;
+    const includeStudent = req.query.student === 'true';
 
-        if (rooms.length === 0) {
-            return res.status(404).send("BlockFloorId not valid");
+    try {
+        let sqlQuery = /*sql*/`SELECT 
+            roomId, 
+            roomNumber`;
+
+        if (includeStudent) {
+            sqlQuery += `, (SELECT COUNT(*)
+                          FROM student AS s
+                          WHERE s.roomId = r.roomId
+                          AND s.deletedAt IS NULL) AS studentCount`;
         }
 
-        res.status(200).send(rooms)
+        sqlQuery += ` FROM room AS r
+                      WHERE r.blockFloorId = ?
+                      AND r.isActive = 1
+                      AND r.deletedAt IS NULL`;
+
+        const studentCountByRoomId = await mysqlQuery(sqlQuery, [blockFloorId], mysqlClient);
+
+        if (studentCountByRoomId.length === 0) {
+            return res.status(404).send('No rooms found');
+        }
+        res.status(200).send(studentCountByRoomId)
     } catch (error) {
         res.status(500).send(error.message)
     }
 }
+
 
 async function createRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -354,7 +368,7 @@ async function validateUpdateRoom(roomId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/room', readRooms)
     app.get('/api/room/:roomId', readRoomById)
-    app.get('/api/room/blockfloor/:blockfloorId', readRoomsByBlockFloorId)
+    app.get('/api/room/student/count', readStudentOrRoomNumberCountByRoomId)
     app.post('/api/room', createRoom)
     app.put('/api/room/:roomId', updateRoomById)
     app.delete('/api/room/:roomId', deleteRoomById)

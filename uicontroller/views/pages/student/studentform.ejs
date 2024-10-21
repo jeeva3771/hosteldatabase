@@ -184,72 +184,121 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block?isActive=1');
-                    const responseData = await response.json();
-                    const { blocks } = responseData;
+                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const blocks = await response.json();
 
-                    let optionsList = '<option selected>Select a Block</option>';
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    blockCode.innerHTML = '<option selected>Select a Block</option>';
+
                     blocks.forEach(block => {
-                        optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
+                        const option = document.createElement('option');
+                        option.value = block.blockId;
+                        option.textContent = `${block.blockCode} (Floors: ${block.floorCount})`;
+                        if (block.floorCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
                     });
-                    blockCode.innerHTML = optionsList;
-                    await populateFloorNumber()
+
+                    activeOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
                 } catch (error) {
                     console.log('Error fetching block codes:', error);
                 }
             }
 
-            async function populateFloorNumber() {
+              async function populateFloorNumber() {
                 try {
                     const blockId = blockCode.value;
 
                     if (blockId === 'Select' || blockId === '') {
-                        floorNumber.innerHTML = '<option selected>Select a Floor</option>';
+                        floorNumber.innerHTML = 'No rooms available';
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
                     const blockFloors = await response.json();
+                    console.log(blockFloors)
+                    const activeOptions = [];
+                    const disabledOptions = [];
 
-                    if (blockFloors.length === 0) {
-                        floorNumber.innerHTML = '<option selected>No floors available</option>';
-                        return;
-                    }
+                    floorNumber.innerHTML = '<option selected>Select a Floor</option>';
 
-                    let optionsList = '<option selected>Select a Floor</option>';
                     blockFloors.forEach(blockFloor => {
-                        optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
+                        const option = document.createElement('option');
+                        option.value = blockFloor.blockFloorId;
+                        option.textContent = blockFloor.floorNumber;
+                        if (blockFloor.roomCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
                     });
-                    floorNumber.innerHTML = optionsList;
-                    await populateRoomNumber()
+
+                    activeOptions.forEach(option => {
+                        floorNumber.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        floorNumber.appendChild(option);
+                    });
 
                 } catch (error) {
                     console.log('Error fetching floor numbers:', error);
                 }
-            }
+            }         
 
             async function populateRoomNumber() {
                 try {
                     const blockFloorId = floorNumber.value;
 
                     if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML = '<option selected></option>';
+                        roomNumber.innerHTML = '';
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/room/blockfloor/${blockFloorId}`);
+                    const response = await fetch(`http://localhost:1000/api/room/student/count?blockFloorId=${blockFloorId}`);
                     const rooms = await response.json();
-
                     if (rooms.length === 0) {
                         roomNumber.innerHTML = '<option selected>No rooms available</option>';
                         return;
                     }
 
-                    let optionsList = '<option selected>Select a Room</option>';
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    roomNumber.innerHTML = '<option selected>Select a Room</option>';
+
                     rooms.forEach(room => {
-                        optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`;
+                        const option = document.createElement('option');
+                        option.value = room.roomId;
+                        option.textContent = room.roomNumber;
+                        if (room.studentCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
                     });
-                    roomNumber.innerHTML = optionsList;
+
+                    activeOptions.forEach(option => {
+                        roomNumber.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        roomNumber.appendChild(option);
+                    });
 
                 } catch (error) {
                     console.log('Error fetching room numbers:', error);

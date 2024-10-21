@@ -90,18 +90,38 @@
                 floorNumber.addEventListener('input', toggleSubmitButton);
                 document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
             }
+            initializeForm();
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block?isActive=1');
-                    const responseData = await response.json();
-                    const { blocks } = responseData;
+                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const blocks = await response.json();
 
-                    let optionsList = '<option selected>Select a Block</option>';
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    blockCode.innerHTML = '<option selected>Select a Block</option>';
+
                     blocks.forEach(block => {
-                        optionsList += `<option value="${block.blockId}">${block.blockCode}</option>`;
+                        const option = document.createElement('option');
+                        option.value = block.blockId;
+                        option.textContent = block.blockCode;
+                        if (block.floorCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
                     });
-                    blockCode.innerHTML = optionsList;
+
+                    activeOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
                 } catch (error) {
                     console.log('Error fetching block codes:', error);
                 }
@@ -125,6 +145,5 @@
                 }
             }
 
-            initializeForm();
 
         </script>
