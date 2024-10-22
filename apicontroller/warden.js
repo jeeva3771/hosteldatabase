@@ -265,10 +265,9 @@ async function resetPassword(req, res) {
 
     console.log(emailId)
     try {
-        const isValidMail = await mysqlQuery(/*sql*/`select emailId from warden where emailId = ?`,
+        const isValidMail = await mysqlQuery(/*sql*/`SELECT emailId FROM warden WHERE emailId = ? AND deletedAt IS NULL`,
             [emailId],
             mysqlClient)
-        console.log('isValidMail:', JSON.stringify(isValidMail));
 
         console.log(isValidMail)
         if (isValidMail.length === 0) {
