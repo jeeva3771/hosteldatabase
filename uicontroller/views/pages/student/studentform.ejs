@@ -226,7 +226,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&room=true`);
                     const blockFloors = await response.json();
                     console.log(blockFloors)
                     const activeOptions = [];
@@ -237,7 +237,7 @@
                     blockFloors.forEach(blockFloor => {
                         const option = document.createElement('option');
                         option.value = blockFloor.blockFloorId;
-                        option.textContent = blockFloor.floorNumber;
+                        option.textContent = `${blockFloor.floorNumber} (Rooms: ${blockFloor.roomCount})`;
                         if (blockFloor.roomCount === 0) {
                             option.disabled = true;
                             disabledOptions.push(option);
@@ -283,7 +283,7 @@
                     rooms.forEach(room => {
                         const option = document.createElement('option');
                         option.value = room.roomId;
-                        option.textContent = room.roomNumber;
+                        option.textContent = room.roomNumber ;
                         if (room.studentCount === 0) {
                             option.disabled = true;
                             disabledOptions.push(option);

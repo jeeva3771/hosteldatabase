@@ -1,4 +1,7 @@
 const { mysqlQuery } = require('../utilityclient.js')
+var randomstring = require("randomstring");
+var nodemailer = require('nodemailer');
+
 const ALLOWED_UPDATE_KEYS = [
     "firstName",
     "lastName",
@@ -9,6 +12,7 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readWardens(req, res) {
+    console.log('aaaaaaaaaa')
     const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
@@ -65,6 +69,8 @@ async function readWardens(req, res) {
 }
 
 async function readWardenById(req, res) {
+    console.log('bbbbbbbbbbbbbbb')
+
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
@@ -85,9 +91,9 @@ async function readWardenById(req, res) {
                 warden AS ww2 ON ww2.wardenId = w.updatedBy
                 WHERE 
                 w.deletedAt IS NULL AND w.wardenId = ?`,
-                [wardenId],
-                mysqlClient
-            )
+            [wardenId],
+            mysqlClient
+        )
         if (warden.length === 0) {
             return res.status(404).send("wardenId not valid");
         }
@@ -99,6 +105,8 @@ async function readWardenById(req, res) {
 }
 
 async function createWarden(req, res) {
+    console.log('ccccccccccccc')
+
     const mysqlClient = req.app.mysqlClient;
     const {
         firstName,
@@ -139,6 +147,8 @@ async function createWarden(req, res) {
 }
 
 async function updateWardenById(req, res) {
+    console.log('ddddddddddddddddd')
+
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
@@ -184,6 +194,8 @@ async function updateWardenById(req, res) {
 }
 
 async function deleteWardenById(req, res) {
+    console.log('eeeeeeeeeeeeeeeeee')
+
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
@@ -212,20 +224,20 @@ async function deleteWardenById(req, res) {
 }
 
 async function authentication(req, res) {
+    console.log('aaaaaffffffffffffffffffaaaaa')
+
     const mysqlClient = req.app.mysqlClient
     const {
         emailId,
         password
     } = req.body
     try {
-        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ?`,
+        const user = await mysqlQuery(/*sql*/`SELECT firstName, lastName, superAdmin FROM warden WHERE emailId = ? AND password = ?`,
             [emailId, password],
             mysqlClient)
         if (user.length > 0) {
             req.session.isLogged = true
             req.session.data = user[0]
-
-            console.log(req.session)
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
@@ -238,10 +250,72 @@ async function authentication(req, res) {
 }
 
 function logOut(req, res) {
+    console.log('ggggggggggggg')
+
     req.session.destroy((err) => {
         if (err) logger.error();
         res.redirect('http://localhost:1000/login')
     })
+}
+
+async function resetPassword(req, res) {
+    console.log('hhhhhhh')
+    const mysqlClient = req.app.mysqlClient;
+    const emailId = req.query.emailId;
+
+    console.log(emailId)
+    try {
+        const isValidMail = await mysqlQuery(/*sql*/`select emailId from warden where emailId = ?`,
+            [emailId],
+            mysqlClient)
+        console.log('isValidMail:', JSON.stringify(isValidMail));
+
+        console.log(isValidMail)
+        if (isValidMail.length === 0) {
+            return res.status(404).send('Invalid EmailId')
+        }
+        console.log(isValidMail[0].emailId)
+        var randomPasswordWords = randomstring.generate();
+        console.log(randomPasswordWords)
+
+        var changePassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ? WHERE emailId = ?`,
+            [randomPasswordWords, isValidMail[0].emailId],
+            mysqlClient
+        )
+
+        if (changePassword.affectedRows === 0) {
+            return res.status(204).send('No change made.')
+        }
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'jeeva37710@gmail.com',
+                pass: 'yios kuac qbqn igcd'
+            }
+        });
+
+        var mailOptions = {
+            from: 'jeeva37710@gmail.com',
+            to: isValidMail[0].emailId,
+            subject: 'Sending Email using Node.js',
+            text: randomPasswordWords
+            //   text: 'That was easy!',
+            //   html: '<h1>Welcome</h1><p>That was easy!</p>'
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
+        res.status(200).send('success')
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error.message)
+    }
 }
 
 function validateInsertItems(body, isUpdate = false) {
@@ -334,11 +408,13 @@ async function validateWardenById(wardenId, mysqlClient) {
 }
 
 module.exports = (app) => {
+    app.post('/api/resetPassword', resetPassword)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)
     app.put('/api/warden/:wardenId', updateWardenById)
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
-   app.get('/api/logout', logOut)
+    app.get('/api/logout', logOut)
+
 }

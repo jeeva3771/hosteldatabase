@@ -1,6 +1,3 @@
-
-
-
 const { mysqlQuery } = require('../utilityclient.js')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",

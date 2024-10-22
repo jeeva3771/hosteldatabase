@@ -143,7 +143,7 @@ async function readBlockFloorById(req, res) {
 async function readRoomBlockFloorCountOrFloorCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
-    const includeBlockFloor = req.query.blockFloor === 'true';
+    const includeBlockFloor = req.query.room === 'true';
     try {
         let sqlQuery = /*sql*/`SELECT 
             blockFloorId, 

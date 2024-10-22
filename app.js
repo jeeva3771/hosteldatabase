@@ -6,7 +6,7 @@ const path = require('path');
 
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-// var bodyParser = require('body-parser');
+var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
 
@@ -44,7 +44,11 @@ app.use(session({
 }));
 
 app.use((req, res, next) => {
-    if (req.originalUrl === '/api/login' && req.method === 'POST') {
+    if (req.originalUrl === '/api/login'  && req.method === 'POST') {
+        return next();
+    }
+
+    if ((req.originalUrl === '/warden/resetPassword') || req.originalUrl === '/warden/resetPassword' && req.method === 'POST') {
         return next();
     }
 
@@ -60,7 +64,7 @@ app.use((req, res, next) => {
     return next()
 })
 
-// app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.set('view engine', 'ejs');

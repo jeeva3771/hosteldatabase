@@ -45,9 +45,15 @@ function errorUi(req, res) {
     })
 }
 
+function resetPasswordUi(req, res) {
+    res.render('pages/resetpassword.ejs')
+}
+
 module.exports = (app) => {
+    app.get('/warden/resetPassword', resetPasswordUi)
     app.get('/warden', wardenPageUi)
     app.get('/warden/add', addWardenUi)
     app.get('/warden/:wardenId', editWardenUi)
     app.get('/error', errorUi)
+    
 }

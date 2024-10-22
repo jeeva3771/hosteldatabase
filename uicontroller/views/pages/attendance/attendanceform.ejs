@@ -147,6 +147,7 @@
                 blockCode.addEventListener('change', populateFloorNumber);
                 floorNumber.addEventListener('change', populateRoomNumber);
                 roomNumber.addEventListener('change', populateStudentList);
+                checkIn.addEventListener('change', toggleSubmitButton)
                 studentList.addEventListener('change', toggleSubmitButton);
 
             }
@@ -160,7 +161,7 @@
                         'http://localhost:1000/api/block/blockFloor/blockCodeCount';
                     const response = await fetch(url);
                     const blocks = await response.json();
-                    console.log(blocks)
+
                     const activeOptions = [];
                     const disabledOptions = [];
 
@@ -206,7 +207,7 @@
                     }
                     
                     const response = await fetch
-                    (`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&blockFloor=true`);
+                    (`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&room=true`);
                     const blockFloors = await response.json();
                     console.log(blockFloors)
                     const activeOptions = [];
