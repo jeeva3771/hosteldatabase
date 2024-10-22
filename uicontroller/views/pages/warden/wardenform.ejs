@@ -1,0 +1,136 @@
+<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Warden' }) %>
+    <h2>Warden form</h2>
+    <div class="form-group">
+        <label for="firstName">First Name</label>
+        <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" class="form-control" id="lastName" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="dob">DOB</label>
+        <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="emailId">Email Id</label>
+        <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
+    </div>
+    <div class="form-group">
+        <label for="isAdmin">Admin</label><br>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="isAdmin" id="isAdmin" value="1"
+                onchange="toggleSubmitButton()">
+            <label class="form-check-label" for="isAir">Yes</label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="radio" name="isAdmin" id="notAdmin" value="0"
+                onchange="toggleSubmitButton()">
+            <label class="form-check-label" for="notAir">No</label>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" class="form-control" id="password" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="form-group">
+        <label for="password">Confirm Password</label>
+        <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
+    </div>
+    <div class="submission">
+        <input type="hidden" id="wardenId" value="<%=wardenId %>" />
+        <button onclick="authentication()" class="btn btn-success" id="submit" disabled>Submit</button>
+    </div>
+    <%- include('../../partials/footer.ejs') %>
+    <script>
+        const firstName = document.getElementById('firstName');
+        const lastName = document.getElementById('lastName');
+        const dob = document.getElementById('dob');
+        const emailId = document.getElementById('emailId');
+        const password = document.getElementById('password');
+        const conform = document.getElementById('conform');
+        var wardenId = document.getElementById('wardenId').value;
+        const submit = document.getElementById('submit');
+
+        function authentication() {
+            const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
+            const myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+
+            const raw = JSON.stringify({
+                "firstName": firstName.value,
+                "lastName": lastName.value,
+                "dob": dob.value,
+                "superAdmin": parseInt(isAdmin.value),
+                "emailId": emailId.value,
+                "password": password.value
+            });
+
+            var requestOptions = {
+                method: wardenId ? 'PUT' : 'POST',
+                headers: myHeaders,
+                body: raw
+            };
+
+            let url = "http://localhost:1000/api/warden";
+            if (wardenId) {
+                url = url + '/' + wardenId
+            }
+
+            fetch(url, requestOptions)
+                .then(response => response.text())
+                .then(wardens => window.location = '/warden')
+                .catch(error => console.error('error', error));
+        }
+
+        if (wardenId) {
+            getWarden(wardenId)
+        }
+
+        function getWarden(wardenId) {
+            const requestOptions = {
+                method: "GET"
+            };
+
+            fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                .then((response) => response.json())
+                .then((warden) => {
+                    firstName.value = warden.firstName;
+                    lastName.value = warden.lastName;
+                    dob.value = warden.dob.split('T')[0];
+                    emailId.value = warden.emailId;
+
+                    if (warden.superAdmin) {
+                        document.getElementById('isAdmin').checked = true;
+                    } else {
+                        document.getElementById('notAdmin').checked = true;
+                    }
+
+                    password.value = warden.password;
+                    conform.value = warden.password;
+                })
+                .catch((error) => console.error(error));
+        }
+
+        function toggleSubmitButton() {
+            const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
+            submit.disabled = !(
+                firstName.value.length > 0 &&
+                lastName.value.length > 0 &&
+                dob.value.length > 0 &&
+                emailId.value.length > 0 &&
+                isAdmin !== null &&
+                password.value.length > 0 &&
+                conform.value.length > 0 &&
+                password.value === conform.value
+            );
+        }
+
+        firstName.addEventListener('input', toggleSubmitButton);
+        lastName.addEventListener('input', toggleSubmitButton);
+        dob.addEventListener('input', toggleSubmitButton);
+        emailId.addEventListener('input', toggleSubmitButton);
+        document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+        password.addEventListener('input', toggleSubmitButton);
+        conform.addEventListener('input', toggleSubmitButton);
+    </script>

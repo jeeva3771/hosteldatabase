@@ -1,0 +1,332 @@
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Student' }) %>
+
+    <h2>Student form</h2>
+    <div class="form-group">
+        <label for="studentName">Name</label>
+        <input type="text" class="form-control" id="studentName">
+    </div>
+    <div class="form-group">
+        <label for="registerNum">Register Number</label>
+        <input type="text" class="form-control" id="registerNum">
+    </div>
+    <div class="form-group">
+        <label for="dob">DOB</label>
+        <input type="date" class="form-control dateLabel" id="dob">
+    </div>
+    <div class="form-group">
+        <label for="course">Course Name</label>
+        <select class="form-control" id="course">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="email">Email Id</label>
+        <input type="email" class="form-control" id="email">
+    </div>
+    <div class="form-group">
+        <label for="studNum">Phone Number</label>
+        <input type="number" class="form-control" id="studNum">
+    </div>
+    <div class="form-group">
+        <label for="fatherName">Father Name</label>
+        <input type="text" class="form-control" id="fatherName">
+    </div>
+    <div class="form-group">
+        <label for="fatherNum">Father Number</label>
+        <input type="number" class="form-control" id="fatherNum">
+    </div>
+    <div class="form-group">
+        <label for="address">Address</label>
+        <input type="text" class="form-control" id="address">
+    </div>
+    <div class="form-group">
+        <label for="blockCode">Block Code</label>
+        <select class="form-control" id="blockCode">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="floorNumber">Floor Number</label>
+        <select class="form-control" id="floorNumber">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="roomNumber">Room Number</label>
+        <select class="form-control" id="roomNumber">
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="joinedDate">Joined Date</label>
+        <input type="date" class="form-control dateLabel" id="joinedDate">
+    </div>
+    <div class="submission">
+        <input type="hidden" id="studentId" value="<%=studentId %>" />
+        <button onclick="saveOrUpdateStudent()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+    </div>
+    <%- include('../../partials/footer.ejs') %>
+        <script>
+            var studentName = document.getElementById('studentName');
+            var registerNum = document.getElementById('registerNum');
+            var dob = document.getElementById('dob');
+            var course = document.getElementById('course');
+            var emailId = document.getElementById('email');
+            var studNum = document.getElementById('studNum');
+            var fatherName = document.getElementById('fatherName');
+            var fatherNum = document.getElementById('fatherNum');
+            var address = document.getElementById('address');
+            var blockCode = document.getElementById('blockCode');
+            var floorNumber = document.getElementById('floorNumber');
+            var roomNumber = document.getElementById('roomNumber');
+            var joinedDate = document.getElementById('joinedDate');
+            var submitButton = document.getElementById('submitButton');
+            var studentId = document.getElementById('studentId').value;
+
+            const today = new Date().toISOString().split('T')[0];
+            joinedDate.value = today;
+
+            function saveOrUpdateStudent() {
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+
+                var raw = JSON.stringify({
+                    "name": studentName.value,
+                    "registerNumber": registerNum.value,
+                    "dob": dob.value,
+                    "courseId": course.value,
+                    "emailId": emailId.value,
+                    "phoneNumber": studNum.value,
+                    "fatherName": fatherName.value,
+                    "fatherNumber": fatherNum.value,
+                    "address": address.value,
+                    "blockId": blockCode.value,
+                    "blockFloorId": floorNumber.value,
+                    "roomId": roomNumber.value,
+                    "joinedDate": joinedDate.value
+                });
+
+                var requestOptions = {
+                    method: studentId ? 'PUT' : 'POST',
+                    headers: myHeaders,
+                    body: raw
+                };
+
+                let url = "http://localhost:1000/api/student";
+                if (studentId) {
+                    url = url + '/' + studentId
+                }
+
+                fetch(url, requestOptions)
+                    .then(response => response.text())
+                    .then(students => window.location = '/student')
+                    .catch(error => console.error('error', error));
+            }
+
+            function toggleSubmitButton() {
+                submitButton.disabled = !(
+                    studentName.value.length > 0 &&
+                    registerNum.value.length > 0 &&
+                    dob.value !== '' &&
+                    course.value !== 'Select' &&
+                    emailId.value.length > 0 &&
+                    studNum.value.length > 0 &&
+                    fatherName.value.length > 0 &&
+                    fatherNum.value.length > 0 &&
+                    address.value.length > 0 &&
+                    blockCode.value !== 'Select' &&
+                    floorNumber.value !== 'Select' &&
+                    roomNumber.value !== 'Select' &&
+                    joinedDate.value !== ''
+                )
+            }
+
+            async function initializeForm() {
+
+                await populateCourse()
+                await populateBlockCode();
+                await populateFloorNumber();
+                await populateRoomNumber()
+
+                if (studentId) {
+                    await getStudentById(studentId);
+                }
+
+                studentName.addEventListener('input', toggleSubmitButton);
+                registerNum.addEventListener('input', toggleSubmitButton);
+                dob.addEventListener('input', toggleSubmitButton);
+                course.addEventListener('change', toggleSubmitButton);
+                emailId.addEventListener('input', toggleSubmitButton);
+                studNum.addEventListener('input', toggleSubmitButton);
+                fatherName.addEventListener('input', toggleSubmitButton);
+                fatherNum.addEventListener('change', toggleSubmitButton);
+                address.addEventListener('change', toggleSubmitButton);
+                blockCode.addEventListener('input', populateFloorNumber);
+                floorNumber.addEventListener('input', populateRoomNumber);
+                roomNumber.addEventListener('input', toggleSubmitButton);
+                joinedDate.addEventListener('input', toggleSubmitButton);
+
+            }
+
+            initializeForm();
+
+
+            async function populateCourse() {
+                try {
+                    const response = await fetch("http://localhost:1000/api/course")
+                    const responseData = await response.json()
+                    const { courses } = responseData
+                    var optionsList = '<option>Select a Course</option>'
+                    courses.forEach(course => {
+                        optionsList += `<option value="${course.courseId}">${course.courseName}</option>`
+                    })
+                    course.innerHTML = optionsList
+                } catch (error) {
+                    console.log('Error fetching course:', error);
+                }
+            }
+
+            async function populateBlockCode() {
+                try {
+                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const blocks = await response.json();
+
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    blockCode.innerHTML = '<option selected>Select a Block</option>';
+
+                    blocks.forEach(block => {
+                        const option = document.createElement('option');
+                        option.value = block.blockId;
+                        option.textContent = `${block.blockCode} (Floors: ${block.floorCount})`;
+                        if (block.floorCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
+                    });
+
+                    activeOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        blockCode.appendChild(option);
+                    });
+
+                } catch (error) {
+                    console.log('Error fetching block codes:', error);
+                }
+            }
+
+              async function populateFloorNumber() {
+                try {
+                    const blockId = blockCode.value;
+
+                    if (blockId === 'Select' || blockId === '') {
+                        floorNumber.innerHTML = 'No rooms available';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
+                    const blockFloors = await response.json();
+                    console.log(blockFloors)
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    floorNumber.innerHTML = '<option selected>Select a Floor</option>';
+
+                    blockFloors.forEach(blockFloor => {
+                        const option = document.createElement('option');
+                        option.value = blockFloor.blockFloorId;
+                        option.textContent = blockFloor.floorNumber;
+                        if (blockFloor.roomCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
+                    });
+
+                    activeOptions.forEach(option => {
+                        floorNumber.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        floorNumber.appendChild(option);
+                    });
+
+                } catch (error) {
+                    console.log('Error fetching floor numbers:', error);
+                }
+            }         
+
+            async function populateRoomNumber() {
+                try {
+                    const blockFloorId = floorNumber.value;
+
+                    if (blockFloorId === 'Select' || blockFloorId === '') {
+                        roomNumber.innerHTML = '';
+                        return;
+                    }
+
+                    const response = await fetch(`http://localhost:1000/api/room/student/count?blockFloorId=${blockFloorId}`);
+                    const rooms = await response.json();
+                    if (rooms.length === 0) {
+                        roomNumber.innerHTML = '<option selected>No rooms available</option>';
+                        return;
+                    }
+
+                    const activeOptions = [];
+                    const disabledOptions = [];
+
+                    roomNumber.innerHTML = '<option selected>Select a Room</option>';
+
+                    rooms.forEach(room => {
+                        const option = document.createElement('option');
+                        option.value = room.roomId;
+                        option.textContent = room.roomNumber;
+                        if (room.studentCount === 0) {
+                            option.disabled = true;
+                            disabledOptions.push(option);
+                        } else {
+                            activeOptions.push(option);
+                        }
+                    });
+
+                    activeOptions.forEach(option => {
+                        roomNumber.appendChild(option);
+                    });
+
+                    disabledOptions.forEach(option => {
+                        roomNumber.appendChild(option);
+                    });
+
+                } catch (error) {
+                    console.log('Error fetching room numbers:', error);
+                }
+            }
+
+            async function getStudentById(studentId) {
+                try {
+                    const response = await fetch("http://localhost:1000/api/student/" + studentId);
+                    const student = await response.json();
+                    studentName.value = student.name
+                    registerNum.value = student.registerNumber
+                    dob.value = student.dob.split('T')[0]
+                    course.value = student.courseId
+                    emailId.value = student.emailId
+                    studNum.value = student.phoneNumber
+                    fatherName.value = student.fatherName
+                    fatherNum.value = student.fatherNumber
+                    address.value = student.address
+                    blockCode.value = student.blockId
+                    await populateFloorNumber();
+                    floorNumber.value = student.blockFloorId;
+                    await populateRoomNumber();
+                    roomNumber.value = student.roomId;
+                    joinedDate.value = student.joinedDate.split('T')[0]
+                } catch (error) {
+                    console.error('Error fetching student details:', error);
+                }
+            }
+
+        </script>

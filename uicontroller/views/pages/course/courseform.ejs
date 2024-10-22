@@ -1,0 +1,68 @@
+<%- include('../../partials/header.ejs', { 
+    isMenuVisible : true,
+     title: 'Course' 
+     }) %>
+        <h2>Course form</h2>
+        <div class="form-group">
+            <label for="courseName">Course Name</label>
+            <input type="text" class="form-control" id="courseName">
+        </div>
+            <input type="hidden" id="courseId" value="<%=courseId %>" />
+            <button onclick="saveOrUpdateCourse()" class="btn btn-success" id="submitButton" disabled>Submit</button>
+<%- include('../../partials/footer.ejs') %>
+
+<script>
+    var courseName = document.getElementById('courseName');
+    var submitButton = document.getElementById('submitButton');
+    var courseId = document.getElementById('courseId').value;
+
+    function saveOrUpdateCourse() {
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
+
+        var raw = JSON.stringify({
+            "courseName": courseName.value
+        });
+
+        var requestOptions = {
+            method: courseId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
+
+        let url = "http://localhost:1000/api/course"
+        if (courseId) {
+            url = url + '/' + courseId
+        }
+
+        fetch(url, requestOptions)
+            .then(response => response.text())
+            .then(response => {
+            window.location = '/course'
+        })          
+        .catch(error => console.error('error', error));
+    }
+
+    if (courseId) {
+        getCourse(courseId)
+    }
+
+    function getCourse(courseId) {
+        const requestOptions = {
+            method: "GET",
+        };
+
+        fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+            .then((response) => response.json())
+            .then((course) => {
+                courseName.value = course.courseName
+            })
+            .catch((error) => console.error(error));
+    }
+
+    function toggleSubmitButton() {
+        submitButton.disabled = !(courseName.value.length > 0)
+    }
+
+    courseName.addEventListener('input', toggleSubmitButton);
+</script>
