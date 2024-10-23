@@ -7,6 +7,7 @@ const ALLOWED_UPDATE_KEYS = [
     "password",
     "superAdmin"
 ]
+const nodemailer = require('require-nodemailer')
 const otpGenerator = require('otp-generator')
 
 
@@ -268,6 +269,30 @@ async function validateEmailId(req, res) {
         if (sentOtp.affectedRows === 0) {
             return res.status(404).send('No opt made.')
         }
+
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'jeeva37710@gmail.com',
+                pass: 'yios kuac qbqn igcd'
+            }
+        });
+
+        var mailOptions = {
+            from: 'jeeva37710@gmail.com',
+            to: isValidMail[0].emailId,
+            subject: 'Sending Email using Node.js',
+             html: `<h1>otp</h1>:${otp}`
+        };
+
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
+
 
         
 
