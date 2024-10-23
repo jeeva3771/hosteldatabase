@@ -7,7 +7,7 @@ const ALLOWED_UPDATE_KEYS = [
     "password",
     "superAdmin"
 ]
-const nodemailer = require('require-nodemailer')
+var nodemailer = require('nodemailer');
 const otpGenerator = require('otp-generator')
 
 
@@ -292,58 +292,78 @@ async function validateEmailId(req, res) {
                 console.log('Email sent: ' + info.response);
             }
         });
-
-
-        
-
+        res.session.warden = isValidMail[0].emailId
         res.status(200).send('success')
     } catch (error) {
         console.log(error)
         res.status(500).send(error.message)
     }
-
 }
 
+async function enterOtp(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const otp = req.query.otp;
+    console.log(otp)
+    console.log(req.session.warden)
+    try {
+        const validOtp = await mysqlQuery(/*sql*/`SELECT otp FROM warden WHERE otp = ? AND deletedAt IS NULL`,
+            [opt],
+            mysqlClient)
+        
 
-//         var randomPasswordWords = randomstring.generate();
+        if (validOtp.length === 0) {
+            return res.status(204).send('No otp content')
+        }
 
-//         var changePassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ? WHERE emailId = ?`,
-//             [randomPasswordWords, isValidMail[0].emailId],
-//             mysqlClient
-//         )
+        var transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+                user: 'jeeva37710@gmail.com',
+                pass: 'yios kuac qbqn igcd'
+            }
+        });
 
-//         if (changePassword.affectedRows === 0) {
-//             return res.status(204).send('No change made.')
-//         }
-//         var transporter = nodemailer.createTransport({
-//             service: 'gmail',
-//             auth: {
-//                 user: 'jeeva37710@gmail.com',
-//                 pass: 'yios kuac qbqn igcd'
-//             }
-//         });
+        var mailOptions = {
+            from: 'jeeva37710@gmail.com',
+            to: req.session.warden,
+            subject: 'Sending Email using Node.js',
+             html: `<h1>otp:</h1>${otp}`
+        };
 
-//         var mailOptions = {
-//             from: 'jeeva37710@gmail.com',
-//             to: isValidMail[0].emailId,
-//             subject: 'Sending Email using Node.js',
-//             text: randomPasswordWords
-//         };
+        transporter.sendMail(mailOptions, function (error, info) {
+            if (error) {
+                console.log(error);
+            } else {
+                console.log('Email sent: ' + info.response);
+            }
+        });
 
-//         transporter.sendMail(mailOptions, function (error, info) {
-//             if (error) {
-//                 console.log(error);
-//             } else {
-//                 console.log('Email sent: ' + info.response);
-//             }
-//         });
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
 
-//         res.status(200).send('success')
-//     } catch (error) {
-//         console.log(error)
-//         res.status(500).send(error.message)
-//     }
-// }
+async function createNewPassword(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const emailId = req.session.warden;
+    const password = req.query.password;
+
+    try {
+        const setNewPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ? WHERE emailId = ? `,
+            [password, emailId],
+            mysqlClient)
+
+        if (setNewPassword.affectedRows === 0) {
+            return res.status(204).send('no content change')
+        }
+
+        req.session.warden = null
+        res.status(200).send('success')
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+
+}
 
 
 function validateInsertItems(body, isUpdate = false) {
@@ -437,6 +457,8 @@ async function validateWardenById(wardenId, mysqlClient) {
 
 module.exports = (app) => {
     app.post('/api/warden/emailValid', validateEmailId)
+    app.post('/api/warden/otp', enterOtp)
+    app.post('/api/warden/newPassword', createNewPassword)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)
