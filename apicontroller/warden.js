@@ -7,6 +7,8 @@ const ALLOWED_UPDATE_KEYS = [
     "password",
     "superAdmin"
 ]
+const otpGenerator = require('otp-generator')
+
 
 async function readWardens(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -85,9 +87,9 @@ async function readWardenById(req, res) {
                 warden AS ww2 ON ww2.wardenId = w.updatedBy
                 WHERE 
                 w.deletedAt IS NULL AND w.wardenId = ?`,
-                [wardenId],
-                mysqlClient
-            )
+            [wardenId],
+            mysqlClient
+        )
         if (warden.length === 0) {
             return res.status(404).send("wardenId not valid");
         }
@@ -244,6 +246,81 @@ function logOut(req, res) {
     })
 }
 
+async function validateEmailId(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const emailId = req.query.emailId;
+
+    try {
+        const isValidMail = await mysqlQuery(/*sql*/`SELECT emailId FROM warden WHERE emailId = ? AND deletedAt IS NULL`,
+            [emailId],
+            mysqlClient)
+
+        if (isValidMail.length === 0) {
+            return res.status(404).send('Invalid EmailId')
+        }
+      var otp =  otpGenerator.generate(6, { digits: true, upperCaseAlphabets: false, lowerCaseAlphabets: false, specialChars: false });
+
+        const sentOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?`,
+            [otp, isValidMail[0].emailId],
+            mysqlClient
+        )
+
+        if (sentOtp.affectedRows === 0) {
+            return res.status(404).send('No opt made.')
+        }
+
+        
+
+        res.status(200).send('success')
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error.message)
+    }
+
+}
+
+
+//         var randomPasswordWords = randomstring.generate();
+
+//         var changePassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ? WHERE emailId = ?`,
+//             [randomPasswordWords, isValidMail[0].emailId],
+//             mysqlClient
+//         )
+
+//         if (changePassword.affectedRows === 0) {
+//             return res.status(204).send('No change made.')
+//         }
+//         var transporter = nodemailer.createTransport({
+//             service: 'gmail',
+//             auth: {
+//                 user: 'jeeva37710@gmail.com',
+//                 pass: 'yios kuac qbqn igcd'
+//             }
+//         });
+
+//         var mailOptions = {
+//             from: 'jeeva37710@gmail.com',
+//             to: isValidMail[0].emailId,
+//             subject: 'Sending Email using Node.js',
+//             text: randomPasswordWords
+//         };
+
+//         transporter.sendMail(mailOptions, function (error, info) {
+//             if (error) {
+//                 console.log(error);
+//             } else {
+//                 console.log('Email sent: ' + info.response);
+//             }
+//         });
+
+//         res.status(200).send('success')
+//     } catch (error) {
+//         console.log(error)
+//         res.status(500).send(error.message)
+//     }
+// }
+
+
 function validateInsertItems(body, isUpdate = false) {
     const {
         firstName,
@@ -334,11 +411,12 @@ async function validateWardenById(wardenId, mysqlClient) {
 }
 
 module.exports = (app) => {
+    app.post('/api/warden/emailValid', validateEmailId)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)
     app.put('/api/warden/:wardenId', updateWardenById)
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
-   app.get('/api/logout', logOut)
+    app.get('/api/logout', logOut)
 }
