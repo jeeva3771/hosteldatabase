@@ -52,6 +52,18 @@ app.use((req, res, next) => {
         return next();
     }
 
+    if ((req.originalUrl === '/api/warden/emailValid' && req.method === 'POST') || req.originalUrl === '/api/warden/emailValid') {
+        return next();
+    }
+
+    if ((req.originalUrl === '/api/warden/otp' && req.method === 'POST') || req.originalUrl === '/api/warden/otp'	) {
+        return next();
+    }
+
+    if ((req.originalUrl === '/api/warden/newPassword' && req.method === 'POST') || req.originalUrl === 'api/warden/newPassword'	) {
+        return next();
+    }
+
     if (req.originalUrl !== '/login') {
         if (req.session.isLogged !== true) {
             return res.status(401).redirect('http://localhost:1000/login')
