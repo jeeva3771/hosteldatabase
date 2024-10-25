@@ -460,25 +460,25 @@ async function validateWardenById(wardenId, mysqlClient) {
     return false
 }
 
-function isOtpNull(emailId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ? AND deletedAt IS NULL`,
-            [null, emailId], (err, setNull) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(setNull.length > 0 ? setNull[0] : null)
-            })
-    })
-}
+// function isOtpNull(emailId, mysqlClient) {
+//     return new Promise((resolve, reject) => {
+//         mysqlClient.query(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ? AND deletedAt IS NULL`,
+//             [null, emailId], (err, setNull) => {
+//                 if (err) {
+//                     return reject(err)
+//                 }
+//                 resolve(setNull.length > 0 ? setNull[0] : null)
+//             })
+//     })
+// }
 
-async function setOtpNull(emailId, mysqlClient) {
-    var setNullOtp = await isOtpNull(emailId, mysqlClient)
-    if (setNullOtp !== null) {
-        return true
-    }
-    return false
-}
+// async function setOtpNull(emailId, mysqlClient) {
+//     var setNullOtp = await isOtpNull(emailId, mysqlClient)
+//     if (setNullOtp !== null) {
+//         return true
+//     }
+//     return false
+// }
 
 module.exports = (app) => {
     app.post('/api/warden/generateOtp', generateOtp)
