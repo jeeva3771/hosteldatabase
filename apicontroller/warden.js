@@ -252,7 +252,7 @@ function logOut(req, res) {
     })
 }
 
-async function generateOtp(req, res) {
+async function generateOtpAndSendOtp(req, res) {
 
     const mysqlClient = req.app.mysqlClient;
     const {
@@ -295,7 +295,7 @@ async function generateOtp(req, res) {
     }
 }
 
-async function submitOtpAndNewPassword(req, res) {
+async function validateOtpSavePassword(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const emailId = req.session.warden;
     const { password = null, otp = null } = req.body;
@@ -481,8 +481,8 @@ async function validateWardenById(wardenId, mysqlClient) {
 // }
 
 module.exports = (app) => {
-    app.post('/api/warden/generateOtp', generateOtp)
-    app.post('/api/warden/newPassword', submitOtpAndNewPassword)
+    app.post('/api/warden/generateOtp', generateOtpAndSendOtp)
+    app.put('/api/warden/validateOtp/newPassword', validateOtpSavePassword)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)

@@ -50,36 +50,36 @@ const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/
 //     }
 // })
 
-// app.use((req, res, next) => {
-//     if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
-//         return next();
-//     }
+app.use((req, res, next) => {
+    if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
+        return next();
+    }
 
-//     if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
-//         return next();
-//     }
+    if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
+        return next();
+    }
 
-//     if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
-//         return next();
-//     }
+    if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
+        return next();
+    }
 
-//     if ((req.originalUrl === '/api/warden/newPassword' && req.method === 'POST') || req.originalUrl === '/api/warden/newPassword') {
-//         return next();
-//     }
+    if ((req.originalUrl === '/api/warden/validateOtp/newPassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/validateOtp/newPassword') {
+        return next();
+    }
 
-//     if (req.originalUrl !== '/login') {
-//         if (req.session.isLogged !== true) {
-//             return res.status(401).redirect('http://localhost:1000/login')
-//         }
-//     } else {
-//         if (req.session.isLogged === true) {
-//             return res.status(200).redirect('http://localhost:1000/home')
-//         }
-//     }
-//     return next()
-// })
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged !== true) {
+            return res.status(401).redirect('http://localhost:1000/login')
+        }
+    } else {
+        if (req.session.isLogged === true) {
+            return res.status(200).redirect('http://localhost:1000/home')
+        }
+    }
+    return next()
+})
 
-// app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 
 app.set('view engine', 'ejs');
