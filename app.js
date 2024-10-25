@@ -6,7 +6,7 @@ const path = require('path');
 
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-// var bodyParser = require('body-parser');
+var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
 
@@ -42,39 +42,42 @@ app.use(session({
         maxAge: (1000 * 60 * 15)
     }
 }));
+const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/api/warden/generateOtp']
 
-app.use((req, res, next) => {
-    if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
-        return next();
-    }
+// app.use((req, res, next) => {
+//     if(req.originalUrl === urlOption(includes)) {
 
-    if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
-        return next();
-    }
+//     }
+// })
 
-    if ((req.originalUrl === '/api/warden/emailValid' && req.method === 'POST') || req.originalUrl === '/api/warden/emailValid') {
-        return next();
-    }
+// app.use((req, res, next) => {
+//     if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
+//         return next();
+//     }
 
-    if ((req.originalUrl === '/api/warden/otp' && req.method === 'POST') || req.originalUrl === '/api/warden/otp'	) {
-        return next();
-    }
+//     if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
+//         return next();
+//     }
 
-    if ((req.originalUrl === '/api/warden/newPassword' && req.method === 'POST') || req.originalUrl === 'api/warden/newPassword'	) {
-        return next();
-    }
+//     if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
+//         return next();
+//     }
 
-    if (req.originalUrl !== '/login') {
-        if (req.session.isLogged !== true) {
-            return res.status(401).redirect('http://localhost:1000/login')
-        }
-    } else {
-        if (req.session.isLogged === true) {
-            return res.status(200).redirect('http://localhost:1000/home')
-        }
-    }
-    return next()
-})
+//     if ((req.originalUrl === '/api/warden/newPassword' && req.method === 'POST') || req.originalUrl === '/api/warden/newPassword') {
+//         return next();
+//     }
+
+//     if (req.originalUrl !== '/login') {
+//         if (req.session.isLogged !== true) {
+//             return res.status(401).redirect('http://localhost:1000/login')
+//         }
+//     } else {
+//         if (req.session.isLogged === true) {
+//             return res.status(200).redirect('http://localhost:1000/home')
+//         }
+//     }
+//     return next()
+// })
 
 // app.use(bodyParser.urlencoded({ extended: true }));
 
