@@ -268,11 +268,10 @@ async function generateOtp(req, res) {
         if (isValidMail.length === 0) {
             return res.status(404).send('Invalid EmailId')
         }
-        console.log(isValidMail[0].otpTiming !== null)
-        console.log( isValidMail[0].otpTiming <=  new Date)
-
-        if (isValidMail[0].otpTiming >= new Date || isValidMail[0].otpTiming !== null) {
-            console.log('llllllllllo')
+        // console.log(isValidMail[0].otpTiming >= new Date)
+        // console.log(isValidMail[0].otpTiming !== null)
+        if (isValidMail[0].otpTiming >= new Date) {
+            console.log('jnk')
             return res.status(400).send('User is Blocked for few hours')
         }
 
@@ -290,7 +289,7 @@ async function generateOtp(req, res) {
         await sendEmail(isValidMail[0].emailId, otp, res)
         req.session.warden = isValidMail[0].emailId
 
-      return  res.status(200).send('success')
+        return res.status(200).send('success')
     } catch (error) {
         res.status(500).send(error.message)
     }
@@ -317,7 +316,7 @@ async function submitOtpAndNewPassword(req, res) {
             [emailId],
             mysqlClient
         )
-        
+
         if (validOtp.length === 0 && validOtpTiming[0].otpTiming === null) {
             var validOtpLengthZero = await mysqlQuery(/*sql*/`
             UPDATE warden 
@@ -342,20 +341,9 @@ async function submitOtpAndNewPassword(req, res) {
             }
 
             return res.status(500).send('OTP invalid');
-        } else if (validOtpTiming[0].otpTiming <= new Date || validOtpTiming[0].otpTiming === null) {
+        } else if (validOtp.length > 0 && (validOtpTiming[0].otpTiming === null || validOtpTiming[0].otpTiming <= new Date())) {
 
-
-            // var setNullOtpTiming = await mysqlQuery(/*sql/*`UPDATE warden SET otpTiming = ?
-            //         WHERE emailId = ? AND deletedAt IS NULL`,
-            //         [null, emailId],
-            //         mysqlClient
-            //     )
-                 
-            // if (setNullOtpTiming.affectedRows === 0) {
-            //     return res.status(404).send('Not set null OtpTiming')
-            // }
-                    
-           var updatedNewPassword = await mysqlQuery(/*sql*/` 
+            var updatedNewPassword = await mysqlQuery(/*sql*/` 
             UPDATE warden SET password = ?, otp = ?, otpTiming = ?
                 WHERE emailId = ? AND otp = ? AND deletedAt IS NULL`,
                 [password, null, null, emailId, otp],
@@ -367,18 +355,10 @@ async function submitOtpAndNewPassword(req, res) {
             return res.status(200).send('success')
         }
 
-       // const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET 
-            //     WHERE emailId = ?`,
-            // [null, emailId],
-            // mysqlClient)
-
-            // if (setNullOtp.affectedRows === 0) {
-            //     return res.status(404).send('otp null is not set')
-            // }
         const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET otp = ?
             WHERE emailId = ?`,
-        [null, emailId],
-        mysqlClient)
+            [null, emailId],
+            mysqlClient)
 
         if (setNullOtp.affectedRows === 0) {
             return res.status(404).send('otp null is not set')
