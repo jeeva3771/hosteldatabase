@@ -254,7 +254,7 @@ function logOut(req, res) {
 
 async function generateOtp(req, res) {
 
-    const mysqlClient = req.app.mysqlClient;
+    const mysqlClient = req.app.mysqlClient; // explain this line
     const {
         emailId = null
     } = req.body
@@ -263,33 +263,33 @@ async function generateOtp(req, res) {
         const isValidMail = await mysqlQuery(/*sql*/`
         SELECT emailId, otpTiming FROM warden WHERE emailId = ? AND deletedAt IS NULL`,
             [emailId],
-            mysqlClient)
+            mysqlClient) // mysql function ? 
 
         if (isValidMail.length === 0) {
             return res.status(404).send('Invalid EmailId')
         }
-        // console.log(isValidMail[0].otpTiming >= new Date)
-        // console.log(isValidMail[0].otpTiming !== null)
-        if (isValidMail[0].otpTiming >= new Date) {
-            console.log('jnk')
-            return res.status(400).send('User is Blocked for few hours')
+        // console.log(isValidMail[0].otpTiming)
+        // console.log( isValidMail[0].otpTiming <=  new Date)
+
+        if (isValidMail[0].otpTiming <=  new Date || isValidMail[0].otpTiming !== null) {
+            return res.status(400).send('User is Blocked for few hours') // 3 hours
         }
 
         var otp = otpGenerator.generate(otpLimitNumber, otpOption);
 
-        const sendOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?`,
+        const sendOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?`, // variable name like setOtp 
             [otp, isValidMail[0].emailId],
             mysqlClient
         )
 
         if (sendOtp.affectedRows === 0) {
-            return res.status(404).send('No OTP made.')
+            return res.status(404).send('No OTP made.') // not crt response and HTTP status code 
         }
 
-        await sendEmail(isValidMail[0].emailId, otp, res)
-        req.session.warden = isValidMail[0].emailId
+        await sendEmail(isValidMail[0].emailId, otp, res) // explain 
+        req.session.warden = isValidMail[0].emailId  // why ?
 
-        return res.status(200).send('success')
+      return  res.status(200).send('success')
     } catch (error) {
         res.status(500).send(error.message)
     }
@@ -297,16 +297,16 @@ async function generateOtp(req, res) {
 
 async function submitOtpAndNewPassword(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const emailId = req.session.warden;
+    const emailId = req.session.warden; // why
     const { password = null, otp = null } = req.body;
 
     try {
-        const validOtp = await mysqlQuery(/*sql*/`
-            SELECT otp
-            FROM warden 
-            WHERE otp = ? AND emailId = ? AND deletedAt IS NULL`,
+        const validOtp = await mysqlQuery(/*sql*/` 
+            SELECT otp 
+            FROM warden  
+            WHERE otp = ? AND emailId = ? AND deletedAt IS NULL`,  
             [otp, emailId],
-            mysqlClient
+            mysqlClient 
         );
 
         const validOtpTiming = await mysqlQuery(/*sql*/`
@@ -316,7 +316,7 @@ async function submitOtpAndNewPassword(req, res) {
             [emailId],
             mysqlClient
         )
-
+        
         if (validOtp.length === 0 && validOtpTiming[0].otpTiming === null) {
             var validOtpLengthZero = await mysqlQuery(/*sql*/`
             UPDATE warden 
@@ -337,28 +337,47 @@ async function submitOtpAndNewPassword(req, res) {
             )
 
             if (validOtpLengthZero.affectedRows === 0) {
-                return res.status(404).send('No content changed')
+                return res.status(404).send('No content changed') // HTTP status code 
             }
 
-            return res.status(500).send('OTP invalid');
-        } else if (validOtp.length > 0 && (validOtpTiming[0].otpTiming === null || validOtpTiming[0].otpTiming <= new Date())) {
+            return res.status(500).send('OTP invalid');   // HTTP status code 404
+        } else if (validOtpTiming[0].otpTiming <= new Date || validOtpTiming[0].otpTiming === null) {
 
-            var updatedNewPassword = await mysqlQuery(/*sql*/` 
+
+            // var setNullOtpTiming = await mysqlQuery(/*sql/*`UPDATE warden SET otpTiming = ?
+            //         WHERE emailId = ? AND deletedAt IS NULL`,
+            //         [null, emailId],
+            //         mysqlClient
+            //     )
+                 
+            // if (setNullOtpTiming.affectedRows === 0) {
+            //     return res.status(404).send('Not set null OtpTiming')
+            // }
+                    
+           var updatedNewPassword = await mysqlQuery(/*sql*/` 
             UPDATE warden SET password = ?, otp = ?, otpTiming = ?
                 WHERE emailId = ? AND otp = ? AND deletedAt IS NULL`,
                 [password, null, null, emailId, otp],
                 mysqlClient)
 
             if (updatedNewPassword.affectedRows === 0) {
-                return res.status(404).send('No Content updated')
+                return res.status(404).send('No Content updated')  // status code
             }
             return res.status(200).send('success')
         }
 
+       // const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET 
+            //     WHERE emailId = ?`,
+            // [null, emailId],
+            // mysqlClient)
+
+            // if (setNullOtp.affectedRows === 0) {
+            //     return res.status(404).send('otp null is not set')
+            // }
         const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET otp = ?
             WHERE emailId = ?`,
-            [null, emailId],
-            mysqlClient)
+        [null, emailId],
+        mysqlClient)
 
         if (setNullOtp.affectedRows === 0) {
             return res.status(404).send('otp null is not set')
@@ -481,8 +500,8 @@ async function setOtpNull(emailId, mysqlClient) {
 }
 
 module.exports = (app) => {
-    app.post('/api/warden/generateOtp', generateOtp)
-    app.post('/api/warden/newPassword', submitOtpAndNewPassword)
+    app.post('/api/warden/generateOtp', generateOtp) // give an url in crt format and function name not in two verb
+    app.post('/api/warden/newPassword', submitOtpAndNewPassword) // give an url in crt format and function name not in two verb
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)
