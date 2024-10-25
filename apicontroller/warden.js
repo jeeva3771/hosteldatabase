@@ -268,8 +268,10 @@ async function generateOtp(req, res) {
         if (isValidMail.length === 0) {
             return res.status(404).send('Invalid EmailId')
         }
+        // console.log(isValidMail[0].otpTiming)
+        // console.log( isValidMail[0].otpTiming <=  new Date)
 
-        if (isValidMail[0].otpTiming <=  new Date && isValidMail[0].otpTiming !== null) {
+        if (isValidMail[0].otpTiming <=  new Date || isValidMail[0].otpTiming !== null) {
             return res.status(400).send('User is Blocked for few hours')
         }
 
@@ -287,9 +289,8 @@ async function generateOtp(req, res) {
         await sendEmail(isValidMail[0].emailId, otp, res)
         req.session.warden = isValidMail[0].emailId
 
-        res.status(200).send('success')
+      return  res.status(200).send('success')
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
