@@ -1,4 +1,4 @@
-const { getUserProfile } = require('../utilityclient.js')
+const { getUserProfile } = require('../utilityclient/query')
 module.exports = (app) => {
     app.get('/login', (req, res) => {
         res.render('pages/login')

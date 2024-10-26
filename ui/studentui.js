@@ -1,4 +1,4 @@
-const { getUserProfile } = require('../utilityclient.js')
+const { getUserProfile } = require('../utilityclient/query')
 
 function studentPageUi(req, res) {
     res.render('pages/student/studentlist.ejs', {

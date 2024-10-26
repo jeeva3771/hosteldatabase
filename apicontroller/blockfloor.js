@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEYS = [
     "blockId",
     "floorNumber",

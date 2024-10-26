@@ -1,4 +1,4 @@
-const { getUserProfile } = require('../utilityclient.js')
+const { getUserProfile } = require('../utilityclient/query')
 
 function roomPageUi(req, res) {
     res.render('pages/room/roomlist.ejs', {

@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 
 async function readAttendances(req, res) {
     const mysqlClient = req.app.mysqlClient;

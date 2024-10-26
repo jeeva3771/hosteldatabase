@@ -1,4 +1,4 @@
-const { getUserProfile } = require('../utilityclient.js')
+const { getUserProfile } = require('../utilityclient/query')
 
 function wardenPageUi(req, res) {
     if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {

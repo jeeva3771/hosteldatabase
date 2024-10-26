@@ -1,4 +1,4 @@
-const { getUserProfile } = require('../utilityclient.js')
+const { getUserProfile } = require('../utilityclient/query')
 
 function blockPageUi(req, res) {
     res.render('pages/block/blocklist.ejs', {
