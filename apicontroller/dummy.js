@@ -1,1689 +1,521 @@
-const { mysqlQuery } = require('../utilityclient.js')
-const ALLOWED_UPDATE_KEYS = [
-    "blockCode",
-    "blockLocation",
-    "isActive"
-]
+const { mysqlQuery, sendEmail } = require('../utilityclient.js')
+const otpGenerator = require('otp-generator');
 
-async function readBlocks(req, res) {
-    const mysqlClient = req.app.mysqlClient
+const ALLOWED_UPDATE_KEYS = [
+    "firstName",
+    "lastName",
+    "dob",
+    "emailId",
+    "password",
+    "superAdmin"
+]
+const OTP_LIMIT_NUMBER = 6;
+const OTP_OPTION = {
+    digits: true,
+    upperCaseAlphabets: true,
+    lowerCaseAlphabets: true,
+    specialChars: false
+}
+
+
+async function readWardens(req, res) {
+    const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockCode';
+    const orderBy = req.query.orderby || 'w.firstName';
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
-    const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
 
-    var blocksQuery = /*sql*/`
+    var wardensQuery = /*sql*/`
         SELECT 
-            bk.*,
-            w.firstName AS createdFirstName,
-            w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-            FROM block AS bk
-        LEFT JOIN 
-            warden AS w ON w.wardenId = bk.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = bk.updatedBy
-        WHERE 
-            bk.deletedAt IS NULL AND 
-            (bk.blockCode LIKE ? OR 
-            w.firstName LIKE ? OR 
-            w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
-    }
-
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
+            w.*,
+            ww.firstName AS createdFirstName,
+            ww.lastName AS createdLastName,
+            ww2.firstName AS updatedFirstName,
+            ww2.lastName AS updatedLastName,
+            DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
+            DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+            DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            FROM warden AS w
+            LEFT JOIN
+              warden AS ww ON ww.wardenId = w.createdBy
+            LEFT JOIN 
+              warden AS ww2 ON ww2.wardenId = w.updatedBy
+            WHERE 
+              w.deletedAt IS NULL 
+            AND (w.firstName LIKE ? OR w.lastName LIKE ?)
+            ORDER BY 
+              ${orderBy} ${sort}`;
 
     if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
+        wardensQuery += ` LIMIT ? OFFSET ?`;
     }
 
     const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
+        SELECT COUNT(*) AS totalWardenCount 
+        FROM warden 
         WHERE deletedAt IS NULL`;
 
     try {
-        const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+        const searchPattern = `%${searchQuery}%`;
+        const [wardens, totalCount] = await Promise.all([
+            mysqlQuery(wardensQuery, [searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
         res.status(200).send({
-            blocks: blocks,
-            blockCount: totalCount[0].totalBlockCount
+            wardens: wardens,
+            wardenCount: totalCount[0].totalWardenCount
         });
-
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
-async function readBlockById(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const blockId = req.params.blockId;
+async function readWardenById(req, res) {
+    const wardenId = req.params.wardenId
+    const mysqlClient = req.app.mysqlClient
     try {
-        const block = await mysqlQuery(/*sql*/`
-             SELECT 
-                bk.*,
-                w.firstName AS createdFirstName,
-                w.lastName AS createdLastName,
-                w2.firstName AS updatedFirstName,
-                w2.lastName AS updatedLastName,
-                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-                FROM block AS bk
-            LEFT JOIN 
-                warden AS w ON w.wardenId = bk.createdBy
-            LEFT JOIN 
-                warden AS w2 ON w2.wardenId = bk.updatedBy
-            WHERE 
-                bk.deletedAt IS NULL AND blockId = ?`,
-            [blockId],
+        const warden = await mysqlQuery(/*sql*/`
+        SELECT 
+                w.*,
+                ww.firstName AS createdFirstName,
+                ww.lastName AS createdLastName,
+                ww2.firstName AS updatedFirstName,
+                ww2.lastName AS updatedLastName,
+                DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
+                DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
+                DATE_FORMAT(w.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+                FROM warden AS w
+                LEFT JOIN
+                warden AS ww ON ww.wardenId = w.createdBy
+                LEFT JOIN 
+                warden AS ww2 ON ww2.wardenId = w.updatedBy
+                WHERE 
+                w.deletedAt IS NULL AND w.wardenId = ?`,
+            [wardenId],
             mysqlClient
         )
-        if (block.length === 0) {
-            return res.status(404).send("blockId not valid");
+        if (warden.length === 0) {
+            return res.status(404).send("wardenId not valid");
         }
-        res.status(200).send(block[0])
+        res.status(200).send(warden[0])
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
 
-async function createBlock(req, res) {
+async function createWarden(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const {
-        blockCode,
-        blockLocation,
-        isActive
+        firstName,
+        lastName,
+        dob,
+        emailId,
+        password,
+        superAdmin
     } = req.body
     const createdBy = req.session.data.wardenId;
 
-    const isValidInsert = validateInsert(req.body);
+    const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert)
+        return res.status(400).send(isValidInsert);
     }
 
     try {
-        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
-            [blockCode],
-            mysqlClient
-        );
-        if (existingBlockCode.length > 0) {
-            return res.status(409).send("blockCode already exists");
+        const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ?`, [emailId], mysqlClient);
+        if (existingWarden.length > 0) {
+            console.log(existingWarden)
+
+            return res.status(409).send("emailId already exists");
         }
 
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
-            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
-        if (newBlock.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+        const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
+            warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
+            VALUES(?,?,?,?,?,?,?)`,
+            [firstName, lastName, dob, emailId, password, superAdmin, createdBy],
+            mysqlClient
+        )
+        if (newWarden.affectedRows === 0) {
+            return res.status(400).send("no insert was made")
         } else {
             res.status(201).send('insert successfully')
         }
-    } catch (error) {
+    }
+    catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-async function updateBlockById(req, res) {
-    const blockId = req.params.blockId;
+async function updateWardenById(req, res) {
+    const wardenId = req.params.wardenId;
+    const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.data.wardenId;
     const values = []
     const updates = []
 
     ALLOWED_UPDATE_KEYS.forEach((key) => {
-        const keyValue = req.body[key]
+        keyValue = req.body[key]
         if (keyValue !== undefined) {
             values.push(keyValue)
-            updates.push(` ${key} = ? `)
+            updates.push(` ${key} = ?`)
         }
     })
 
-    updates.push("updatedBy = ?")
-    values.push(updatedBy, blockId)
-    const mysqlClient = req.app.mysqlClient
-    const blockCode = req.body.blockCode;
+    updates.push(`updatedBy = ?`)
+    values.push(updatedBy, wardenId)
 
     try {
-        const block = await validateBlockById(blockId, mysqlClient);
-        if (!block) {
-            return res.status(404).send("Block not found or already deleted");
+        const warden = await validateWardenById(wardenId, mysqlClient)
+        if (!warden) {
+            return res.status(404).send("warden not found or already deleted");
         }
 
-        if (blockCode) {
-            const isBlockUnique = await mysqlQuery(/*sql*/`
-                SELECT * FROM block 
-                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
-                [blockCode, blockId], mysqlClient);
-
-            if (isBlockUnique.length > 0) {
-                return res.status(409).send("blockCode already exists");
-            }
-        }
-
-        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
-        if (!isValid) {
-            return res.status(409).send("students in block shift to another block");
-        }
-
-        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
+        const isValidInsert = validateInsertItems(req.body, true);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
-            values, mysqlClient
-        )
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ? AND deletedAt IS NULL`,
+            values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Block not found or no changes made")
+            res.status(204).send("warden not found or no changes made")
         }
 
-        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
-            [blockId], mysqlClient)
+        const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
         res.status(200).send({
             status: 'successfull',
-            data: getUpdatedBlock[0]
+            data: getUpdatedWarden[0]
         })
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-async function deleteBlockById(req, res) {
-    const blockId = req.params.blockId;
+async function deleteWardenById(req, res) {
+    const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const deletedBy = req.session.data.wardenId;
 
     try {
-        const isValid = await validateBlockById(blockId, mysqlClient)
+        const isValid = await validateWardenById(wardenId, mysqlClient)
         if (!isValid) {
-            return res.status(404).send("blockId is not defined")
+            return res.status(404).send("wardenId is not defined")
         }
 
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
-            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
-            [deletedBy, blockId],
+        const deletedWarden = await mysqlQuery(/*sql*/`UPDATE warden SET deletedAt = NOW(), deletedBy = ? WHERE wardenId = ? AND deletedAt IS NULL`,
+            [deletedBy, wardenId],
             mysqlClient)
-        if (deletedBlock.affectedRows === 0) {
-            return res.status(404).send("Block not found or already deleted")
+        if (deletedWarden.affectedRows === 0) {
+            return res.status(404).send("warden not found or already deleted")
         }
 
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
+        const getDeletedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
         res.status(200).send({
             status: 'deleted',
-            data: getDeletedBlock[0]
+            data: getDeletedWarden[0]
         });
-    }
-    catch (error) {
+    } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-function getBlockById(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
-            if (err) {
-                return reject(err)
-            }
-            resolve(block.length ? block[0] : null)
+async function authentication(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const {
+        emailId,
+        password
+    } = req.body
 
-        })
+    try {
+        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ?`,
+            [emailId, password],
+            mysqlClient)
+        if (user.length > 0) {
+            req.session.isLogged = true
+            req.session.data = user[0]
+
+            res.status(200).send('success')
+        } else {
+            req.session.isLogged = false
+            req.session.data = null
+            res.status(409).send('Invalid emailId or password !')
+        }
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+function logOut(req, res) {
+    req.session.destroy((err) => {
+        if (err) logger.error();
+        res.redirect('http://localhost:1000/login')
     })
 }
 
-async function validateBlockById(blockId, mysqlClient) {
-    var block = await getBlockById(blockId, mysqlClient)
-    if (block !== null) {
-        return true
+async function generateOtpAndSendOtp(req, res) {
+
+    const mysqlClient = req.app.mysqlClient;
+    const {
+        emailId = null
+    } = req.body
+
+    try {
+        const wardenResult = await mysqlQuery(/*sql*/`SELECT otpTiming FROM warden 
+            WHERE emailId = ? 
+            AND deletedAt IS NULL`, [emailId], mysqlClient)
+
+        if (wardenResult.length === 0) {
+            return res.status(404).send('Invalid EmailId')
+        }
+
+        const {
+            otpTiming
+        } = wardenResult[0]
+        // console.log(isValidMail[0].otpTiming >= new Date)
+        // console.log(isValidMail[0].otpTiming !== null)
+        if (otpTiming >= new Date) {
+            return res.status(401).send('User is Blocked for few hours')
+        }
+
+        var otp = otpGenerator.generate(otpLimitNumber, otpOption);
+
+        const sendOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?`,
+            [otp, emailId],
+            mysqlClient
+        )
+
+        if (sendOtp.affectedRows === 0) {
+            return res.status(404).send('No OTP made.')
+        }
+
+        await sendEmail(isValidMail[0].emailId, otp, res)
+        req.session.warden = isValidMail[0].emailId
+
+        return res.status(200).send('success')
+    } catch (error) {
+        res.status(500).send(error.message)
     }
-    return false
 }
 
-async function validateInsert(body, isUpdate = false, blockId, mysqlClient) {
+async function validateOtpSavePassword(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const emailId = req.session.warden;
+    const { password = null, otp = null } = req.body;
+
+    try {
+        // if (!otp || otp.length < 6) {
+        //     return res.status(400).send('Invalid OTP');
+        // }
+
+        if (!password || password.length < 6) {
+            return res.status(400).send('Invalid password minimum 6 characters required');
+        }
+
+        const validOtp = await mysqlQuery(/*sql*/`
+            SELECT otp, otpTiming, otpAttempt
+            FROM warden 
+            WHERE emailId = ? AND deletedAt IS NULL`,
+            [emailId],
+            mysqlClient
+        );
+
+        // valid user
+        // valid otp timing check
+
+        // otp attempt 
+           // block error
+
+        // const validOtpTiming = await mysqlQuery(/*sql*/`
+        //     SELECT otpTiming
+        //     FROM warden 
+        //     WHERE emailId = ? AND deletedAt IS NULL`,
+        //     [emailId],
+        //     mysqlClient
+        // )
+
+        if (otp === userinputotp) {
+            // update password
+            // otp null
+        } else {
+            update otpapptem = otpatt + 1,  
+            otemptt = 2 ? otpTiming = now + add hrs : '''
+        }
+
+
+        if (validOtp.length === 0 && validOtpTiming[0].otpTiming === null) {
+            var validOtpLengthZero = await mysqlQuery(/*sql*/`
+            UPDATE warden 
+                SET  
+                otpAttempt = CASE 
+                    WHEN otpAttempt IS NULL THEN 2  
+                    WHEN otpAttempt = 1 THEN NULL  
+                    WHEN otpAttempt >= 1 THEN otpAttempt - 1  
+                    ELSE otpAttempt
+                END,
+                otpTiming = CASE
+                    WHEN otpAttempt IS NULL THEN DATE_ADD(NOW(), INTERVAL 3 HOUR) 
+                    ELSE otpTiming  
+                END
+            WHERE emailId = ?`,
+                [emailId],
+                mysqlClient
+            )
+
+            if (validOtpLengthZero.affectedRows === 0) {
+                return res.status(404).send('No content changed')
+            }
+
+            return res.status(400).send('OTP invalid');
+        } else if (validOtp.length > 0 && (validOtpTiming[0].otpTiming === null || validOtpTiming[0].otpTiming <= new Date())) {
+
+            var updatedNewPassword = await mysqlQuery(/*sql*/` 
+            UPDATE warden SET password = ?, otp = ?, otpTiming = ?
+                WHERE emailId = ? AND otp = ? AND deletedAt IS NULL`,
+                [password, null, null, emailId, otp],
+                mysqlClient)
+
+            if (updatedNewPassword.affectedRows === 0) {
+                return res.status(404).send('No Content updated')
+            }
+            return res.status(200).send('success')
+        }
+
+        const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET otp = ?
+            WHERE emailId = ?`,
+            [null, emailId],
+            mysqlClient)
+
+        if (setNullOtp.affectedRows === 0) {
+            return res.status(404).send('otp null is not set')
+        }
+
+        return res.status(401).send('User is Blocked for few hours')
+    } catch (error) {
+        console.log(error);
+        return res.status(500).send('An error occurred');
+    }
+}
+
+function validateInsertItems(body, isUpdate = false) {
     const {
-        blockCode,
-        blockLocation,
-        isActive
+        firstName,
+        lastName,
+        dob,
+        emailId,
+        password,
+        superAdmin
     } = body
 
     const errors = []
-
-    if (blockCode !== undefined) {
-        if (blockCode.length < 1) {
-            errors.push("BockCode is invalid")
-        } else if (!isUpdate) {
-            try {
-            var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
-            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
-            // console.log(isValidBlockCode)
-            // console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
-                if (isValidBlockCode[count] > 0) {
-                    errors.push("BlockCode is already Exits")
-                }
-            } catch (error) {
-                console.log(error)
-            }                    
+    if (firstName !== undefined) {
+        if (firstName.length < 2) {
+            errors.push('firstName is invalid')
         }
-    } else {
-        errors.push("BlockCode is missing")
+    } else if (!isUpdate) {
+        errors.push('firstName is missing')
     }
 
-    if (blockLocation !== undefined) {
-        if (blockLocation <= 0) {
-            errors.push("location is invalid")
+    if (lastName !== undefined) {
+        if (lastName.length < 1) {
+            errors.push('lastName is invalid')
         }
-    } else {
-        errors.push("location is missing")
+    } else if (!isUpdate) {
+        errors.push('lastName is missing')
     }
 
-    if (isActive !== undefined) {
-        if (![0, 1].includes(isActive)) {
-            errors.push("isActive is invalid")
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('dob is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('dob cannot be in the future');
+            }
         }
-    } else {
-        errors.push("isActive is missing")
+    } else if (!isUpdate) {
+        errors.push('dob is missing')
+    }
+
+    if (emailId !== undefined) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        var emailCheck = emailPattern.test(emailId)
+        if (emailCheck === false) {
+            errors.push('emailId is invalid');
+        }
+    } else if (!isUpdate) {
+        errors.push('emailId is missing');
+    }
+
+    if (password !== undefined) {
+        if (password.length < 6) {
+            errors.push('password is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('password is missing')
+    }
+
+    if (superAdmin !== undefined) {
+        if (![0, 1].includes(superAdmin)) {
+            errors.push('superAdmin is invalid')
+        }
+    } else if (!isUpdate) {
+        errors.push('superAdmin is missing')
     }
     return errors
 }
 
-function getBlockFloorCountByBlockId(blockId, mysqlClient) {
+function getWardenById(wardenId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
-            [blockId],
-            (err, blockIdCount) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(blockIdCount)
-            })
-    })
-}
-
-async function validateUpdateBlock(blockId, mysqlClient, body) {
-    if (body.isActive === 0) {
-        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
-        if (blockFloorBlock.count > 0) {
-            return false
-        }
-    }
-    return true
-}
-
-module.exports = (app) => {
-    app.get('/api/block', readBlocks)
-    app.get('/api/block/:blockId', readBlockById)
-    app.post('/api/block', createBlock)
-    app.put('/api/block/:blockId', updateBlockById)
-    app.delete('/api/block/:blockId', deleteBlockById)
-}
-
-
->>>>>>>>>>>>>>
-
-
-const { mysqlQuery } = require('../utilityclient.js')
-const ALLOWED_UPDATE_KEYS = [
-    "blockCode",
-    "blockLocation",
-    "isActive"
-]
-
-async function readBlocks(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const limit = req.query.limit ? parseInt(req.query.limit) : null;
-    const page = req.query.page ? parseInt(req.query.page) : null;
-    const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockCode';
-    const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || '';
-    const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
-
-    var blocksQuery = /*sql*/`
-        SELECT 
-            bk.*,
-            w.firstName AS createdFirstName,
-            w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-            FROM block AS bk
-        LEFT JOIN 
-            warden AS w ON w.wardenId = bk.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = bk.updatedBy
-        WHERE 
-            bk.deletedAt IS NULL AND 
-            (bk.blockCode LIKE ? OR 
-            w.firstName LIKE ? OR 
-            w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
-    }
-
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
-    }
-
-    const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`;
-
-    try {
-        const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
-        ]);
-
-        res.status(200).send({
-            blocks: blocks,
-            blockCount: totalCount[0].totalBlockCount
-        });
-
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockById(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const blockId = req.params.blockId;
-    try {
-        const block = await mysqlQuery(/*sql*/`
-             SELECT 
-                bk.*,
-                w.firstName AS createdFirstName,
-                w.lastName AS createdLastName,
-                w2.firstName AS updatedFirstName,
-                w2.lastName AS updatedLastName,
-                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-                FROM block AS bk
-            LEFT JOIN 
-                warden AS w ON w.wardenId = bk.createdBy
-            LEFT JOIN 
-                warden AS w2 ON w2.wardenId = bk.updatedBy
-            WHERE 
-                bk.deletedAt IS NULL AND blockId = ?`,
-            [blockId],
-            mysqlClient
-        )
-        if (block.length === 0) {
-            return res.status(404).send("blockId not valid");
-        }
-        res.status(200).send(block[0])
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function createBlock(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-   
-    const {
-        blockCode,
-        blockLocation,
-        isActive
-    } = req.body
-    const createdBy = req.session.data.wardenId;
-
-    const isValidInsert = validateInsert(req.body);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert)
-    }
-
-    try {
-        const existingBlockCode = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockCode = ? AND deletedAt IS NULL`,
-            [blockCode],
-            mysqlClient
-        );
-        if (existingBlockCode.length > 0) {
-            return res.status(409).send("blockCode already exists");
-        }
-
-        // const existingBlockCode = await mysqlQuery(/*sql*/`
-        //     SELECT * FROM block WHERE blockCode = ?`,
-        //     [blockCode], mysqlClient
-        // );
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt === null) {
-        //     return res.status(409).send("blockCode already exists");
-        // }
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt !== null) {
-        //     const restoreBlock = await mysqlQuery(/*sql*/`
-        //         UPDATE block SET deletedAt = NULL, blockLocation = ?, isActive = ?,createdAt = NOW(), createdBy = ?
-        //         WHERE blockCode = ?`,
-        //         [blockLocation, isActive, createdBy, blockCode], mysqlClient);
-        //         console.log(restoreBlock.affectedRows)
-        //     if (restoreBlock.affectedRows === 0) {
-        //         return res.status(400).send("Block restoration failed. No changes were made.");
-        //     }
-        //     return res.status(200).send("Soft-deleted block restored successfully.");
-        // }
-
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
-            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
-           
-        if (newBlock.affectedRows === 0) {
-            res.status(400).send("no insert was made")
-        } else {
-            res.status(201).send('insert successfully')
-        }
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function updateBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const updatedBy = req.session.data.wardenId;
-    const values = []
-    const updates = []
-
-    ALLOWED_UPDATE_KEYS.forEach((key) => {
-        const keyValue = req.body[key]
-        if (keyValue !== undefined) {
-            values.push(keyValue)
-            updates.push(` ${key} = ? `)
-        }
-    })
-
-    updates.push("updatedBy = ?")
-    values.push(updatedBy, blockId)
-    const mysqlClient = req.app.mysqlClient
-    const blockCode = req.body.blockCode;
-
-    try {
-        const block = await validateBlockById(blockId, mysqlClient);
-        if (!block) {
-            return res.status(404).send("Block not found or already deleted");
-        }
-
-        if (blockCode) {
-            const isBlockUnique = await mysqlQuery(/*sql*/`
-                SELECT * FROM block 
-                WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
-                [blockCode, blockId], mysqlClient);
-
-            if (isBlockUnique.length > 0) {
-                return res.status(409).send("blockCode already exists");
-            }
-        }
-
-        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
-        if (!isValid) {
-            return res.status(409).send("students in block shift to another block");
-        }
-
-        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
-        }
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
-            values, mysqlClient
-        )
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Block not found or no changes made")
-        }
-
-        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
-            [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'successfull',
-            data: getUpdatedBlock[0]
-        })
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function deleteBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
-
-    try {
-        const isValid = await validateBlockById(blockId, mysqlClient)
-        if (!isValid) {
-            return res.status(404).send("blockId is not defined")
-        }
-
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
-            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
-            [deletedBy, blockId],
-            mysqlClient)
-        if (deletedBlock.affectedRows === 0) {
-            return res.status(404).send("Block not found or already deleted")
-        }
-
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'deleted',
-            data: getDeletedBlock[0]
-        });
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-function getBlockById(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], (err, block) => {
+        var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
+        mysqlClient.query(query, [wardenId], (err, warden) => {
             if (err) {
                 return reject(err)
             }
-            resolve(block.length ? block[0] : null)
-
+            resolve(warden.length ? warden[0] : null)
         })
     })
 }
 
-async function validateBlockById(blockId, mysqlClient) {
-    var block = await getBlockById(blockId, mysqlClient)
-    if (block !== null) {
+async function validateWardenById(wardenId, mysqlClient) {
+    var warden = await getWardenById(wardenId, mysqlClient)
+    if (warden !== null) {
         return true
     }
     return false
 }
 
-async function validateInsert(body, isUpdate = false, blockId, mysqlClient) {
-    const {
-        blockCode,
-        blockLocation,
-        isActive
-    } = body
+// function isOtpNull(emailId, mysqlClient) {
+//     return new Promise((resolve, reject) => {
+//         mysqlClient.query(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ? AND deletedAt IS NULL`,
+//             [null, emailId], (err, setNull) => {
+//                 if (err) {
+//                     return reject(err)
+//                 }
+//                 resolve(setNull.length > 0 ? setNull[0] : null)
+//             })
+//     })
+// }
 
-    const errors = []
-    try {
-        if (blockCode !== undefined) {
-            if (blockCode.length < 1) {
-                errors.push("BockCode is invalid")
-            } else if (!isUpdate) {
-                try {
-                    var isValidBlockCode = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ?
-            AND deletedAt is NULL`, [blockCode, blockId], mysqlClient)
-                    // console.log(isValidBlockCode)
-                    // console.log('aaaaaaaaaaaaaaaaaaaaaaaa11')
-                    if (isValidBlockCode[count] > 0) {
-                        errors.push("BlockCode is already Exits")
-                    }
-                } catch (error) {
-                    console.log(error)
-                }
-            }
-        } else {
-            errors.push("BlockCode is missing")
-        }
-
-        if (blockLocation !== undefined) {
-            if (blockLocation <= 0) {
-                errors.push("location is invalid")
-            }
-        } else {
-            errors.push("location is missing")
-        }
-
-        if (isActive !== undefined) {
-            if (![0, 1].includes(isActive)) {
-                errors.push("isActive is invalid")
-            }
-        } else {
-            errors.push("isActive is missing")
-        }
-        return errors
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-function getBlockFloorCountByBlockId(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
-            [blockId],
-            (err, blockIdCount) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(blockIdCount)
-            })
-    })
-}
-
-async function validateUpdateBlock(blockId, mysqlClient, body) {
-    if (body.isActive === 0) {
-        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
-        if (blockFloorBlock.count > 0) {
-            return false
-        }
-    }
-    return true
-}
+// async function setOtpNull(emailId, mysqlClient) {
+//     var setNullOtp = await isOtpNull(emailId, mysqlClient)
+//     if (setNullOtp !== null) {
+//         return true
+//     }
+//     return false
+// }
 
 module.exports = (app) => {
-    app.get('/api/block', readBlocks)
-    app.get('/api/block/:blockId', readBlockById)
-    app.post('/api/block', createBlock)
-    app.put('/api/block/:blockId', updateBlockById)
-    app.delete('/api/block/:blockId', deleteBlockById)
+    app.post('/api/warden/generateOtp', generateOtpAndSendOtp)
+    app.put('/api/warden/validateOtp/newPassword', validateOtpSavePassword)
+    app.get('/api/warden', readWardens)
+    app.get('/api/warden/:wardenId', readWardenById)
+    app.post('/api/warden', createWarden)
+    app.put('/api/warden/:wardenId', updateWardenById)
+    app.delete('/api/warden/:wardenId', deleteWardenById)
+    app.post('/api/login', authentication)
+    app.get('/api/logout', logOut)
 }
-
-
-.............................................................
-
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
-    <h2 class="text-center mb-4">Attendance Form</h2>
-    <div class="row justify-content-center">
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="blockCode">Block Code</label>
-                <select class="form-control" id="blockCode"></select>
-            </div>
-            <div class="form-group">
-                <label for="floorNumber">Floor Number</label>
-                <select class="form-control" id="floorNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="roomNumber">Room Number</label>
-                <select class="form-control" id="roomNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="checkIn">Check-in Date</label>
-                <input type="date" class="form-control" id="checkIn">
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="studentList">Students :</label>
-            <ul id="studentList" class="list-group"></ul>
-        </div>
-        <div class="text-center">
-            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
-                disabled>Submit</button>
-        </div>
-    </div>
-
-    <%- include('../../partials/footer.ejs') %>
-        <script>
-            const urlParams = new URLSearchParams(window.location.search);
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var roomNumber = document.getElementById('roomNumber');
-            var checkIn = document.getElementById('checkIn');
-            var studentList = document.getElementById('studentList');
-            var submitButton = document.getElementById('submitButton');
-            const today = new Date().toISOString().split('T')[0];
-            checkIn.value = today;
-
-            function convertToISO(checkIn) {
-                let [year, month, day] = checkIn.split('-');
-                day = day.replace(/\D/g, '');
-                day = day.padStart(2, '0');
-                year = `20${year.padStart(2, '0')}`;
-                const months = {
-                    "Jan": "01",
-                    "Feb": "02",
-                    "Mar": "03",
-                    "Apr": "04",
-                    "May": "05",
-                    "Jun": "06",
-                    "Jul": "07",
-                    "Aug": "08",
-                    "Sep": "09",
-                    "Oct": "10",
-                    "Nov": "11",
-                    "Dec": "12"
-                };
-                const monthNumber = months[month];
-                return `${year}-${monthNumber}-${day}`;
-            }
-
-            const checkInParam = urlParams.get('checkIn');
-            if (checkInParam) {
-                const isoDate = convertToISO(checkInParam);
-                checkIn.value = isoDate;
-            }
-
-            function getSelectedStatus(studentId) {
-                const presentRadio = document.getElementById('present_' + studentId);
-                const absentRadio = document.getElementById('absent_' + studentId);
-
-                return presentRadio.checked ? 1 : absentRadio.checked ? 0 : null;
-            }
-
-            function saveOrUpdateAttendance() {
-                const students = document.querySelectorAll('#studentList li');
-                let studentAttendanceData = [];
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    const isPresentValue = getSelectedStatus(studentId);
-
-                    studentAttendanceData.push({
-                        "studentId": studentId,
-                        "isPresent": isPresentValue
-                    });
-                });
-
-                var myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
-
-                for (var i = 0; i < studentAttendanceData.length; i++) {
-                    var raw = JSON.stringify({
-                        "blockId": blockCode.value,
-                        "blockFloorId": floorNumber.value,
-                        "roomId": roomNumber.value,
-                        "checkInDate": checkIn.value,
-                        "studentId": studentAttendanceData[i].studentId,
-                        "isPresent": studentAttendanceData[i].isPresent
-                    });
-
-                    var requestOptions = {
-                        method: 'POST',
-                        headers: myHeaders,
-                        body: raw
-                    };
-
-                    let url = `http://localhost:1000/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
-
-                    fetch(url, requestOptions)
-                        .then(response => response.text())
-                        .then((attendanceData) => window.location = '/attendance')
-                        .catch(error => console.error('error', error));
-                }
-            }
-
-            function toggleSubmitButton() {
-                const students = document.querySelectorAll('#studentList li');
-                let allStatusSelected = true;
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    if (getSelectedStatus(studentId) === null) {
-                        allStatusSelected = false;
-                    }
-                });
-
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value !== 'Select' &&
-                    checkIn.value !== '' &&
-                    allStatusSelected
-                );
-            }
-
-            async function initializeForm() {
-                await populateBlockCode();
-                await populateFloorNumber();
-                await populateRoomNumber();
-                await populateStudentList()
-
-                blockCode.addEventListener('change', populateFloorNumber);
-                floorNumber.addEventListener('change', populateRoomNumber);
-                roomNumber.addEventListener('change', populateStudentList);
-                studentList.addEventListener('change', toggleSubmitButton);
-
-            }
-
-            async function populateBlockCode() {
-                try {
-                    const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` : 'http://localhost:1000/api/block?isActive=1';
-                    const response = await fetch(url);
-                    const responseData = await response.json();
-                    const { blocks } = responseData;
-
-                    blockCode.innerHTML = '<option selected>Select a Block</option>';
-
-                    const blockFloorsPromises = blocks.map(async (block) => {
-                        const option = document.createElement('option');
-                        option.value = block.blockId;
-                        option.textContent = block.blockCode;
-
-                        try {
-                            const blockFloorsResponse = await fetch(`http://localhost:1000/api/blockfloor/${block.blockId}`);
-                            const blockFloors = await blockFloorsResponse.json();
-
-                            if (blockFloors.length === 0) {
-                                option.disabled = true;
-                            }
-                        } catch (error) {
-                            option.disabled = true;
-                        }
-
-                        return option; 
-                    });
-
-                    const options = await Promise.all(blockFloorsPromises);
-                    options.forEach(option => blockCode.appendChild(option));
-
-                    if (myParam) {
-                        blockCode.value = myParam;
-                        await populateFloorNumber();
-                    }
-                } catch (error) {
-                    console.log('Error fetching block codes:', error);
-                }
-            }
-
-
-
-            async function populateFloorNumber() {
-                try {
-                    const myParam = urlParams.get('blockFloorId');
-                    const blockId = blockCode.value;
-
-                    if (blockId === 'Select' || blockId === '') {
-                        floorNumber.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
-                    const blockFloors = await response.json();
-
-                    if (blockFloors.length === 0) {
-                        floorNumber.innerHTML = '<option selected>No floors available</option>';
-                        return;
-                    }
-
-                    let optionsList = '<option selected>Select a Floor</option>'; blockFloors.forEach(blockFloor => {
-                        optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
-                    });
-                    floorNumber.innerHTML = optionsList;
-
-                    if (myParam) {
-                        floorNumber.value = myParam;
-                        await populateRoomNumber
-                    }
-
-
-                } catch (error) {
-                    console.log('Error fetching floor numbers:', error);
-                }
-            }
-
-            async function populateRoomNumber() {
-                try {
-                    const myParam = urlParams.get('roomId');
-                    const blockFloorId = floorNumber.value;
-
-                    if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/room/blockfloor/${blockFloorId}`);
-                    const rooms = await response.json();
-
-                    if (rooms.length === 0) {
-                        roomNumber.innerHTML = '<option selected>No rooms available</option>';
-                        return;
-                    }
-
-                    let optionsList = '<option selected>Select a Room</option>';
-                    rooms.forEach(room => {
-                        optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`;
-                    });
-                    roomNumber.innerHTML = optionsList;
-
-                    if (myParam) {
-                        roomNumber.value = myParam;
-                        await populateStudentList
-                    }
-
-                } catch (error) {
-                    console.log('Error fetching room numbers:', error);
-                }
-            }
-
-            async function populateStudentList() {
-                try {
-                    const roomId = roomNumber.value;
-                    if (roomId === 'Select') {
-                        studentList.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
-                    const students = await response.json();
-
-                    if (students.length === 0) {
-                        studentList.innerHTML = '<li class="list-group-item">No students available</li>';
-                        return;
-                    }
-
-                    studentList.innerHTML = '';
-                    students.forEach(student => {
-                        const isPresentChecked = student.isPresent === 1 ? 'checked' : '';
-                        const isAbsentChecked = student.isPresent === 0 ? 'checked' : '';
-
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item');
-                        li.innerHTML = `
-                <span>${student.name}</span>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}" ${isPresentChecked}>
-                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                </div>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}" ${isAbsentChecked}>
-                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                </div>`;
-
-                        studentList.appendChild(li);
-                    });
-
-                } catch (error) {
-                    console.log('Error fetching student list:', error);
-                }
-            }
-            initializeForm();
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        const { mysqlQuery } = require('../utilityclient.js')
-const ALLOWED_UPDATE_KEYS = [
-    "blockCode",
-    "blockLocation",
-    "isActive"
-]
-
-async function readBlocks(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const limit = req.query.limit ? parseInt(req.query.limit) : null;
-    const page = req.query.page ? parseInt(req.query.page) : null;
-    const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockCode';
-    const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || '';
-    const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
-
-    var blocksQuery = /*sql*/`
-        SELECT 
-            bk.*,
-            w.firstName AS createdFirstName,
-            w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp,
-            (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL) AS floorCount 
-            FROM block AS bk
-        LEFT JOIN 
-            warden AS w ON w.wardenId = bk.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = bk.updatedBy
-        WHERE 
-            bk.deletedAt IS NULL AND 
-            (bk.blockCode LIKE ? OR 
-            w.firstName LIKE ? OR 
-            w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
-    }
-
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
-    }
-
-    const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`;
-
-    try {
-        const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
-        ]);
-
-        res.status(200).send({
-            blocks: blocks,
-            blockCount: totalCount[0].totalBlockCount
-        });
-
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockById(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const blockId = req.params.blockId;
-    try {
-        const block = await mysqlQuery(/*sql*/`
-             SELECT 
-                bk.*,
-                w.firstName AS createdFirstName,
-                w.lastName AS createdLastName,
-                w2.firstName AS updatedFirstName,
-                w2.lastName AS updatedLastName,
-                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-                FROM block AS bk
-            LEFT JOIN 
-                warden AS w ON w.wardenId = bk.createdBy
-            LEFT JOIN 
-                warden AS w2 ON w2.wardenId = bk.updatedBy
-            WHERE 
-                bk.deletedAt IS NULL AND blockId = ?`,
-            [blockId],
-            mysqlClient
-        )
-        if (block.length === 0) {
-            return res.status(404).send("blockId not valid");
-        }
-        res.status(200).send(block[0])
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function createBlock(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-
-    const {
-        blockCode,
-        blockLocation,
-        isActive
-    } = req.body
-    const createdBy = req.session.data.wardenId;
-
-    const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert)
-    }
-
-    try {
-        // const existingBlockCode = await mysqlQuery(/*sql*/`
-        //     SELECT * FROM block WHERE blockCode = ?`,
-        //     [blockCode], mysqlClient
-        // );
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt === null) {
-        //     return res.status(409).send("blockCode already exists");
-        // }
-
-        // if (existingBlockCode.length > 0 && existingBlockCode[0].deletedAt !== null) {
-        //     const restoreBlock = await mysqlQuery(/*sql*/`
-        //         UPDATE block SET deletedAt = NULL, blockLocation = ?, isActive = ?,createdAt = NOW(), createdBy = ?
-        //         WHERE blockCode = ?`,
-        //         [blockLocation, isActive, createdBy, blockCode], mysqlClient);
-        //         console.log(restoreBlock.affectedRows)
-        //     if (restoreBlock.affectedRows === 0) {
-        //         return res.status(400).send("Block restoration failed. No changes were made.");
-        //     }
-        //     return res.status(200).send("Soft-deleted block restored successfully.");
-        // }
-
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
-            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
-
-        if (newBlock.affectedRows === 0) {
-            res.status(400).send("no insert was made")
-        } else {
-            res.status(201).send('insert successfully')
-        }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
-    }
-}
-
-async function updateBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const updatedBy = req.session.data.wardenId;
-    const values = []
-    const updates = []
-
-    ALLOWED_UPDATE_KEYS.forEach((key) => {
-        const keyValue = req.body[key]
-        if (keyValue !== undefined) {
-            values.push(keyValue)
-            updates.push(` ${key} = ? `)
-        }
-    })
-
-    updates.push("updatedBy = ?")
-    values.push(updatedBy, blockId)
-    const mysqlClient = req.app.mysqlClient
-    const blockCode = req.body.blockCode;
-
-    try {
-        const block = await validateBlockById(blockId, mysqlClient);
-        if (!block) {
-            return res.status(404).send("Block not found or already deleted");
-        }
-
-        // if (blockCode) {
-        //     const isBlockUnique = await mysqlQuery(/*sql*/`
-        //         SELECT * FROM block 
-        //         WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`,
-        //         [blockCode, blockId], mysqlClient);
-
-        //     if (isBlockUnique.length > 0) {
-        //         return res.status(409).send("blockCode already exists");
-        //     }
-        // }
-
-        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
-        if (!isValid) {
-            return res.status(409).send("students in block shift to another block");
-        }
-
-        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
-        }
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
-            values, mysqlClient
-        )
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Block not found or no changes made")
-        }
-
-        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
-            [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'successfull',
-            data: getUpdatedBlock[0]
-        })
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function deleteBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
-
-    try {
-        const isValid = await validateBlockById(blockId, mysqlClient)
-        if (!isValid) {
-            return res.status(404).send("blockId is not defined")
-        }
-
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block SET deletedAt = NOW(),
-            deletedBy = ? WHERE blockId = ? AND deletedAt IS NULL`,
-            [deletedBy, blockId],
-            mysqlClient)
-        if (deletedBlock.affectedRows === 0) {
-            return res.status(404).send("Block not found or already deleted")
-        }
-
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'deleted',
-            data: getDeletedBlock[0]
-        });
-    }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-function getBlockById(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
-            if (err) {
-                return reject(err)
-            }
-            resolve(block.length ? block[0] : null)
-
-        })
-    })
-}
-
-async function validateBlockById(blockId, mysqlClient) {
-    var block = await getBlockById(blockId, mysqlClient)
-    if (block !== null) {
-        return true
-    }
-    return false
-}
-
-async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
-    const { blockCode, blockLocation, isActive } = body;
-    console.log(blockCode)
-    const errors = [];
-
-    try {
-        if (blockCode !== undefined) {
-            if (blockCode.length < 1) {
-                errors.push("BlockCode is invalid");
-            } else {
-                let query;
-                let params;
-
-                if (isUpdate === true) {
-                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
-                    params = [blockCode, blockId];
-                } else {
-                    query = `SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
-                    params = [blockCode];
-                }
-
-                const isValidBlockCode = await mysqlQuery(query, params, mysqlClient);
-                if (isValidBlockCode[0].count > 0) {
-                    errors.push("BlockCode already exists");
-                }
-            }
-        } else {
-            errors.push("BlockCode is missing");
-        }
-
-        if (blockLocation !== undefined) {
-            if (blockLocation.length < 1) {
-                errors.push("location is invalid")
-            }
-        } else {
-            errors.push("location is missing")
-        }
-
-        if (isActive !== undefined) {
-            if (![0, 1].includes(isActive)) {
-                errors.push("isActive is invalid")
-            }
-        } else {
-            errors.push("isActive is missing")
-        }
-        return errors
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-function getBlockFloorCountByBlockId(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
-            [blockId],
-            (err, blockIdCount) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(blockIdCount)
-            })
-    })
-}
-
-async function validateUpdateBlock(blockId, mysqlClient, body) {
-    if (body.isActive === 0) {
-        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
-        if (blockFloorBlock.count > 0) {
-            return false
-        }
-    }
-    return true
-}
-
-module.exports = (app) => {
-    app.get('/api/block', readBlocks)
-    app.get('/api/block/:blockId', readBlockById)
-    app.post('/api/block', createBlock)
-    app.put('/api/block/:blockId', updateBlockById)
-    app.delete('/api/block/:blockId', deleteBlockById)
-}
-
-
-var blockFloorBlockCodeCount = /*sql*/`SELECT 
-        blockId, 
-        blockCode,(SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId 
-        AND b.deletedAt IS NULL) AS floorCount FROM block bk
-
-
-
-
-        <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
-    <h2 class="text-center mb-4">Attendance Form</h2>
-    <div class="row justify-content-center">
-        <div class="col-md-3">
-            <div class="form-group">
-                <label for="blockCode">Block Code</label>
-                <select class="form-control" id="blockCode"></select>
-            </div>
-            <div class="form-group">
-                <label for="floorNumber">Floor Number</label>
-                <select class="form-control" id="floorNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="roomNumber">Room Number</label>
-                <select class="form-control" id="roomNumber"></select>
-            </div>
-            <div class="form-group">
-                <label for="checkIn">Check-in Date</label>
-                <input type="date" class="form-control" id="checkIn">
-            </div>
-        </div>
-        <div class="form-group">
-            <label for="studentList">Students :</label>
-            <ul id="studentList" class="list-group"></ul>
-        </div>
-        <div class="text-center">
-            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
-                disabled>Submit</button>
-        </div>
-    </div>
-
-    <%- include('../../partials/footer.ejs') %>
-        <script>
-            const urlParams = new URLSearchParams(window.location.search);
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var roomNumber = document.getElementById('roomNumber');
-            var checkIn = document.getElementById('checkIn');
-            var studentList = document.getElementById('studentList');
-            var submitButton = document.getElementById('submitButton');
-            const today = new Date().toISOString().split('T')[0];
-            checkIn.value = today;
-
-            function convertToISO(checkIn) {
-                let [year, month, day] = checkIn.split('-');
-                day = day.replace(/\D/g, '');
-                day = day.padStart(2, '0');
-                year = `20${year.padStart(2, '0')}`;
-                const months = {
-                    "Jan": "01",
-                    "Feb": "02",
-                    "Mar": "03",
-                    "Apr": "04",
-                    "May": "05",
-                    "Jun": "06",
-                    "Jul": "07",
-                    "Aug": "08",
-                    "Sep": "09",
-                    "Oct": "10",
-                    "Nov": "11",
-                    "Dec": "12"
-                };
-                const monthNumber = months[month];
-                return `${year}-${monthNumber}-${day}`;
-            }
-
-            const checkInParam = urlParams.get('checkIn');
-            if (checkInParam) {
-                const isoDate = convertToISO(checkInParam);
-                checkIn.value = isoDate;
-            }
-
-            function getSelectedStatus(studentId) {
-                const presentRadio = document.getElementById('present_' + studentId);
-                const absentRadio = document.getElementById('absent_' + studentId);
-
-                return presentRadio.checked ? 1 : absentRadio.checked ? 0 : null;
-            }
-
-            function saveOrUpdateAttendance() {
-                const students = document.querySelectorAll('#studentList li');
-                let studentAttendanceData = [];
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    const isPresentValue = getSelectedStatus(studentId);
-
-                    studentAttendanceData.push({
-                        "studentId": studentId,
-                        "isPresent": isPresentValue
-                    });
-                });
-
-                var myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
-
-                for (var i = 0; i < studentAttendanceData.length; i++) {
-                    var raw = JSON.stringify({
-                        "blockId": blockCode.value,
-                        "blockFloorId": floorNumber.value,
-                        "roomId": roomNumber.value,
-                        "checkInDate": checkIn.value,
-                        "studentId": studentAttendanceData[i].studentId,
-                        "isPresent": studentAttendanceData[i].isPresent
-                    });
-
-                    var requestOptions = {
-                        method: 'POST',
-                        headers: myHeaders,
-                        body: raw
-                    };
-
-                    let url = `http://localhost:1000/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
-
-                    fetch(url, requestOptions)
-                        .then(() => window.location = '/attendance')
-                        .catch(error => console.error('error', error));
-                }
-            }
-
-            function toggleSubmitButton() {
-                const students = document.querySelectorAll('#studentList li');
-                let allStatusSelected = true;
-
-                students.forEach((student) => {
-                    const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
-                    if (getSelectedStatus(studentId) === null) {
-                        allStatusSelected = false;
-                    }
-                });
-
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value !== 'Select' &&
-                    checkIn.value !== '' &&
-                    allStatusSelected
-                );
-            }
-
-            async function initializeForm() {
-                await populateBlockCode();
-                await populateFloorNumber();
-                await populateRoomNumber();
-                await populateStudentList()
-
-                blockCode.addEventListener('change', populateFloorNumber);
-                floorNumber.addEventListener('change', populateRoomNumber);
-                roomNumber.addEventListener('change', populateStudentList);
-                studentList.addEventListener('change', toggleSubmitButton);
-
-            }
-
-            initializeForm();
-
-            async function populateBlockCode() {
-                try {
-                    const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block?blockId=${myParam}` :
-                        'http://localhost:1000/api/block/blockFloor/blockCodeCount';
-                    const response = await fetch(url);
-                    const responseData = await response.json();
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
-                    blockCode.innerHTML = '<option selected>Select a Block</option>';
-
-                    responseData.forEach(block => {
-                        const option = document.createElement('option');
-                        option.value = block.blockId;
-                        option.textContent = block.blockCode;
-                        if (block.floorCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
-                        }
-                    });
-
-                    activeOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
-
-                    disabledOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
-
-
-                    if (myParam) {
-                        blockCode.value = myParam;
-                        await populateFloorNumber();
-                    }
-                } catch (error) {
-                    console.log('Error fetching block codes:', error);
-                }
-            }
-
-            async function populateFloorNumber() {
-                try {
-                    const myParam = urlParams.get('blockFloorId');
-                    const blockId = blockCode.value;
-
-                    if (blockId === 'Select' || blockId === '') {
-                        floorNumber.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/block/${blockId}`);
-                    const blockFloors = await response.json();
-
-                    if (blockFloors.length === 0) {
-                        floorNumber.innerHTML = '';
-                        return;
-                    }
-
-                    let optionsList = '<option selected>Select a Floor</option>'; blockFloors.forEach(blockFloor => {
-                        optionsList += `<option value="${blockFloor.blockFloorId}">${blockFloor.floorNumber}</option>`;
-                    });
-                    floorNumber.innerHTML = optionsList;
-
-                    if (myParam) {
-                        floorNumber.value = myParam;
-                        await populateRoomNumber
-                    }
-
-
-                } catch (error) {
-                    console.log('Error fetching floor numbers:', error);
-                }
-            }
-
-            async function populateRoomNumber() {
-                try {
-                    const myParam = urlParams.get('roomId');
-                    const blockFloorId = floorNumber.value;
-
-                    if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/room/blockfloor/${blockFloorId}`);
-                    const rooms = await response.json();
-
-                    if (rooms.length === 0) {
-                        roomNumber.innerHTML = '<option selected>No rooms available</option>';
-                        return;
-                    }
-
-                    let optionsList = '<option selected>Select a Room</option>';
-                    rooms.forEach(room => {
-                        optionsList += `<option value="${room.roomId}">${room.roomNumber}</option>`;
-                    });
-                    roomNumber.innerHTML = optionsList;
-
-                    if (myParam) {
-                        roomNumber.value = myParam;
-                        await populateStudentList
-                    }
-
-                } catch (error) {
-                    console.log('Error fetching room numbers:', error);
-                }
-            }
-
-            async function populateStudentList() {
-                try {
-                    const roomId = roomNumber.value;
-                    if (roomId === 'Select') {
-                        studentList.innerHTML = '';
-                        return;
-                    }
-
-                    const response = await fetch(`http://localhost:1000/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
-                    const students = await response.json();
-
-                    if (students.length === 0) {
-                        studentList.innerHTML = '<li class="list-group-item">No students available</li>';
-                        return;
-                    }
-
-                    studentList.innerHTML = '';
-                    students.forEach(student => {
-                        const isPresentChecked = student.isPresent === 1 ? 'checked' : '';
-                        const isAbsentChecked = student.isPresent === 0 ? 'checked' : '';
-
-                        const li = document.createElement('li');
-                        li.classList.add('list-group-item');
-                        li.innerHTML = `
-                <span>${student.name}</span>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}" ${isPresentChecked}>
-                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                </div>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}" ${isAbsentChecked}>
-                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                </div>`;
-
-                        studentList.appendChild(li);
-                    });
-
-                } catch (error) {
-                    console.log('Error fetching student list:', error);
-                }
-            }
-            
-        </script>
