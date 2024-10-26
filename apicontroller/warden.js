@@ -271,7 +271,6 @@ async function generateOtpAndSendOtp(req, res) {
         // console.log(isValidMail[0].otpTiming >= new Date)
         // console.log(isValidMail[0].otpTiming !== null)
         if (isValidMail[0].otpTiming >= new Date) {
-            console.log('jnk')
             return res.status(401).send('User is Blocked for few hours')
         }
 
@@ -301,12 +300,12 @@ async function validateOtpSavePassword(req, res) {
     const { password = null, otp = null } = req.body;
 
     try {
-        // if (!otp || otp.length < 6) {
-        //     return res.status(400).send('Invalid OTP');
-        // }
+        if (!otp || otp.length < 6) {
+            return res.status(400).send('Invalid OTP');
+        }
 
         if (!password || password.length < 6) {
-            return res.status(400).send('Invalid password minimum 6 characters required');
+            return res.status(400).send('Invalid password');
         }
 
         const validOtp = await mysqlQuery(/*sql*/`
