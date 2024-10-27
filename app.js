@@ -3,7 +3,6 @@ const mysql = require('mysql');
 const logger = require('pino')();
 const pinoReqLogger = require('pino-http')();
 const path = require('path');
-
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var bodyParser = require('body-parser');
@@ -11,23 +10,23 @@ var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
 
 //apicontroller
-const course = require('./apicontroller/course.js')
-const block = require('./apicontroller/block.js')
-const warden = require('./apicontroller/warden.js')
-const blockFloor = require('./apicontroller/blockfloor.js')
-const room = require('./apicontroller/room.js')
-const student = require('./apicontroller/student.js')
-const attendance = require('./apicontroller/attendance.js')
+const course = require('./apicontroller/course.js');
+const block = require('./apicontroller/block.js');
+const warden = require('./apicontroller/warden.js');
+const blockFloor = require('./apicontroller/blockfloor.js');
+const room = require('./apicontroller/room.js');
+const student = require('./apicontroller/student.js');
+const attendance = require('./apicontroller/attendance.js');
 
 //uicontroller
-const homeUi = require('./ui/homeui.js')
-const courseUi = require('./ui/courseui.js')
-const blockUi = require('./ui/blockui.js')
-const blockFloorUi = require('./ui/blockfloorui.js')
-const roomUi = require('./ui/roomui.js')
-const wardenUi = require('./ui/wardenui.js')
-const studentUi = require('./ui/studentui.js')
-const attendanceUi = require('./ui/attendanceui.js')
+const homeUi = require('./ui/homeui.js');
+const courseUi = require('./ui/courseui.js');
+const blockUi = require('./ui/blockui.js');
+const blockFloorUi = require('./ui/blockfloorui.js');
+const roomUi = require('./ui/roomui.js');
+const wardenUi = require('./ui/wardenui.js');
+const studentUi = require('./ui/studentui.js');
+const attendanceUi = require('./ui/attendanceui.js');
 
 const app = express()
 app.use(express.json())
@@ -106,6 +105,7 @@ app.mysqlClient.connect(function (err) {
         room(app)
         student(app)
         attendance(app)
+
         homeUi(app)
         courseUi(app)
         blockUi(app)

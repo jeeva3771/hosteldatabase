@@ -519,3 +519,291 @@ module.exports = (app) => {
     app.post('/api/login', authentication)
     app.get('/api/logout', logOut)
 }
+
+
+...........................
+
+const express = require('express')
+const mysql = require('mysql')
+const logger = require('pino')()
+const pinoReqLogger = require('pino-http')()
+const path = require('path')
+const nodemailer = require('nodemailer')
+var cookieParser = require('cookie-parser')
+var session = require('express-session')
+var bodyParser = require('body-parser')
+var FileStore = require('session-file-store')(session)
+var fileStoreOptions = {}
+
+//apicontroller
+const course = require('./apicontroller/course.js')
+const block = require('./apicontroller/block.js')
+const warden = require('./apicontroller/warden.js')
+const blockFloor = require('./apicontroller/blockfloor.js')
+const room = require('./apicontroller/room.js')
+const student = require('./apicontroller/student.js')
+const attendance = require('./apicontroller/attendance.js')
+const sendMail = require('./utilityclient/email.js')
+
+//uicontroller
+const homeUi = require('./ui/homeui.js')
+const courseUi = require('./ui/courseui.js')
+const blockUi = require('./ui/blockui.js')
+const blockFloorUi = require('./ui/blockfloorui.js')
+const roomUi = require('./ui/roomui.js')
+const wardenUi = require('./ui/wardenui.js')
+const studentUi = require('./ui/studentui.js')
+const attendanceUi = require('./ui/attendanceui.js')
+
+const app = express()
+app.use(express.json())
+app.use(pinoReqLogger)
+app.use(cookieParser());
+app.use(session({
+    store: new FileStore(fileStoreOptions),
+    secret: 'keyboard',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: (1000 * 60 * 15)
+    }
+}));
+// const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/api/warden/generateOtp']
+
+// app.use((req, res, next) => {
+//     if(req.originalUrl === urlOption(includes)) {
+
+//     }
+// })
+
+// app.use((req, res, next) => {
+//     if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
+//         return next();
+//     }
+
+//     if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
+//         return next();
+//     }
+
+//     if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
+//         return next();
+//     }
+
+//     if ((req.originalUrl === '/api/warden/validateOtp/newPassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/validateOtp/newPassword') {
+//         return next();
+//     }
+
+//     if (req.originalUrl !== '/login') {
+//         if (req.session.isLogged !== true) {
+//             return res.status(401).redirect('http://localhost:1000/login')
+//         }
+//     } else {
+//         if (req.session.isLogged === true) {
+//             return res.status(200).redirect('http://localhost:1000/home')
+//         }
+//     }
+//     return next()
+// })
+
+app.use(bodyParser.urlencoded({ extended: true }));
+
+
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '/uicontroller/views'));
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.mysqlClient = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'root',
+    database: 'hosteldatabase'
+})
+
+app.mysqlClient.connect(function (err) {
+    if (err) {
+        console.error(err)
+    } else {
+        console.log('mysql connected')
+
+        course(app)
+        block(app)
+        warden(app)
+        blockFloor(app)
+        room(app)
+        student(app)
+        attendance(app)
+        sendMail(nodemailer)
+
+        homeUi(app)
+        courseUi(app)
+        blockUi(app)
+        blockFloorUi(app)
+        roomUi(app)
+        wardenUi(app)
+        studentUi(app)
+        attendanceUi(app)
+
+        app.listen(1000, () => {
+            logger.info('listen 1000port')
+        })
+    }
+})
+
+//////////////////
+<%- include('../partials/header.ejs', { isMenuVisible : false, title: 'ResetPassword' , breadcrumb: []}) %>
+    <form class="container">
+        <div class="row justify-content-center mt-5">
+            <div class="col-4">
+                <div class="border">
+                    <form>
+                        <h3 class="font-weight-bold text-center mb-3">Forgotten Password ?</h3>
+                        <div id="emailValid">
+                            <div class="mb-3">
+                                <label for="emailId" class="form-label">Email</label>
+                                <input type="text" class="form-control" id="emailId" placeholder="Enter email"
+                                    aria-describedby="emailHelp" onkeyup="toggleButton()">
+                                <small id="emailError" class="errorContent"></small>
+                            </div>
+                            <div class="col d-flex justify-content-center mb-2">
+                                <button type="button" class="btn btn-primary" id="sendOtp" onclick="generateOtp()"
+                                    disabled>Generate OTP</button>
+                            </div>
+                        </div>
+                        <div id="additionalFields" class="hidden">
+                            <b class="fs-6">Please enter the 6-digit code sent to your email.</b>
+                            <div class="mb-3">
+                                <label for="otp" class="form-label">OTP</label>
+                                <input type="text" class="form-control" id="otp" onkeyup="toggleButton()"
+                                    placeholder="Enter OTP">
+                                <small id="otpError" class="errorContent"></small>
+                            </div>
+                            <div class="col d-flex justify-content-center mb-2">
+                                <!-- <button type="button" class="btn btn-primary" id="resendOtp"
+                                    onclick="generateOtp()">Resend OTP</button> -->
+                                <a href="javascript:void(0);" onclick="generateOtp()">Resend OTP</a>
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" class="form-control" id="password" onkeyup="toggleButton()"
+                                    placeholder="Enter password">
+                            </div>
+                            <div class="mb-3">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="confirmPassword"
+                                    placeholder="Enter confirm password" onkeyup="toggleButton()">
+                                <small id="passwordError" class="errorContent"></small>
+                            </div>
+                            <div class="col d-flex justify-content-center mb-2">
+                                <button type="button" class="btn btn-primary" id="submit" onclick="resetPassword()"
+                                    disabled>Verify
+                                    OTP & SavePassword</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <script>
+            var emailId = document.getElementById('emailId');
+            var sendOtp = document.getElementById('sendOtp');
+            var additionalFields = document.getElementById('additionalFields');
+            var otp = document.getElementById('otp');
+            var password = document.getElementById('password');
+            var confirmPassword = document.getElementById('confirmPassword');
+            var emailValid = document.getElementById('emailValid');
+            var emailError = document.getElementById('emailError');
+            var otpError = document.getElementById('otpError');
+            var submit = document.getElementById('submit');
+
+            function toggleButton() {
+                sendOtp.disabled = !(emailId.value.length > 0)
+                submit.disabled = !(
+                    otp.value.length > 0 &&
+                    password.value === confirmPassword.value
+                )
+            }
+
+            function generateOtp() {
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+
+                var raw = JSON.stringify({
+                    "emailId": emailId.value
+                });
+
+                var requestOptions = {
+                    method: 'POST',
+                    headers: myHeaders,
+                    body: raw,
+                    redirect: 'follow'
+                };
+
+                fetch("http://localhost:1000/api/warden/generateOtp", requestOptions)
+                    .then(async (response) => {
+                        if (response.status === 200) {
+                            emailValid.style.display = 'none'
+                            additionalFields.style.display = 'block'
+                        } else {
+                            emailError.innerText = await response.text()
+                            emailError.style.display = 'block'
+                        }
+                    })
+                    .catch(error => console.log('error', error));
+            }
+
+            function resetPassword() {
+                var myHeaders = new Headers();
+                myHeaders.append("Content-Type", "application/json");
+
+                var raw = JSON.stringify({
+                    "otp": otp.value,
+                    "password": password.value
+                });
+
+                var requestOptions = {
+                    method: 'PUT',
+                    headers: myHeaders,
+                    body: raw,
+                    redirect: 'follow'
+                };
+
+                fetch("http://localhost:1000/api/warden/resetpassword", requestOptions)
+                    .then(async (response) => {
+                        if (response.status === 200) {
+                            window.location = '/login';
+                        } else if (response.status === 400) {
+                            const errorData = await response.json();
+
+                            if (errorData.errorType === 'OTP') {
+                                otpError.innerText = errorData.message;
+                                otpError.style.display = 'block';
+                                if (password.value.length < 6) {
+                                    passwordError.innerText = 'Password must be at least 6 characters long.'
+                                    passwordError.style.display = 'block';
+                                }
+                            } else {
+                                passwordError.innerText = 'Password must be at least 6 characters long.'
+                                passwordError.style.display = 'block';
+                            }
+                        } else if (response.status === 401) {
+                            alert(await response.text());
+                            window.location = '/login';
+                        }
+                    })
+                    .catch(error => console.log('error', error));
+            }
+
+            function hideError(input, errorElement) {
+                input.addEventListener('input', function () {
+                    errorElement.style.display = 'none';
+                });
+            }
+
+            hideError(emailId, emailError);
+            hideError(otp, otpError);
+            hideError(password, passwordError);
+            hideError(confirmPassword, passwordError);
+
+
+        </script>
+        <%- include('../partials/footer.ejs') %>

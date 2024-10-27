@@ -1,5 +1,4 @@
 const nodemailer = require('nodemailer');
-
 const {
     EMAIL_AUTH,
     EMAIL_FROM
@@ -24,7 +23,6 @@ function sendEmail({
             if (err) {
                 reject(err)
             } else {
-                console.log('jeeva')
                 resolve(info)
             }    
         })
