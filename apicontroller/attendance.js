@@ -121,10 +121,10 @@ async function readAttendanceById(req, res) {
     }
 }
 
- async function readRoomStudents (req, res) {
+async function readRoomStudents(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const { roomId } = req.params;
-    const { checkIn } = req.query; 
+    const { checkIn } = req.query;
 
     try {
         const studentsWithAttendance = await mysqlQuery(
@@ -148,30 +148,30 @@ async function readAttendanceById(req, res) {
 };
 
 async function createAttendance(req, res) {
-        const mysqlClient = req.app.mysqlClient;
-        const { blockId, blockFloorId, roomId } = req.params;
-        const { checkInDate, isPresent } = req.body;
-        const wardenId = req.session.data.wardenId;
+    const mysqlClient = req.app.mysqlClient;
+    const { blockId, blockFloorId, roomId } = req.params;
+    const { checkInDate, isPresent } = req.body;
+    const wardenId = req.session.data.wardenId;
 
-    
-        try {
-            const errors = await validateInsertItems(req.params, req.body, mysqlClient);
-            if (errors.length > 0) {
-                return res.status(400).send(errors); 
-            }
-            
-            const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE roomId = ?`,
-                [roomId],
-                mysqlClient
-            );
 
-            if (students.length === 0) {
-                return res.status(404).send('No students found for the specified room.');
-            }
-    
-            const attendancePromises = students.map((student) => {
-                console.log(student)
-                return mysqlQuery(
+    try {
+        const errors = await validateInsertItems(req.params, req.body, mysqlClient);
+        if (errors.length > 0) {
+            return res.status(400).send(errors);
+        }
+
+        const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE roomId = ?`,
+            [roomId],
+            mysqlClient
+        );
+
+        if (students.length === 0) {
+            return res.status(404).send('No students found for the specified room.');
+        }
+
+        const attendancePromises = students.map((student) => {
+            console.log(student)
+            return mysqlQuery(
                     /*sql*/ `
                     INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -180,41 +180,84 @@ async function createAttendance(req, res) {
                         isPresent = VALUES(isPresent),
                         wardenId = VALUES(wardenId)
                     `,
-                    [student.studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId],
-                    mysqlClient
-                );
-            });
-    
-            await Promise.all(attendancePromises);
-    
-            res.status(201).send('Attendance successfully recorded for all students in the room.');
-        } catch (error) {
-            res.status(500).send(error.message);
-        }
+                [student.studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId],
+                mysqlClient
+            );
+        });
+
+        await Promise.all(attendancePromises);
+
+        res.status(201).send('Attendance successfully recorded for all students in the room.');
+    } catch (error) {
+        res.status(500).send(error.message);
+    }
+}
+
+// async function attendanceListById(req, res) {
+//     const mysqlClient = req.app.mysqlClient;
+//     const studentId = req.params.studentId;
+//     const { startDate, endDate } = req.query
+
+//     try {
+//         const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ? `,
+//             [studentId],
+//             mysqlClient
+//         )
+//         if (student.length === 0) {
+//             return res.status(404).send('studentId is invalid')
+//         }
+
+//         const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE checkInDate >= ? AND checkInDate <= ? AND studentId = ? `,
+//             [startDate, endDate, studentId],
+//             mysqlClient
+//         )
+//         res.status(200).send(attendanceList)
+//     } catch (error) {
+//         res.status(500).send(error.message)
+//     }
+// }
+
+async function studentAttendanceReport(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const {
+        month = null,
+        year = null,
+        studentId = null
+    } = req.body
+
+    if (!month) {
+        return res.status(400).send('Month is not defined')
     }
 
-async function attendanceListById(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const studentId = req.params.studentId;
-    const { startDate, endDate } = req.query
+    if (!year) {
+        return res.status(400).send('year is not defined')
+    }
 
     try {
-        const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ? `,
-            [studentId],
-            mysqlClient
-        )
-        if (student.length === 0) {
-            return res.status(404).send('studentId is invalid')
+        const studentRecord = await mysqlQuery(/*sql*/`
+        SELECT 
+            s.name,
+            a.isPresent
+        FROM 
+            attendance AS a
+        LEFT JOIN 
+            student AS s ON s.studentId = a.studentId
+        WHERE 
+            MONTH(a.checkInDate) = ?
+            AND YEAR(a.checkInDate) = ?
+            AND a.studentId = ?`,
+        [month, year, studentId], mysqlClient)
+
+        if (studentRecord.length === 0) {
+            return res.status(400).send('No content is loaded')
         }
 
-        const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE checkInDate >= ? AND checkInDate <= ? AND studentId = ? `,
-            [startDate, endDate, studentId],
-            mysqlClient
-        )
-        res.status(200).send(attendanceList)
+        return res.status(200).send(studentRecord)
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
+
 }
 
 async function validateInsertItems(params, body, mysqlClient) {
@@ -292,5 +335,6 @@ module.exports = (app) => {
     app.get('/api/attendance/:attendanceId', readAttendanceById)
     app.get('/api/attendance/student/:roomId', readRoomStudents)
     app.post('/api/attendance/:blockId/:blockFloorId/:roomId', createAttendance)
-    app.get('/api/attendance/student/:studentId', attendanceListById)
+    // app.get('/api/attendance/student/:studentId', attendanceListById)
+    app.post('/api/attendance/studentattendancereport', studentAttendanceReport)
 }

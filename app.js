@@ -4,10 +4,10 @@ const logger = require('pino')();
 const pinoReqLogger = require('pino-http')();
 const path = require('path');
 var cookieParser = require('cookie-parser');
-var session = require('express-session');
+// var session = require('express-session');
 var bodyParser = require('body-parser');
-var FileStore = require('session-file-store')(session);
-var fileStoreOptions = {};
+// var FileStore = require('session-file-store')(session);
+// var fileStoreOptions = {};
 
 //apicontroller
 const course = require('./apicontroller/course.js');
@@ -32,15 +32,15 @@ const app = express()
 app.use(express.json())
 app.use(pinoReqLogger)
 app.use(cookieParser());
-app.use(session({
-    store: new FileStore(fileStoreOptions),
-    secret: 'keyboard',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: (1000 * 60 * 15)
-    }
-}));
+// app.use(session({
+//     store: new FileStore(fileStoreOptions),
+//     secret: 'keyboard',
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//         maxAge: (1000 * 60 * 15)
+//     }
+// }));
 // const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/api/warden/generateOtp']
 
 // app.use((req, res, next) => {
@@ -54,15 +54,15 @@ app.use(session({
 //         return next();
 //     }
 
-//     if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
+//     if ((req.originalUrl === '/warden/resetpassword') || (req.originalUrl === '/warden/resetpassword' && req.method === 'POST')) {
 //         return next();
 //     }
 
-//     if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
+//     if ((req.originalUrl === '/api/warden/generateotp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateotp') {
 //         return next();
 //     }
 
-//     if ((req.originalUrl === '/api/warden/validateOtp/newPassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/validateOtp/newPassword') {
+//     if ((req.originalUrl === '/api/warden/resetpassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/resetpassword') {
 //         return next();
 //     }
 

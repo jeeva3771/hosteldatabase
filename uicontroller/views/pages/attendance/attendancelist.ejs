@@ -35,15 +35,7 @@
                 </tr>
             </thead>
             <tbody id="attendancesData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
+                
             </tbody>
         </table>
         <nav aria-label="Page navigation example">
@@ -51,6 +43,7 @@
             </ul>
         </nav>
     </div>
+
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
@@ -89,6 +82,16 @@
 
             function attendancePage(pageNo = 1) {
                 currentPage = pageNo
+
+                tableData.innerHTML = `
+                    <tr id="spinnerRow">
+                        <td colspan="7" class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>`;
+                    
                 var requestOptions = {
                     method: 'GET'
                 };

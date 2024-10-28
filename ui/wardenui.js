@@ -1,7 +1,7 @@
 const { getUserProfile } = require('../utilityclient/query')
 
 function wardenPageUi(req, res) {
-    if (!req.session || !req.session.data || req.session.data.superAdmin !== 1) {
+    if (!req.session || !req.session.warden || req.session.warden.superAdmin !== 1) {
         res.status(403).redirect('/error')
     } else {
         res.render('pages/warden/wardenlist.ejs', {
@@ -50,7 +50,7 @@ function resetPasswordUi(req, res) {
 }   
 
 module.exports = (app) => {
-    app.get('/warden/resetPassword', resetPasswordUi)
+    app.get('/warden/resetpassword', resetPasswordUi)
     app.get('/warden', wardenPageUi)
     app.get('/warden/add', addWardenUi)
     app.get('/warden/:wardenId', editWardenUi)
