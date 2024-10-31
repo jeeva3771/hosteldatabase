@@ -4,10 +4,9 @@ const logger = require('pino')();
 const pinoReqLogger = require('pino-http')();
 const path = require('path');
 var cookieParser = require('cookie-parser');
-// var session = require('express-session');
-var bodyParser = require('body-parser');
-// var FileStore = require('session-file-store')(session);
-// var fileStoreOptions = {};
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
+var fileStoreOptions = {};
 
 //apicontroller
 const course = require('./apicontroller/course.js');
@@ -32,54 +31,33 @@ const app = express()
 app.use(express.json())
 app.use(pinoReqLogger)
 app.use(cookieParser());
-// app.use(session({
-//     store: new FileStore(fileStoreOptions),
-//     secret: 'keyboard',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//         maxAge: (1000 * 60 * 15)
-//     }
-// }));
-// const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/api/warden/generateOtp']
+app.use(session({
+    store: new FileStore(fileStoreOptions),
+    secret: 'keyboard',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: (1000 * 60 * 15)
+    }
+}));
+const urlOption = ['/login', '/api/login', '/warden/resetpassword', '/api/warden/generateotp', '/api/warden/resetpassword']
 
-// app.use((req, res, next) => {
-//     if(req.originalUrl === urlOption(includes)) {
+app.use((req, res, next) => {
+    if (urlOption.includes(req.originalUrl)) {
+        return next()
+    }
 
-//     }
-// })
-
-// app.use((req, res, next) => {
-//     if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
-//         return next();
-//     }
-
-//     if ((req.originalUrl === '/warden/resetpassword') || (req.originalUrl === '/warden/resetpassword' && req.method === 'POST')) {
-//         return next();
-//     }
-
-//     if ((req.originalUrl === '/api/warden/generateotp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateotp') {
-//         return next();
-//     }
-
-//     if ((req.originalUrl === '/api/warden/resetpassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/resetpassword') {
-//         return next();
-//     }
-
-//     if (req.originalUrl !== '/login') {
-//         if (req.session.isLogged !== true) {
-//             return res.status(401).redirect('http://localhost:1000/login')
-//         }
-//     } else {
-//         if (req.session.isLogged === true) {
-//             return res.status(200).redirect('http://localhost:1000/home')
-//         }
-//     }
-//     return next()
-// })
-
-app.use(bodyParser.urlencoded({ extended: true }));
-
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged !== true) {
+            return res.status(401).redirect('http://localhost:1000/login')
+        }
+    } else {
+        if (req.session.isLogged === true) {
+            return res.status(200).redirect('http://localhost:1000/home')
+        }
+    }
+    return next()
+})
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));

@@ -178,7 +178,7 @@ async function createBlockFloor(req, res) {
         floorNumber,
         isActive
     } = req.body
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
 
     const isValidInsert = await validateInsertItems(req.body);
@@ -207,7 +207,7 @@ async function updateBlockFloorById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const values = []
     const updates = []
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
 
 
     ALLOWED_UPDATE_KEYS.forEach(key => {
@@ -262,7 +262,7 @@ async function updateBlockFloorById(req, res) {
 async function deleteBlockFloorById(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateBlockFloorById(blockFloorId, mysqlClient)

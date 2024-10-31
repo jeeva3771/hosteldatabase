@@ -99,7 +99,7 @@ async function readCourseById(req, res) {
 async function createCourse(req, res) {
     const mysqlClient = req.app.mysqlClient
     const { courseName } = req.body
-    const createdBy = req.session.data.wardenId
+    const createdBy = req.session.warden.wardenId
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert) {
@@ -126,7 +126,7 @@ async function createCourse(req, res) {
 async function updateCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -179,7 +179,7 @@ async function updateCourseById(req, res) {
 async function deleteCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const course = await validateCourseById(courseId, mysqlClient);

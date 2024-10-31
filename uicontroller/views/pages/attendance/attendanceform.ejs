@@ -160,7 +160,7 @@
                         'http://localhost:1000/api/block/blockFloor/blockCodeCount';
                     const response = await fetch(url);
                     const blocks = await response.json();
-                    console.log(blocks)
+
                     const activeOptions = [];
                     const disabledOptions = [];
 
@@ -208,7 +208,7 @@
                     const response = await fetch
                     (`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&blockFloor=true`);
                     const blockFloors = await response.json();
-                    console.log(blockFloors)
+
                     const activeOptions = [];
                     const disabledOptions = [];
 

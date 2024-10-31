@@ -153,7 +153,7 @@ async function createRoom(req, res) {
         isActive,
         isAirConditioner
     } = req.body;
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -180,7 +180,7 @@ async function createRoom(req, res) {
 async function updateRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
 
     const values = []
     const updates = []
@@ -231,7 +231,7 @@ async function updateRoomById(req, res) {
 async function deleteRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateRoomById(roomId, mysqlClient)

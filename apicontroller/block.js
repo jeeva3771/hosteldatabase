@@ -142,7 +142,7 @@ async function createBlock(req, res) {
         blockLocation,
         isActive
     } = req.body
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
     if (isValidInsert.length > 0) {
@@ -166,7 +166,7 @@ async function createBlock(req, res) {
 
 async function updateBlockById(req, res) {
     const blockId = req.params.blockId;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -221,7 +221,7 @@ async function updateBlockById(req, res) {
 async function deleteBlockById(req, res) {
     const blockId = req.params.blockId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateBlockById(blockId, mysqlClient)

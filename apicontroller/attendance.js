@@ -147,11 +147,11 @@ async function readRoomStudents(req, res) {
     }
 };
 
-async function createAttendance(req, res) {
+async function addOrEditAttendance(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const { blockId, blockFloorId, roomId } = req.params;
     const { checkInDate, isPresent } = req.body;
-    const wardenId = req.session.data.wardenId;
+    const wardenId = req.session.warden.wardenId;
 
 
     try {
@@ -189,6 +189,7 @@ async function createAttendance(req, res) {
 
         res.status(201).send('Attendance successfully recorded for all students in the room.');
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -217,44 +218,53 @@ async function createAttendance(req, res) {
 //     }
 // }
 
+
 async function studentAttendanceReport(req, res) {
     const mysqlClient = req.app.mysqlClient
     const {
-        month = null,
-        year = null,
-        studentId = null
-    } = req.body
+        month,
+        year,
+        studentName
+    } = req.query
 
     if (!month) {
         return res.status(400).send('Month is not defined')
     }
 
     if (!year) {
-        return res.status(400).send('year is not defined')
+        return res.status(400).send('Year is not defined')
+    }
+
+    if (!studentName) {
+        return res.status(400).send('Student is not defined')
     }
 
     try {
-        const studentRecord = await mysqlQuery(/*sql*/`
+        const studentReport = await mysqlQuery(/*sql*/`
         SELECT 
-            s.name,
+            DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
             a.isPresent
         FROM 
             attendance AS a
-        LEFT JOIN 
+        INNER JOIN 
             student AS s ON s.studentId = a.studentId
         WHERE 
             MONTH(a.checkInDate) = ?
             AND YEAR(a.checkInDate) = ?
-            AND a.studentId = ?`,
-        [month, year, studentId], mysqlClient)
+            AND s.name = ?`,
+        [month, year, studentName], mysqlClient)
 
-        if (studentRecord.length === 0) {
-            return res.status(400).send('No content is loaded')
+        if (studentReport.length === 0) {
+            return res.status(404).send('Student attendance report not found for the selected month and year.')
         }
 
-        return res.status(200).send(studentRecord)
+        const formattedReport = studentReport.reduce((acc, { checkIn, isPresent }) => {
+            acc[checkIn] = isPresent;
+            return acc;
+        }, {});
+
+        return res.status(200).send(formattedReport);
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 
@@ -332,9 +342,9 @@ async function validateInsertItems(params, body, mysqlClient) {
 
 module.exports = (app) => {
     app.get('/api/attendance', readAttendances)
+    app.get('/api/attendance/studentattendancereport', studentAttendanceReport)
     app.get('/api/attendance/:attendanceId', readAttendanceById)
     app.get('/api/attendance/student/:roomId', readRoomStudents)
-    app.post('/api/attendance/:blockId/:blockFloorId/:roomId', createAttendance)
+    app.post('/api/attendance/:blockId/:blockFloorId/:roomId', addOrEditAttendance)
     // app.get('/api/attendance/student/:studentId', attendanceListById)
-    app.post('/api/attendance/studentattendancereport', studentAttendanceReport)
 }
