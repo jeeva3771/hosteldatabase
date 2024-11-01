@@ -170,7 +170,6 @@ async function addOrEditAttendance(req, res) {
         }
 
         const attendancePromises = students.map((student) => {
-            console.log(student)
             return mysqlQuery(
                     /*sql*/ `
                     INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId)
@@ -178,8 +177,7 @@ async function addOrEditAttendance(req, res) {
                     ON DUPLICATE KEY UPDATE
                         checkInDate = VALUES(checkInDate),
                         isPresent = VALUES(isPresent),
-                        wardenId = VALUES(wardenId)
-                    `,
+                        wardenId = VALUES(wardenId)`,
                 [student.studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId],
                 mysqlClient
             );
@@ -187,7 +185,7 @@ async function addOrEditAttendance(req, res) {
 
         await Promise.all(attendancePromises);
 
-        res.status(201).send('Attendance successfully recorded for all students in the room.');
+        res.status(200).send('Attendance successfully recorded.');
     } catch (error) {
         console.log(error)
         res.status(500).send(error.message);
@@ -236,19 +234,19 @@ async function studentAttendanceReport(req, res) {
         errors.push('year')
     }
 
-    if (studentName  === "Select Student") {
+    if (studentName === "Select a Student") {
         errors.push('student')
     }
 
     if (errors.length > 0) {
         let errorMessage;
-    
+
         if (errors.length === 1) {
             errorMessage = `Please select a ${errors[0]} before generating the report.`
         } else {
             errorMessage = `Please select a ${errors.join(", ")} before generating the report.`
         }
-    
+
         return res.status(400).send(errorMessage)
     }
 
@@ -265,7 +263,7 @@ async function studentAttendanceReport(req, res) {
             MONTH(a.checkInDate) = ?
             AND YEAR(a.checkInDate) = ?
             AND s.name = ?`,
-        [month, year, studentName], mysqlClient)
+            [month, year, studentName], mysqlClient)
 
         if (studentReport.length === 0) {
             return res.status(404).send('Student attendance report not found for the selected month and year.')
