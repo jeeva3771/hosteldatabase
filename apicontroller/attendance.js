@@ -226,17 +226,30 @@ async function studentAttendanceReport(req, res) {
         year,
         studentName
     } = req.query
+    var errors = []
 
-    if (!month) {
-        return res.status(400).send('Month is not defined')
+    if (isNaN(month)) {
+        errors.push('month')
     }
 
-    if (!year) {
-        return res.status(400).send('Year is not defined')
+    if (isNaN(year)) {
+        errors.push('year')
     }
 
-    if (!studentName) {
-        return res.status(400).send('Student is not defined')
+    if (studentName  === "Select Student") {
+        errors.push('student')
+    }
+
+    if (errors.length > 0) {
+        let errorMessage;
+    
+        if (errors.length === 1) {
+            errorMessage = `Please select a ${errors[0]} before generating the report.`
+        } else {
+            errorMessage = `Please select a ${errors.join(", ")} before generating the report.`
+        }
+    
+        return res.status(400).send(errorMessage)
     }
 
     try {

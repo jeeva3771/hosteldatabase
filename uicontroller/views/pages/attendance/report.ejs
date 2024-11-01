@@ -1,9 +1,7 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance Report' }) %>
     <h2 class="text-center mb-5">Attendance Report</h2>
     <div class="container d-flex flex-column align-items-center">
-
         <div class="row g-3 justify-content-center mb-4">
-
             <div class="col-auto">
                 <label class="visually-hidden" for="student">Student</label>
                 <select class="form-select" id="student">
@@ -26,16 +24,16 @@
                 <input type="submit" class="btn btn-primary" onclick="renderReport()">
             </div>
         </div>
-            <table class="table table-bordered">
-                <thead>
-                    <tr id="dayHeaders">
-                       
-                    </tr>
-                </thead>
-                <tbody id="dateLabel">
+        <table class="table table-bordered">
+            <thead>
+                <tr id="dayHeaders">
 
-                </tbody>
-            </table>
+                </tr>
+            </thead>
+            <tbody id="dateLabel">
+
+            </tbody>
+        </table>
         <div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -113,6 +111,7 @@
                 }
 
                 function renderReport() {
+                    dayHeaders.innerHTML = '';
                     dateLabel.innerHTML = '';
                     const month = parseInt(selectedMonth.value);
                     const year = parseInt(selectedYear.value);
@@ -123,20 +122,15 @@
                     fetch(`http://localhost:1000/api/attendance/studentattendancereport?month=${month + 1}&year=${year}&studentName=${selectedStudent.value}`)
                         .then(async (response) => {
                             if (!response.ok) {
-                                if (response.status === 404) {
-                                    const errorMessage = await response.text();
-                                    errorModalBody.innerText = errorMessage;
+                                const errorMessage = await response.text();
+                                errorModalBody.innerText = errorMessage;
 
-                                    const modalInstance = new bootstrap.Modal(errorModal);
-                                    return modalInstance.show()
-                                } else {
-                                    alert(await "An error occurred while fetching attendance data.");
-                                }
+                                const modalInstance = new bootstrap.Modal(errorModal);
+                                return modalInstance.show()
                             }
                             return response.json();
                         })
                         .then(data => {
-                            dayHeaders.innerHTML = ''
                             const attendanceData = Object.entries(data).map(([key, value]) => {
                                 return { date: key, status: value }
                             });

@@ -79,7 +79,7 @@
 
                 fetch(url, requestOptions)
                     .then(async (response) => {
-                        if (response.status === 200) {
+                        if (response.status === 201 || 200) {
                             window.location = '/warden'
                         } else {
                             const responseText = await response.json();
