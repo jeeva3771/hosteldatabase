@@ -121,6 +121,98 @@ async function readAttendanceById(req, res) {
     }
 }
 
+async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const date = req.query.date;
+
+    try {
+        const getBlocksStudentCountAndAttendanceCount = await mysqlQuery(/*sql*/`
+            SELECT 
+                bk.blockId,
+                bk.blockCode,
+                COUNT(s.blockId) AS studentsCount, 
+                COUNT(a.checkInDate) AS attendanceCount
+            FROM block AS bk
+            LEFT JOIN student s ON bk.blockId = s.blockId AND s.deletedAt IS NULL
+            LEFT JOIN attendance a ON a.studentId = s.studentId AND a.checkInDate = ?
+            WHERE bk.deletedAt IS NULL AND bk.isActive = 1
+            GROUP BY bk.blockId
+            ORDER BY bk.blockCode ASC`, [date], mysqlClient)
+
+        if (getBlocksStudentCountAndAttendanceCount.length === 0) {
+            return res.status(404).send('No Block is Found')
+        }
+
+        res.status(200).send(getBlocksStudentCountAndAttendanceCount)
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error.message)
+    }
+}
+
+async function readBlockFloorsAndStudentCountAndAttendanceCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const {
+        date,
+        blockId
+    } = req.query
+
+    try {
+        const getBlockFloorsStudentCountAndAttendanceCount = await mysqlQuery(/*sql*/`
+                select 
+                    b.blockFloorId,
+                    b.floorNumber,
+                    count(s.blockFloorId) as studentsCount, 
+                    count(a.checkInDate) as attendanceCount
+                from blockfloor as b
+                left join student s ON b.blockFloorId = s.blockFloorId AND s.deletedAt is null
+                left join attendance a ON a.studentId = s.studentId AND a.checkInDate = ?
+                where b.deletedAt is null and b.isActive = 1 and b.blockId = ?
+                group by b.blockFloorId
+                order by b.floorNumber ASC`, [date, blockId], mysqlClient)
+
+        if (getBlockFloorsStudentCountAndAttendanceCount.length === 0) {
+            console.log('2')
+            return res.status(404).send('No Blockfloor is Found')
+        }
+
+        res.status(200).send(getBlockFloorsStudentCountAndAttendanceCount)
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function readRoomsAndStudentCountAndAttendanceCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const {
+        date,
+        blockFloorId
+    } = req.query;
+
+    try {
+        const getRoomsStudentCountAndAttendanceCount = await mysqlQuery(/*sql*/`
+            select 
+                r.roomId,
+                r.roomNumber,
+                count(s.roomId) as studentsCount, 
+                count(a.checkInDate) as attendanceCount
+            from room as r
+            left join student s ON r.roomId = s.roomId AND s.deletedAt is null
+            left join attendance a ON a.studentId = s.studentId AND a.checkInDate = ?
+            where r.deletedAt is null and r.isActive = 1 and r.blockFloorId = ?
+            group by r.roomId
+            order by r.roomNumber ASC`, [date, blockFloorId], mysqlClient)
+
+            if (getRoomsStudentCountAndAttendanceCount.length === 0) {
+                return res.status(404).send('No Room is found')
+            }
+
+            res.status(200).send(getRoomsStudentCountAndAttendanceCount)
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 async function readRoomStudents(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const { roomId } = req.params;
@@ -191,31 +283,6 @@ async function addOrEditAttendance(req, res) {
         res.status(500).send(error.message);
     }
 }
-
-// async function attendanceListById(req, res) {
-//     const mysqlClient = req.app.mysqlClient;
-//     const studentId = req.params.studentId;
-//     const { startDate, endDate } = req.query
-
-//     try {
-//         const student = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ? `,
-//             [studentId],
-//             mysqlClient
-//         )
-//         if (student.length === 0) {
-//             return res.status(404).send('studentId is invalid')
-//         }
-
-//         const attendanceList = await mysqlQuery(/*sql*/`SELECT * FROM attendance WHERE checkInDate >= ? AND checkInDate <= ? AND studentId = ? `,
-//             [startDate, endDate, studentId],
-//             mysqlClient
-//         )
-//         res.status(200).send(attendanceList)
-//     } catch (error) {
-//         res.status(500).send(error.message)
-//     }
-// }
-
 
 async function studentAttendanceReport(req, res) {
     const mysqlClient = req.app.mysqlClient
@@ -354,8 +421,10 @@ async function validateInsertItems(params, body, mysqlClient) {
 module.exports = (app) => {
     app.get('/api/attendance', readAttendances)
     app.get('/api/attendance/studentattendancereport', studentAttendanceReport)
+    app.get('/api/attendance/block', readBlocksAndStudentCountAndAttendanceCount)
+    app.get('/api/attendance/blockfloor', readBlockFloorsAndStudentCountAndAttendanceCount)
+    app.get('/api/attendance/room', readRoomsAndStudentCountAndAttendanceCount)
     app.get('/api/attendance/:attendanceId', readAttendanceById)
     app.get('/api/attendance/student/:roomId', readRoomStudents)
     app.post('/api/attendance/:blockId/:blockFloorId/:roomId', addOrEditAttendance)
-    // app.get('/api/attendance/student/:studentId', attendanceListById)
 }

@@ -597,3 +597,39 @@ ADD CONSTRAINT unique_block_floor UNIQUE (blockId, floorNumber);
 
 ALTER TABLE room 
 ADD CONSTRAINT unique_room UNIQUE (blockId, blockFloorId, roomNumber);
+
+select 
+	b.blockId,
+    b.blockCode,
+    count(s.blockId) as studentsCount, 
+    count(a.checkInDate) as attendanceCount
+from block as b
+left join student s ON b.blockId = s.blockId AND s.deletedAt is null
+left join attendance a ON a.studentId = s.studentId AND a.checkInDate = '2024-11-02'
+where b.deletedAt is null and b.isActive=1
+group by b.blockId
+order by b.blockCode ASC
+
+select 
+	b.blockFloorId,
+    b.floorNumber,
+    count(s.blockFloorId) as studentsCount, 
+    count(a.checkInDate) as attendanceCount
+from blockfloor as b
+left join student s ON b.blockFloorId = s.blockFloorId AND s.deletedAt is null
+left join attendance a ON a.studentId = s.studentId AND a.checkInDate = '2024-11-02'
+where b.deletedAt is null and b.isActive = 1 and b.blockId = '57'
+group by b.blockFloorId
+order by b.floorNumber ASC
+
+select 
+	r.roomId,
+    r.roomNumber,
+    count(s.roomId) as studentsCount, 
+    count(a.checkInDate) as attendanceCount
+from room as r
+left join student s ON r.roomId = s.roomId AND s.deletedAt is null
+left join attendance a ON a.studentId = s.studentId AND a.checkInDate = '2024-11-02'
+where r.deletedAt is null and r.isActive = 1 and r.blockFloorId = 41
+group by r.roomId
+order by r.roomNumber ASC

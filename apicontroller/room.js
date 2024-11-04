@@ -129,7 +129,7 @@ async function readStudentOrRoomNumberCountByRoomId(req, res) {
         sqlQuery += ` FROM room AS r
                       WHERE r.blockFloorId = ?
                       AND r.isActive = 1
-                      AND r.deletedAt IS NULL`;
+                      AND r.deletedAt IS NULL ORDER BY r.roomNumber ASC`;
 
         const studentCountByRoomId = await mysqlQuery(sqlQuery, [blockFloorId], mysqlClient);
 

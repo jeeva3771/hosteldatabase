@@ -16,7 +16,6 @@ async function readBlockFloors(req, res) {
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, searchPattern]
     const status = req.query.isActive;
-    console.log(status)
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -158,9 +157,9 @@ async function readRoomBlockFloorCountOrFloorCount(req, res) {
 
         sqlQuery += ` FROM blockfloor AS b
             WHERE b.blockId = ? AND b.isActive = 1
-            AND b.deletedAt IS NULL`;
+            AND b.deletedAt IS NULL ORDER BY b.floorNumber ASC`;
 
-        const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
+            const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
 
         if (roomBlockFloorCount.length === 0) {
             return res.status(404).send('No BlockFloors found');

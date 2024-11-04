@@ -114,7 +114,7 @@ async function readBlockFloorBlockCodeCount(req, res) {
                 AND b.deletedAt IS NULL) AS floorCount 
                 FROM block bk 
                 WHERE isActive = 1 
-                AND deletedAt IS NULL`;
+                AND deletedAt IS NULL ORDER BY bk.blockCode ASC`;
 
         const queryParams = [];
         if (blockId) {
@@ -130,6 +130,30 @@ async function readBlockFloorBlockCodeCount(req, res) {
 
         res.status(200).send(blockFloorBlockCodeCount);
     } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
+async function readBlockAttendancePercentage(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const blockId = req.query.blockId
+    console.log(blockId)
+    try {
+        const blockCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student WHERE blockId = ?`,
+            [blockId], mysqlClient)
+
+        if (blockCount.length === 0) {
+            return res.status(404).send('No student in block')
+        }
+
+        const checkInDateCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM attendance WHERE 
+        blockId = ? AND checkInDate = DATE(NOW())`, [blockId], mysqlClient)
+
+        var calculationPercentage = blockCount[0].count / checkInDateCount[0].count * 100
+        
+        res.status(200).send(calculationPercentage)
+    } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -181,7 +205,6 @@ async function updateBlockById(req, res) {
     updates.push("updatedBy = ?")
     values.push(updatedBy, blockId)
     const mysqlClient = req.app.mysqlClient
-    const blockCode = req.body.blockCode;
 
     try {
         const block = await validateBlockById(blockId, mysqlClient);
@@ -275,7 +298,6 @@ async function validateBlockById(blockId, mysqlClient) {
 
 async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
     const { blockCode, blockLocation, isActive } = body;
-    console.log(blockCode)
     const errors = [];
 
     try {
@@ -349,6 +371,7 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
+    app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
     app.get('/api/block/blockFloor/blockCodeCount', readBlockFloorBlockCodeCount)
     app.post('/api/block', createBlock)

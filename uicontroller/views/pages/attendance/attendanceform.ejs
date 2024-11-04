@@ -1,126 +1,62 @@
 <%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
     <h2 class="text-center mb-4">Attendance Form</h2>
+    <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" class="form-control dateLabel" id="checkIn" onchange="populateBlockCode()">
+    </div>
     <div class="container text-center">
-        <div class="row justify-content-center">
-            <div class="col-auto">
-                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3" id="blockCode">
+        <div class="row justify-content-center" id="blockCodeContainer">
+            <p><strong>Block</strong></p>
+            <div class="col-5">
+                <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
                 </div>
             </div>
         </div>
     </div>
+    <div class="row justify-content-center hidden" id="floorNumberContainer">
+        <p><strong>Floor Number</strong></p>
+        <div class="col-2">
+            <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center hidden" id="roomNumberContainer">
+        <p><strong>Room Number</strong></p>
+        <div class="col-2">
+            <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
+            </div>
+        </div>
+    </div>
 
+    <div id="studentContainer" class="hidden">
+
+        <div id="studentList">
+            
+
+        </div>
+        <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success" id="submitButton"
+            >Submit</button>
+    </div>
 
     <%- include('../../partials/footer.ejs') %>
         <script>
             const urlParams = new URLSearchParams(window.location.search);
+            var blockCodeContainer = document.getElementById('blockCodeContainer');
             var blockCode = document.getElementById('blockCode');
+            var floorNumberContainer = document.getElementById('floorNumberContainer');
             var floorNumber = document.getElementById('floorNumber');
+            var roomNumberContainer = document.getElementById('roomNumberContainer');
             var roomNumber = document.getElementById('roomNumber');
             var checkIn = document.getElementById('checkIn');
-            var studentList = document.getElementById('studentList');
-            var submitButton = document.getElementById('submitButton');
-            const today = new Date().toISOString().split('T')[0];
-            // checkIn.value = today;
-
-            async function populateBlockCode() {
-                try {
-                    const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block/blockFloor/blockCodeCount?blockId=${myParam}` :
-                        'http://localhost:1000/api/block/blockFloor/blockCodeCount';
-                    const response = await fetch(url);
-                    const blocks = await response.json();
-
-                    blockCode.innerHTML = ''
-                    blocks.forEach(block => {
-                        const blockDom = document.createElement('a');
-                        blockDom.className = 'col btn btn-outline-dark';
-                        blockDom.textContent = block.blockCode;
-                        blockDom.href = '#';
-
-                        if (block.floorCount === 0) {
-                            blockDom.classList.add('disabled');
-                        } else {
-                            blockDom.addEventListener('click', async () => {
-                                await populateFloorNumber();
-                            });
-                        }
-
-                        blockCode.appendChild(blockDom);
-                    });
-                    if (myParam) {
-                        blockCode.value = myParam;
-                        await populateFloorNumber();
-                    }
-                } catch (error) {
-                    console.log('Error fetching block codes:', error);
-                }
-            }
-            populateBlockCode()
-
-            async function populateFloorNumber() {
-                try {
-                    const myParam = urlParams.get('blockFloorId');
-                    const blockId = blockCode.value;
-
-                    const response = await fetch
-                        (`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&blockFloor=true`);
-                    const blockFloors = await response.json();
-
-                    floorNumber.innerHTML = '';
-
-                    blockFloors.forEach(blockFloor => {
-                        const blockFloorDom = document.createElement('a');
-                        blockFloorDom.className = 'col btn btn-outline-dark';
-                        blockFloorDom.textContent = blockFloor.floorNumber;
-                        blockFloorDom.href = '#';
-
-                        if (blockFloor.roomCount === 0) {
-                            blockFloorDom.classList.add('disabled');
-                        } else {
-                            blockFloorDom.addEventListener('click', async () => {
-                                await populateRoomNumber();
-                            });
-                        }
-                        floorNumber.appendChild(blockFloorDom);
-                    });
-
-                    if (myParam) {
-                        floorNumber.value = myParam;
-                        await populateRoomNumber()
-                    }
-
-                } catch (error) {
-                    console.log('Error fetching floor numbers:', error);
-                }
-            }
-
-
-        </script>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <!-- <script>
-            const urlParams = new URLSearchParams(window.location.search);
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var roomNumber = document.getElementById('roomNumber');
-            var checkIn = document.getElementById('checkIn');
+            var studentContainer = document.getElementById('studentContainer');
             var studentList = document.getElementById('studentList');
             var submitButton = document.getElementById('submitButton');
             const today = new Date().toISOString().split('T')[0];
             checkIn.value = today;
+            let currentBlockId = null;
+            let currentBlockFloorId = null;
+            let currentRoomId = null;
+
 
             function convertToISO(checkIn) {
                 let [year, month, day] = checkIn.split('-');
@@ -198,6 +134,7 @@
                         .catch(error => console.error('error', error));
                 }
             }
+            
 
             function toggleSubmitButton() {
                 const students = document.querySelectorAll('#studentList li');
@@ -211,192 +148,230 @@
                 });
 
                 submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value !== 'Select' &&
-                    roomNumber.value !== 'Select' &&
-                    checkIn.value !== '' &&
                     allStatusSelected
                 );
             }
 
-            async function initializeForm() {
-                await populateBlockCode();
-                await populateFloorNumber();
-                await populateRoomNumber();
-                await populateStudentList()
-
-                blockCode.addEventListener('change', populateFloorNumber);
-                floorNumber.addEventListener('change', populateRoomNumber);
-                roomNumber.addEventListener('change', populateStudentList);
-                studentList.addEventListener('change', toggleSubmitButton);
-
-            }
-
-            initializeForm();
-
             async function populateBlockCode() {
+                blockCode.innerHTML = ''
+                var activeOptions = [];
+                var disabledOptions = [];
+
                 try {
+                    if (!checkIn.value || checkIn.value > today) {
+                        return;
+                    }
+
                     const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/block/blockFloor/blockCodeCount?blockId=${myParam}` :
-                        'http://localhost:1000/api/block/blockFloor/blockCodeCount';
+                    const url = myParam ? `http://localhost:1000/api/attendance/block?blockId=${myParam}` :
+                        `http://localhost:1000/api/attendance/block?date=${checkIn.value}`;
+
+                    var myHeaders = new Headers();
+
+                    var requestOptions = {
+                        method: 'GET',
+                        headers: myHeaders,
+                        redirect: 'follow'
+                    };
+
                     const response = await fetch(url);
                     const blocks = await response.json();
 
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
-                    blockCode.innerHTML = '<option selected>Select a Block</option>';
-
-                    blocks.forEach(block => {
-                        const option = document.createElement('option');
-                        option.value = block.blockId;
-                        option.textContent = `${block.blockCode} (Floors: ${block.floorCount})`;
-                        if (block.floorCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
+                    blocks.forEach(async (block) => {
+                        if (myParam) {
+                            blockCode.value = myParam;
+                            return await populateFloorNumber(myParam);
                         }
-                    });
 
-                    activeOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
+                        const blockDom = document.createElement('button');
+                        blockDom.className = 'col btn btn-outline-dark me-2';
+                        blockDom.value = block.blockId;
+                        blockDom.textContent = block.blockCode;
+                        var blockBasedPercentage = block.attendanceCount / block.studentsCount * 100
 
-                    disabledOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
+                        if (block.studentsCount === 0) {
+                            blockDom.classList.add('disabled')
+                            disabledOptions.push(blockDom)
+                        } else if (blockBasedPercentage === 100) {
+                            blockDom.style.backgroundColor = 'green'
+                            activeOptions.push(blockDom)
+                        } else if (block.attendanceCount > 0 && blockBasedPercentage < 99) {
+                            blockDom.style.backgroundColor = 'orange'
+                            activeOptions.push(blockDom)
+                        } else {
+                            blockDom.style.backgroundColor = 'red'
+                            activeOptions.push(blockDom)
+                        }
 
-                    if (myParam) {
-                        blockCode.value = myParam;
-                        await populateFloorNumber();
-                    }
+                        blockDom.onclick = () => {
+                            currentBlockId = block.blockId;
+                            populateFloorNumber(block.blockId);
+                            blockCodeContainer.style.display = 'none';
+                            floorNumberContainer.style.display = 'block';
+                        };
+                    })
+
+                    activeOptions.forEach(block => {
+                        blockCode.appendChild(block);
+                    })
+
+                    disabledOptions.forEach(block => {
+                        blockCode.appendChild(block);
+                    })
                 } catch (error) {
                     console.log('Error fetching block codes:', error);
                 }
             }
 
-            async function populateFloorNumber() {
+            async function populateFloorNumber(blockId) {
+                floorNumber.innerHTML = ''
+                var activeOptions = [];
+                var disabledOptions = [];
                 try {
-                    const myParam = urlParams.get('blockFloorId');
-                    const blockId = blockCode.value;
-
-                    if (blockId === 'Select' || blockId === '') {
-                        floorNumber.innerHTML = 'No rooms available';
+                    if (!checkIn.value || checkIn.value > today) {
                         return;
                     }
 
-                    const response = await fetch
-                        (`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}&blockFloor=true`);
+                    const myParam = urlParams.get('blockFloorId');
+                    const url = myParam ? `http://localhost:1000/api/attendance/blockfloor?date=${checkIn.value}&blockId=${myParam}` :
+                        `http://localhost:1000/api/attendance/blockfloor?date=${checkIn.value}&blockId=${blockId}`;
+
+                    var myHeaders = new Headers();
+                    var requestOptions = {
+                        method: 'GET',
+                        headers: myHeaders,
+                        redirect: 'follow'
+                    };
+
+                    const response = await fetch(url);
                     const blockFloors = await response.json();
 
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
-                    floorNumber.innerHTML = '<option selected>Select a Floor</option>';
-
-                    blockFloors.forEach(blockFloor => {
-                        const option = document.createElement('option');
-                        option.value = blockFloor.blockFloorId;
-                        option.textContent = `${blockFloor.floorNumber} (Rooms: ${blockFloor.roomCount})`;
-                        if (blockFloor.roomCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
+                    blockFloors.forEach(async (blockFloor) => {
+                        if (myParam) {
+                            floorNumber.value = myParam;
+                            return await populateRoomNumber(blockFloor.blockFloorId)
                         }
-                    });
 
-                    activeOptions.forEach(option => {
-                        floorNumber.appendChild(option);
-                    });
+                        const blockFloorDom = document.createElement('button');
+                        blockFloorDom.className = 'col btn btn-outline-dark me-2';
+                        blockFloorDom.value = blockFloor.blockFloorId;
+                        blockFloorDom.textContent = blockFloor.floorNumber;
+                        var blockFloorBasedPercentage = blockFloor.attendanceCount / blockFloor.studentsCount * 100
 
-                    disabledOptions.forEach(option => {
-                        floorNumber.appendChild(option);
-                    });
+                        if (blockFloor.studentsCount === 0) {
+                            blockFloorDom.classList.add('disabled')
+                            disabledOptions.push(blockFloorDom)
+                        } else if (blockFloorBasedPercentage === 100) {
+                            blockFloorDom.style.backgroundColor = 'green'
+                            activeOptions.push(blockFloorDom)
+                        } else if (blockFloor.attendanceCount > 0 && blockFloorBasedPercentage < 99) {
+                            blockFloorDom.style.backgroundColor = 'orange'
+                            activeOptions.push(blockFloorDom)
+                        } else {
+                            blockFloorDom.style.backgroundColor = 'red'
+                            activeOptions.push(blockFloorDom)
+                        }
 
+                        activeOptions.forEach(blockFloor => {
+                            floorNumber.appendChild(blockFloor);
+                        })
 
-                    if (myParam) {
-                        floorNumber.value = myParam;
-                        await populateRoomNumber
-                    }
+                        disabledOptions.forEach(blockFloor => {
+                            floorNumber.appendChild(blockFloor);
+                        })
 
+                        blockFloorDom.onclick = () => {
+                            currentBlockFloorId = blockFloor.blockFloorId;
+                            populateRoomNumber(blockFloor.blockFloorId);
+                            floorNumberContainer.style.display = 'none';
+                            roomNumberContainer.style.display = 'block';
+                        };
+                    })
                 } catch (error) {
-                    console.log('Error fetching floor numbers:', error);
+                    console.log('Error fetching BlockFloor codes:', error);
                 }
             }
 
-            async function populateRoomNumber() {
+            async function populateRoomNumber(blockFloorId) {
+                roomNumber.innerHTML = '';
+                var activeOptions = [];
+                var disabledOptions = [];
                 try {
-                    const myParam = urlParams.get('roomId');
-                    const blockFloorId = floorNumber.value;
-
-                    if (blockFloorId === 'Select' || blockFloorId === '') {
-                        roomNumber.innerHTML = '';
+                    if (!checkIn.value || checkIn.value > today) {
                         return;
                     }
 
-                    const response = await fetch
-                        (`http://localhost:1000/api/room/student/count?blockFloorId=${blockFloorId}&student=true`);
+                    const myParam = urlParams.get('roomId');
+                    const url = myParam ? `http://localhost:1000/api/attendance/room?date=${checkIn.value}&blockFloorId=${myParam}` :
+                        `http://localhost:1000/api/attendance/room?date=${checkIn.value}&blockFloorId=${blockFloorId}`;
+
+                    var myHeaders = new Headers();
+
+                    var requestOptions = {
+                        method: 'GET',
+                        headers: myHeaders,
+                        redirect: 'follow'
+                    };
+
+                    const response = await fetch(url);
                     const rooms = await response.json();
 
-                    if (rooms.length === 0) {
-                        roomNumber.innerHTML = '<option selected>No rooms available</option>';
-                        return;
-                    }
+                    rooms.forEach(async (room) => {
 
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
-                    roomNumber.innerHTML = '<option selected>Select a Room</option>';
-
-                    rooms.forEach(room => {
-                        const option = document.createElement('option');
-                        option.value = room.roomId;
-                        option.textContent = `${room.roomNumber} (Students: ${room.studentCount})`;
-                        if (room.studentCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
+                        if (myParam) {
+                            roomNumber.value = myParam;
+                            return await populateStudentList(room.roomId)
                         }
-                    });
 
-                    activeOptions.forEach(option => {
-                        roomNumber.appendChild(option);
-                    });
+                        const roomDom = document.createElement('button');
+                        roomDom.className = 'col btn btn-outline-dark me-2';
+                        roomDom.value = room.roomId;
+                        roomDom.textContent = room.roomNumber;
+                        var roomBasedPercentage = room.attendanceCount / room.studentsCount * 100
 
-                    disabledOptions.forEach(option => {
-                        roomNumber.appendChild(option);
-                    });
+                        if (room.studentsCount === 0) {
+                            roomDom.classList.add('disabled')
+                            disabledOptions.push(roomDom)
+                        } else if (roomBasedPercentage === 100) {
+                            roomDom.style.backgroundColor = 'green'
+                            activeOptions.push(roomDom)
+                        } else if (room.attendanceCount > 0 && roomBasedPercentage < 99) {
+                            roomDom.style.backgroundColor = 'orange'
+                            activeOptions.push(roomDom)
+                        } else {
+                            roomDom.style.backgroundColor = 'red'
+                            activeOptions.push(roomDom)
+                        }
 
-                    if (myParam) {
-                        roomNumber.value = myParam;
-                        await populateStudentList
-                    }
+                        activeOptions.forEach(room => {
+                            roomNumber.appendChild(room);
+                        })
+
+                        disabledOptions.forEach(room => {
+                            roomNumber.appendChild(room);
+                        })
+
+                        roomDom.onclick = () => {
+                            currentRoomId = room.roomId
+                            populateStudentList(room.roomId);
+                            roomNumberContainer.style.display = 'none';
+                            studentContainer.style.display = 'block';
+                        };
+                    });
 
                 } catch (error) {
-                    console.log('Error fetching room numbers:', error);
+                    console.log('Error fetching Room codes:', error);
                 }
             }
 
-            async function populateStudentList() {
-                try {
-                    const roomId = roomNumber.value;
-                    if (roomId === 'Select') {
-                        studentList.innerHTML = '';
-                        return;
-                    }
+            async function populateStudentList(roomId) {
+                studentList.innerHTML = '';
 
+                try {
                     const response = await fetch(`http://localhost:1000/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
                     const students = await response.json();
 
-                    if (students.length === 0) {
-                        studentList.innerHTML = '<li class="list-group-item">No students available</li>';
-                        return;
-                    }
 
-                    studentList.innerHTML = '';
                     students.forEach(student => {
                         const isPresentChecked = student.isPresent === 1 ? 'checked' : '';
                         const isAbsentChecked = student.isPresent === 0 ? 'checked' : '';
@@ -404,15 +379,15 @@
                         const li = document.createElement('li');
                         li.classList.add('list-group-item');
                         li.innerHTML = `
-                <span>${student.name}</span>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}" ${isPresentChecked}>
-                    <label class="form-check-label" for="present_${student.studentId}">Present</label>
-                </div>
-                <div class="form-check form-check-inline float-right">
-                    <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}" ${isAbsentChecked}>
-                    <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
-                </div>`;
+                        <span>${student.name}</span>
+                        <div class="form-check form-check-inline float-right">
+                            <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="1" id="present_${student.studentId}" ${isPresentChecked}>
+                            <label class="form-check-label" for="present_${student.studentId}">Present</label>
+                        </div>
+                        <div class="form-check form-check-inline float-right">
+                            <input class="form-check-input" type="radio" name="isPresent_${student.studentId}" value="0" id="absent_${student.studentId}" ${isAbsentChecked}>
+                            <label class="form-check-label" for="absent_${student.studentId}">Absent</label>
+                        </div>`;
 
                         studentList.appendChild(li);
                     });
@@ -422,4 +397,37 @@
                 }
             }
 
-        </script> -->
+
+            checkIn.addEventListener('change', () => {
+                if (checkIn.value > today) {
+                    // if (blockCodeContainer.style.display === 'block') {
+                    //     blockCode.innerHTML = '';
+                    //     blockCodeContainer.innerHTML = '';
+                    //     blockCodeContainer.style.display = 'none';
+                    // } else if (floorNumberContainer.style.display === 'block') {
+                    //     floorNumber.innerHTML = '';
+                    //     floorNumberContainer.innerHTML = '';
+                    //     floorNumberContainer.style.display = 'none';
+                    // } else if (roomNumberContainer.style.display === 'block') {
+                    //     roomNumber.innerHTML = '';
+                    //     roomNumberContainer.style.display = 'none';
+                    // } else if (studentContainer.style.display === 'block') {
+                    //     studentList.innerHTML = '';
+                    //     studentContainer.style.display = 'none';
+                    // }
+                    alert('Date cannot be in the future');
+                }
+
+                if (floorNumberContainer.style.display === 'block') {
+                    return populateFloorNumber(currentBlockId)
+                } else if (roomNumberContainer.style.display === 'block') {
+                    return populateRoomNumber(currentBlockFloorId);
+                } else if (studentContainer.style.display === 'block') {
+                    return populateStudentList(currentRoomId)
+                }
+            });
+
+            window.addEventListener('load', () => {
+                populateBlockCode()
+            })
+        </script>

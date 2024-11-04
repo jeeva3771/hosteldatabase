@@ -151,7 +151,7 @@ async function getStudentsForAttendanceReport(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
         var studentsForAttendanceReport = await mysqlQuery(/*sql*/`
-        SELECT name, registerNumber FROM student WHERE deletedAt IS NULL`,
+        SELECT name, registerNumber FROM student WHERE deletedAt IS NULL ORDER BY name ASC`,
         [], mysqlClient
         )
 
