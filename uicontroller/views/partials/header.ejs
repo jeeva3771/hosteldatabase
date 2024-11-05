@@ -9,7 +9,7 @@
   </title>
   <style>
     .container-main {
-      width: 90%;
+      width: 100%;
       margin: 0 5%;
     }
 
@@ -21,14 +21,6 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, .1), 0 8px 16px rgba(0, 0, 0, .1);
       padding: 14px;
-    }
-
-    .spaceAlign {
-      margin-left: 18px;
-    }
-
-    .spaceAlign-2 {
-      margin-left: 14px;
     }
 
     .hidden {
@@ -92,7 +84,23 @@
     .clr2 {
       background-color: red;
     }
+
+    .clr3 {
+      background-color: orange;
+    }
+
+    .clr4 {
+      background-color: #adb5bd;
+    }
     
+    .controlInputType {
+      width: 170px;
+    }
+
+    #checkIn {
+    width: 150px;
+    margin: 0 auto;
+}
   </style>
 </head>
 
@@ -151,11 +159,11 @@
             <ol class="breadcrumb">
               <% for (let i=0; i < breadcrumb.length; i++) { %>
                 <% if (i===breadcrumb.length - 1) { %>
-                  <li class="breadcrumb-item active" aria-current="page"><a href="<%= breadcrumb[i].link %>">
+                  <li class="breadcrumb-item active small" aria-current="page"><a href="<%= breadcrumb[i].link %>">
                       <%= breadcrumb[i].name %>
                     </a></li>
                   <% } else { %>
-                    <li class="breadcrumb-item"><a href="<%= breadcrumb[i].link %>">
+                    <li class="breadcrumb-item small"><a href="<%= breadcrumb[i].link %>">
                         <%= breadcrumb[i].name %>
                       </a></li>
                     <% } %>

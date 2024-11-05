@@ -25,7 +25,7 @@
         </div>
     </div>
     <div class="row justify-content-center">
-        <table class="table table-bordered w-25 mb-4">
+        <table class="table table-bordered w-25 mb-4 border border-dark-subtle">
             <thead>
                 <tr id="dayHeaders"></tr>
             </thead>
@@ -38,7 +38,7 @@
             <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
             <span class="ms-2">Absent</span>
 
-            <div class="p-2 smallBox mt-0 clr3 ms-3 rounded-0 border border-1"></div>
+            <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1"></div>
             <span class="ms-2">Not Marked</span>
         </div>
     </div>
@@ -155,6 +155,7 @@
 
                                     if (attendanceRecord) {
                                         cell.style.backgroundColor = attendanceRecord.status === 1 ? 'green' : 'red';
+                                        cell.classList.add('text-white');
                                     }
                                     date++;
                                 }

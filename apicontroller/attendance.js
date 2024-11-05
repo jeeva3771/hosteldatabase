@@ -404,6 +404,7 @@ async function validateInsertItems(params, body, mysqlClient) {
                 errors.push('checkInDate cannot be in the future');
             }
         }
+        console.log(errors)
     } else {
         errors.push('checkInDate is missing')
     }
