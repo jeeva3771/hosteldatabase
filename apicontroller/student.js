@@ -24,7 +24,7 @@ async function readStudents(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern]
+    const queryParameters = [searchPattern, searchPattern, limit, offset];
 
     var studentsQuery = /*sql*/`
         SELECT 
@@ -58,12 +58,8 @@ async function readStudents(req, res) {
             s.deletedAt IS NULL 
             AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
             ORDER BY 
-            ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        studentsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit, offset)
-    }
+            ${orderBy} ${sort}
+            LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 

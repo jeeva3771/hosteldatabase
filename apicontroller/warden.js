@@ -29,6 +29,8 @@ async function readWardens(req, res) {
     const orderBy = req.query.orderby || 'w.firstName';
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const queryParameters = [searchPattern, searchPattern, limit, offset];
 
     var wardensQuery = /*sql*/`
         SELECT 
@@ -61,9 +63,8 @@ async function readWardens(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
-        const searchPattern = `%${searchQuery}%`;
         const [wardens, totalCount] = await Promise.all([
-            mysqlQuery(wardensQuery, [searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(wardensQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 

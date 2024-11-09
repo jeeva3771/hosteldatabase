@@ -18,16 +18,17 @@ const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
 
 //uicontroller
-const homeUi = require('./ui/homeui.js');
-const courseUi = require('./ui/courseui.js');
-const blockUi = require('./ui/blockui.js');
-const blockFloorUi = require('./ui/blockfloorui.js');
-const roomUi = require('./ui/roomui.js');
-const wardenUi = require('./ui/wardenui.js');
-const studentUi = require('./ui/studentui.js');
-const attendanceUi = require('./ui/attendanceui.js');
+const homeUi = require('./uicontroller/page/homeui.js');
+const courseUi = require('./uicontroller/page/courseui.js');
+const blockUi = require('./uicontroller/page/blockui.js');
+const blockFloorUi = require('./uicontroller/page/blockfloorui.js');
+const roomUi = require('./uicontroller/page/roomui.js');
+const wardenUi = require('./uicontroller/page/wardenui.js');
+const studentUi = require('./uicontroller/page/studentui.js');
+const attendanceUi = require('./uicontroller/page/attendanceui.js');
 
 const app = express()
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
 app.use(pinoReqLogger)
 app.use(cookieParser());
@@ -40,10 +41,17 @@ app.use(session({
         maxAge: (1000 * 60 * 15)
     }
 }));
-const urlOption = ['/login', '/api/login', '/warden/resetpassword', '/api/warden/generateotp', '/api/warden/resetpassword']
+
+const pageSessionExclude = [
+    '/login', 
+    '/api/login', 
+    '/warden/resetpassword', 
+    '/api/warden/generateotp',
+    '/api/warden/resetpassword'
+]
 
 app.use((req, res, next) => {
-    if (urlOption.includes(req.originalUrl)) {
+    if (pageSessionExclude.includes(req.originalUrl)) {
         return next()
     }
 
@@ -61,7 +69,6 @@ app.use((req, res, next) => {
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.mysqlClient = mysql.createConnection({
     host: 'localhost',

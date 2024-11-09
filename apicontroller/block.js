@@ -14,7 +14,6 @@ async function readBlocks(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
 
     var blocksQuery = /*sql*/`
         SELECT 
@@ -37,17 +36,9 @@ async function readBlocks(req, res) {
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
             w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
-    }
-
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
-    }
+            w2.lastName LIKE ?)
+        ORDER BY ${orderBy} ${sort}
+        LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
@@ -66,6 +57,7 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -276,6 +268,24 @@ async function deleteBlockById(req, res) {
     }
 }
 
+async function readBlockCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+
+    try {
+    const getBlockCount = await mysqlQuery(/*sql*/`
+        SELECT COUNT(*) AS totalBlockCount 
+        FROM block 
+        WHERE deletedAt IS NULL`, [], mysqlClient)
+ 
+        if (getBlockCount) {
+            return res.status(404).send('No Block count content found')
+        }
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
         mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
@@ -373,7 +383,8 @@ module.exports = (app) => {
     app.get('/api/block', readBlocks)
     app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
-    app.get('/api/block/blockFloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/blockfloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)

@@ -186,7 +186,7 @@
 
                     const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
                     const blockFloors = await response.json();
-                    console.log(blockFloors)
+
                     const activeOptions = [];
                     const disabledOptions = [];
 
@@ -243,6 +243,5 @@
                     console.error('Error fetching room details:', error);
                 }
             }
-
 
         </script>

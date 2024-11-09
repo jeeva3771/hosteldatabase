@@ -14,8 +14,7 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern]
-    const status = req.query.isActive;
+    const queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset]
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -36,20 +35,9 @@ async function readBlockFloors(req, res) {
               warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
-            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)`;
-
-    if (status !== undefined) {
-        console.log('Adding');
-        blockFloorsQuery += ` AND b.isActive = 1`;
-        console.log('Adding isActive condition');
-    }
-
-    blockFloorsQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blockFloorsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit, offset);
-    }
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
+            ORDER BY ${orderBy} ${sort}
+            LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 
@@ -109,35 +97,6 @@ async function readBlockFloorById(req, res) {
         res.status(500).send(error.message)
     }
 }
-
-// async function readRoomBlockFloorCount(req, res) {
-//     const mysqlClient = req.app.mysqlClient;
-//     const blockId = req.query.blockId;
-//     try {
-//         var roomBlockFloorCount = await mysqlQuery(/*sql*/`SELECT 
-//             blockFloorId, 
-//             floorNumber,
-//             (SELECT COUNT(*)
-//             FROM room AS r
-//             WHERE r.blockFloorId = b.blockFloorId
-//             AND r.deletedAt IS NULL) AS roomCount
-//             FROM blockfloor AS b
-//             WHERE b.blockId = ? AND b.isActive = 1
-//             AND b.deletedAt IS NULL`,
-//             [blockId], 
-//             mysqlClient
-//         )
-
-//     if (roomBlockFloorCount.length === 0) {
-//         return res.status(404).send('No blockfloors found');
-//     }
-//         res.status(200).send(roomBlockFloorCount)
-//     } catch (error) {
-//         res.status(500).send(error.message)
-//     }
-// }
-
-
 
 async function readRoomBlockFloorCountOrFloorCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
