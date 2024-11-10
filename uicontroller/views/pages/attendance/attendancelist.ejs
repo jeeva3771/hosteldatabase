@@ -1,8 +1,11 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendancepage' }) %>
+<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance List' }) %>
     <div class="contentMain">
         <div class="d-flex justify-content-between align-items-center my-2">
             <h3 class="col-auto me-2 controlAlign">Attendance</h3>
             <div class="d-flex align-items-center">
+                <div class="mx-1">
+                    <a class="btn btn-secondary" href="/attendance/report">Report</a>
+                </div>
                 <div class="mx-1">
                     <select class="form-select" id="limit" onchange="changeLimit()">
                         <option value="50" href="#">50</option>
@@ -11,14 +14,11 @@
                         <option value="200" href="#">200</option>
                     </select>
                 </div>
-                <div class="mx-1">
-                    <form onkeyup="handleSearch(event)">
-                        <input class="form-control" id="searchInput" type="search" placeholder="Search"
-                            aria-label="Search">
-                    </form>
+                <div class="mx-1" onkeyup="handleSearch(event)">
+                    <input class="form-control" id="searchInput" type="search" placeholder="Search" aria-label="Search">
                 </div>
                 <div class="mx-1">
-                    <a class="btn btn-info" href="/attendance/add">Take Attendance</a>
+                    <a class="btn btn-primary" href="/attendance/add">Take Attendance</a>
                 </div>
             </div>
         </div>
@@ -35,15 +35,7 @@
                 </tr>
             </thead>
             <tbody id="attendancesData">
-                <tr>
-                    <td>
-                        <div class="d-flex justify-content-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden"></span>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
+
             </tbody>
         </table>
         <nav aria-label="Page navigation example">
@@ -54,10 +46,15 @@
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
-            var searchQuery = ''
+            var searchQuery = '';
+            var searchReport = '';
             var tableData = document.getElementById("attendancesData");
             var limit = document.getElementById("limit").value;
             var paginationDom = document.getElementById("pagination");
+            const existingModal = document.getElementById('attendanceModal');
+            var monthSelect = document.getElementById("monthSelect");
+            var yearSelect = document.getElementById("yearSelect");
+            var dateLabel = document.getElementById('dateLabel');
             var columnSortOrders = {
                 studentId: 'ASC',
                 registerNumber: 'ASC',
@@ -65,9 +62,31 @@
                 isPresent: 'ASC',
                 wardenId: 'ASC'
             };
+            const currentTime = new Date();
+            const currentYear = currentTime.getFullYear();
+            const yearRange = 20;
 
             var currentColumn = 'createdAt';
             var url = `&orderby=a.${currentColumn}&sort=DESC`;
+
+            function populateDropDown() {
+                for (let i = 0; i < 12; i++) {
+                    var monthOption = document.createElement('option')
+                    monthOption.value = i
+                    monthOption.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
+                    monthSelect.appendChild(monthOption)
+                }
+
+                for (let i = currentYear - yearRange; i <= currentYear; i++) {
+                    var yearOption = document.createElement('option')
+                    yearOption.value = i
+                    yearOption.textContent = i
+                    yearSelect.appendChild(yearOption)
+                }
+
+                monthSelect.value = currentTime.getMonth()
+                yearSelect.value = currentYear
+            }
 
             function changeLimit() {
                 limit = document.getElementById("limit").value
@@ -75,33 +94,43 @@
             }
 
             function handleSearch(event) {
-                event.preventDefault();
-                searchQuery = document.getElementById("searchInput").value;
-                attendancePage();
+                event.preventDefault()
+                searchQuery = document.getElementById("searchInput").value
+                attendancePage()
             }
 
             function sortByColumn(column, sortOrder) {
-                columnSortOrders[column] = sortOrder;
-                currentColumn = column;
-                url = `&orderby=a.${currentColumn}&sort=${sortOrder}`;
-                wardenPage(currentPage);
+                columnSortOrders[column] = sortOrder
+                currentColumn = column
+                url = `&orderby=a.${currentColumn}&sort=${sortOrder}`
+                wardenPage(currentPage)
             }
 
             function attendancePage(pageNo = 1) {
                 currentPage = pageNo
+
+                tableData.innerHTML = `
+                    <tr id="spinnerRow">
+                        <td colspan="7" class="text-center">
+                            <div class="spinner-border" role="status">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                        </td>
+                    </tr>`
+
                 var requestOptions = {
                     method: 'GET'
-                };
+                }
 
-                fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
+                fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok ' + response.statusText);
+                            throw new Error('Network response was not ok ' + response.statusText)
                         }
-                        return response.json();
+                        return response.json()
                     })
                     .then(responseData => {
-                        const { attendances, attendanceCount } = responseData;
+                        const { attendances, attendanceCount } = responseData
 
                         var trHtml = ''
                         for (var i = 0; i < attendances.length; i++) {
@@ -133,9 +162,9 @@
                           <a class="page-link" href="#" onclick="attendancePage(${i})">${i}</a>
                        </li>`;
                         }
-                        paginationDom.innerHTML = paginationHtml;
+                        paginationDom.innerHTML = paginationHtml
                     })
-                    .catch((error) => console.error(error));
+                    .catch((error) => console.error(error))
             }
 
 
@@ -144,7 +173,7 @@
             }
 
             function readAttendanceById(attendanceId) {
-                var myHeaders = new Headers();
+                var myHeaders = new Headers()
                 var requestOptions = {
                     method: 'GET',
                     headers: myHeaders
@@ -154,9 +183,8 @@
                     .then(response => response.json())
                     .then(attendance => {
 
-                        const existingModal = document.getElementById('attendanceModal');
                         if (existingModal) {
-                            existingModal.remove();
+                            existingModal.remove()
                         }
                         const modalHtml = `
                         <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -259,14 +287,14 @@
                                 </div>
                             </div>
                         </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(document.getElementById('attendanceModal'));
+                        document.body.insertAdjacentHTML('beforeend', modalHtml)
+                        var modal = new bootstrap.Modal(document.getElementById('attendanceModal'))
                         modal.show();
 
                     })
-                    .catch(error => console.log('error', error));
+                    .catch(error => console.log('error', error))
             }
-
+            
             window.addEventListener('load', () => {
                 attendancePage()
             })

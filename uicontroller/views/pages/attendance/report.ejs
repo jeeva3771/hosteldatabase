@@ -1,0 +1,202 @@
+<%- include('../../partials/header.ejs', { isMenuVisible: true, title: 'Attendance Report' }) %>
+    <h2 class="text-center mb-5">Attendance Report</h2>
+    <div class="container d-flex flex-column align-items-center">
+        <div class="row g-3 justify-content-center mb-4">
+            <div class="col-auto">
+                <label class="visually-hidden" for="student">Student</label>
+                <select class="form-select" id="student">
+                    <option selected>Select a Student</option>
+                </select>
+            </div>
+        </div>
+        <div class="row g-3 justify-content-center mb-5">
+            <div class="col-auto">
+                <label class="visually-hidden" for="month">Month</label>
+                <select class="form-select" id="month">
+                    <option selected>Select Month</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <label class="visually-hidden" for="year">Year</label>
+                <select class="form-select" id="year">
+                    <option selected>Select Year</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="row justify-content-center">
+        <table class="table table-bordered w-25 mb-4 border border-dark-subtle">
+            <thead>
+                <tr id="dayHeaders"></tr>
+            </thead>
+            <tbody id="dateLabel"></tbody>
+        </table>
+        <div class="d-flex flex-row mb-3 align-items-center justify-content-center d-none" id="attendanceStatus">
+            <div class="p-2 smallBox mt-0 clr1"></div>
+            <span class="ms-2">Present</span>
+
+            <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
+            <span class="ms-2">Absent</span>
+
+            <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1"></div>
+            <span class="ms-2">Not Marked</span>
+        </div>
+    </div>
+    <%- include('../../partials/footer.ejs') %>
+
+        <script>
+            const selectedStudent = document.getElementById('student');
+            const selectedMonth = document.getElementById('month');
+            const selectedYear = document.getElementById('year');
+            const dateLabel = document.getElementById('dateLabel');
+            const dayHeaders = document.getElementById('dayHeaders');
+
+            const currentTime = new Date();
+            const currentYear = currentTime.getFullYear();
+            const yearRange = 20;
+
+            window.addEventListener('load', async () => {
+                try {
+                    await Promise.all([populateDropDownStudents(), populateDropDownMonthAndYear()]);
+                } catch (error) {
+                    console.error('Error populating dropdowns:', error);
+                }
+            });
+
+            selectedMonth.addEventListener('change', renderReport);
+            selectedYear.addEventListener('change', renderReport);
+            selectedStudent.addEventListener('change', renderReport);
+
+            function populateDropDownStudents() {
+                fetch("http://localhost:1000/api/student/getstudent")
+                    .then(response => response.json())
+                    .then(students => {
+                        students.forEach(student => {
+                            const option = document.createElement('option');
+                            option.value = student.name;
+                            option.textContent = `${student.name} - RegNo: (${student.registerNumber})`;
+                            selectedStudent.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.log('Error fetching students:', error));
+            }
+
+            function populateDropDownMonthAndYear() {
+                for (let i = 0; i < 12; i++) {
+                    const monthOption = document.createElement('option');
+                    monthOption.value = i;
+                    monthOption.textContent = new Date(0, i).toLocaleString('default', { month: 'long' });
+                    selectedMonth.appendChild(monthOption);
+                }
+
+                for (let i = currentYear - yearRange; i <= currentYear + yearRange; i++) {
+                    const yearOption = document.createElement('option');
+                    yearOption.value = i;
+                    yearOption.textContent = i;
+                    selectedYear.appendChild(yearOption);
+                }
+                selectedMonth.value = currentTime.getMonth();
+                selectedYear.value = currentYear;
+            }
+
+            function renderDayHeaders() {
+                const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.innerHTML = '';
+                daysOfWeek.forEach(day => {
+                    const th = document.createElement('th');
+                    th.textContent = day;
+                    dayHeaders.appendChild(th);
+                });
+            }
+
+            async function renderReport() {
+                const month = parseInt(selectedMonth.value);
+                const year = parseInt(selectedYear.value);
+                const firstDay = new Date(year, month, 1).getDay();
+                const lastDate = new Date(year, month + 1, 0).getDate();
+
+                dayHeaders.innerHTML = '';
+                dateLabel.innerHTML = '';
+
+                try {
+                    const response = await fetch(`http://localhost:1000/api/attendance/studentattendancereport?month=${month + 1}&year=${year}&studentName=${selectedStudent.value}`);
+
+                    if (!response.ok) {
+                        if (response.status === 404) {
+                            renderDefaultCalendar(firstDay, lastDate);
+                            toggleAttendanceStatusDisplay(true);
+                            return;
+                        } else {
+                            throw new Error(`Failed to fetch attendance data: ${response.status}`);
+                        }
+                    }
+                    renderDayHeaders();
+                    const data = await response.json();
+                    const attendanceData = Object.entries(data).map(([key, value]) => ({ date: key, status: value }));
+
+                    if (attendanceData.length === 0) {
+                        renderDefaultCalendar(firstDay, lastDate);
+                        toggleAttendanceStatusDisplay(false); 
+
+                    } else {
+                        toggleAttendanceStatusDisplay(true);
+                        let date = 1;
+                        for (let i = 0; i < 6; i++) {
+                            const row = document.createElement('tr');
+                            for (let j = 0; j < 7; j++) {
+                                const cell = document.createElement('td');
+                                cell.classList.add('text-center');
+                                if (i === 0 && j < firstDay || date > lastDate) {
+                                    cell.textContent = '';
+                                } else {
+                                    cell.textContent = date;
+                                    const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                                    const attendanceRecord = attendanceData.find(record => record.date === formattedDate);
+
+                                    if (attendanceRecord) {
+                                        cell.style.backgroundColor = attendanceRecord.status === 1 ? 'green' : 'red';
+                                        cell.classList.add('text-white');
+                                    }
+                                    date++;
+                                }
+                                row.appendChild(cell);
+                            }
+                            dateLabel.appendChild(row);
+                            if (date > lastDate) break;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Error fetching attendance data:', error);
+                }
+            }
+
+            function renderDefaultCalendar(firstDay, lastDate) {
+                let date = 1;
+                dayHeaders.innerHTML = '';
+                dateLabel.innerHTML = '';
+                renderDayHeaders();
+
+                for (let i = 0; i < 6; i++) {
+                    const row = document.createElement('tr');
+                    for (let j = 0; j < 7; j++) {
+                        const cell = document.createElement('td');
+                        cell.classList.add('text-center');
+                        if (i === 0 && j < firstDay) {
+                            cell.textContent = '';
+                        } else if (date > lastDate) {
+                            cell.textContent = '';
+                        } else {
+                            cell.textContent = date;
+                            date++;
+                        }
+                        row.appendChild(cell);
+                    }
+                    dateLabel.appendChild(row);
+                    if (date > lastDate) break;
+                }
+            }
+
+            function toggleAttendanceStatusDisplay(show) {
+                attendanceStatus.classList.toggle('d-none', !show);
+            }
+        </script>

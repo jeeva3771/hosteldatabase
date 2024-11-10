@@ -3,33 +3,32 @@ const mysql = require('mysql');
 const logger = require('pino')();
 const pinoReqLogger = require('pino-http')();
 const path = require('path');
-
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
-var bodyParser = require('body-parser');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
 
 //apicontroller
-const course = require('./apicontroller/course.js')
-const block = require('./apicontroller/block.js')
-const warden = require('./apicontroller/warden.js')
-const blockFloor = require('./apicontroller/blockfloor.js')
-const room = require('./apicontroller/room.js')
-const student = require('./apicontroller/student.js')
-const attendance = require('./apicontroller/attendance.js')
+const course = require('./apicontroller/course.js');
+const block = require('./apicontroller/block.js');
+const warden = require('./apicontroller/warden.js');
+const blockFloor = require('./apicontroller/blockfloor.js');
+const room = require('./apicontroller/room.js');
+const student = require('./apicontroller/student.js');
+const attendance = require('./apicontroller/attendance.js');
 
 //uicontroller
-const homeUi = require('./ui/homeui.js')
-const courseUi = require('./ui/courseui.js')
-const blockUi = require('./ui/blockui.js')
-const blockFloorUi = require('./ui/blockfloorui.js')
-const roomUi = require('./ui/roomui.js')
-const wardenUi = require('./ui/wardenui.js')
-const studentUi = require('./ui/studentui.js')
-const attendanceUi = require('./ui/attendanceui.js')
+const homeUi = require('./uicontroller/page/homeui.js');
+const courseUi = require('./uicontroller/page/courseui.js');
+const blockUi = require('./uicontroller/page/blockui.js');
+const blockFloorUi = require('./uicontroller/page/blockfloorui.js');
+const roomUi = require('./uicontroller/page/roomui.js');
+const wardenUi = require('./uicontroller/page/wardenui.js');
+const studentUi = require('./uicontroller/page/studentui.js');
+const attendanceUi = require('./uicontroller/page/attendanceui.js');
 
 const app = express()
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
 app.use(pinoReqLogger)
 app.use(cookieParser());
@@ -42,29 +41,18 @@ app.use(session({
         maxAge: (1000 * 60 * 15)
     }
 }));
-const urlOption = ['/login','/warden/resetPassword','/api/warden/newPassword','/api/warden/generateOtp']
 
-// app.use((req, res, next) => {
-//     if(req.originalUrl === urlOption(includes)) {
-
-//     }
-// })
+const pageSessionExclude = [
+    '/login', 
+    '/api/login', 
+    '/warden/resetpassword', 
+    '/api/warden/generateotp',
+    '/api/warden/resetpassword'
+]
 
 app.use((req, res, next) => {
-    if (req.originalUrl === '/login' || (req.originalUrl === '/api/login'  && req.method === 'POST')) {
-        return next();
-    }
-
-    if ((req.originalUrl === '/warden/resetPassword') || (req.originalUrl === '/warden/resetPassword' && req.method === 'POST')) {
-        return next();
-    }
-
-    if ((req.originalUrl === '/api/warden/generateOtp' && req.method === 'POST') || req.originalUrl === '/api/warden/generateOtp') {
-        return next();
-    }
-
-    if ((req.originalUrl === '/api/warden/validateOtp/newPassword' && req.method === 'PUT') || req.originalUrl === '/api/warden/validateOtp/newPassword') {
-        return next();
+    if (pageSessionExclude.includes(req.originalUrl)) {
+        return next()
     }
 
     if (req.originalUrl !== '/login') {
@@ -79,12 +67,8 @@ app.use((req, res, next) => {
     return next()
 })
 
-app.use(bodyParser.urlencoded({ extended: true }));
-
-
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.mysqlClient = mysql.createConnection({
     host: 'localhost',
@@ -106,6 +90,7 @@ app.mysqlClient.connect(function (err) {
         room(app)
         student(app)
         attendance(app)
+
         homeUi(app)
         courseUi(app)
         blockUi(app)

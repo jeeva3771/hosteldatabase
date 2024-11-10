@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEY = [
     "courseName"
 ]
@@ -12,7 +12,7 @@ async function readCourses(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || ''; 
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern]
+    const queryParameters = [searchPattern, searchPattern, limit, offset];
 
     var coursesQuery = /*sql*/ `
         SELECT 
@@ -32,13 +32,8 @@ async function readCourses(req, res) {
         WHERE 
             c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ?)
         ORDER BY 
-            ${orderBy} ${sort}`;
-    
-    if (limit && offset !== null) { 
-        coursesQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit,offset);
-        
-    }
+            ${orderBy} ${sort}
+        LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalCourseCount 
@@ -46,8 +41,6 @@ async function readCourses(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
-        console.log(coursesQuery, queryParameters);
-
         const [courses, totalCount] = await Promise.all([
             mysqlQuery(coursesQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
@@ -99,7 +92,7 @@ async function readCourseById(req, res) {
 async function createCourse(req, res) {
     const mysqlClient = req.app.mysqlClient
     const { courseName } = req.body
-    const createdBy = req.session.data.wardenId
+    const createdBy = req.session.warden.wardenId
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert) {
@@ -126,7 +119,7 @@ async function createCourse(req, res) {
 async function updateCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -179,7 +172,7 @@ async function updateCourseById(req, res) {
 async function deleteCourseById(req, res) {
     const courseId = req.params.courseId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const course = await validateCourseById(courseId, mysqlClient);

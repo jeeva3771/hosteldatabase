@@ -1,7 +1,4 @@
-
-
-
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
     "blockLocation",
@@ -17,7 +14,6 @@ async function readBlocks(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
 
     var blocksQuery = /*sql*/`
         SELECT 
@@ -37,20 +33,13 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL AND 
             (bk.blockCode LIKE ? OR 
+            bk.blockLocation LIKE ? OR
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
-    }
-
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
-    }
+            bk.isActive LIKE ? OR
+            bk.createdBy LIKE ?)
+        ORDER BY ${orderBy} ${sort}
+        LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
@@ -59,7 +48,7 @@ async function readBlocks(req, res) {
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -69,6 +58,7 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -117,7 +107,7 @@ async function readBlockFloorBlockCodeCount(req, res) {
                 AND b.deletedAt IS NULL) AS floorCount 
                 FROM block bk 
                 WHERE isActive = 1 
-                AND deletedAt IS NULL`;
+                AND deletedAt IS NULL ORDER BY bk.blockCode ASC`;
 
         const queryParams = [];
         if (blockId) {
@@ -137,6 +127,30 @@ async function readBlockFloorBlockCodeCount(req, res) {
     }
 }
 
+async function readBlockAttendancePercentage(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    const blockId = req.query.blockId
+    console.log(blockId)
+    try {
+        const blockCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student WHERE blockId = ?`,
+            [blockId], mysqlClient)
+
+        if (blockCount.length === 0) {
+            return res.status(404).send('No student in block')
+        }
+
+        const checkInDateCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM attendance WHERE 
+        blockId = ? AND checkInDate = DATE(NOW())`, [blockId], mysqlClient)
+
+        var calculationPercentage = blockCount[0].count / checkInDateCount[0].count * 100
+        
+        res.status(200).send(calculationPercentage)
+    } catch (error) {
+        console.log(error)
+        res.status(500).send(error.message)
+    }
+}
+
 async function createBlock(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
@@ -145,7 +159,7 @@ async function createBlock(req, res) {
         blockLocation,
         isActive
     } = req.body
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
     if (isValidInsert.length > 0) {
@@ -169,7 +183,7 @@ async function createBlock(req, res) {
 
 async function updateBlockById(req, res) {
     const blockId = req.params.blockId;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -184,7 +198,6 @@ async function updateBlockById(req, res) {
     updates.push("updatedBy = ?")
     values.push(updatedBy, blockId)
     const mysqlClient = req.app.mysqlClient
-    const blockCode = req.body.blockCode;
 
     try {
         const block = await validateBlockById(blockId, mysqlClient);
@@ -224,7 +237,7 @@ async function updateBlockById(req, res) {
 async function deleteBlockById(req, res) {
     const blockId = req.params.blockId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateBlockById(blockId, mysqlClient)
@@ -256,6 +269,24 @@ async function deleteBlockById(req, res) {
     }
 }
 
+async function readBlockCount(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+
+    try {
+    const getBlockCount = await mysqlQuery(/*sql*/`
+        SELECT COUNT(*) AS totalBlockCount 
+        FROM block 
+        WHERE deletedAt IS NULL`, [], mysqlClient)
+ 
+        if (getBlockCount) {
+            return res.status(404).send('No Block count content found')
+        }
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
         mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
@@ -278,7 +309,6 @@ async function validateBlockById(blockId, mysqlClient) {
 
 async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
     const { blockCode, blockLocation, isActive } = body;
-    console.log(blockCode)
     const errors = [];
 
     try {
@@ -352,8 +382,10 @@ async function validateUpdateBlock(blockId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/block', readBlocks)
+    app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
-    app.get('/api/block/blockFloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/blockfloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)

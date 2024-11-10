@@ -1,4 +1,9 @@
-const { mysqlQuery, sendEmail } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
+const sendEmail = require('../utilityclient/email')
+
+
+const otpGenerator = require('otp-generator');
+
 const ALLOWED_UPDATE_KEYS = [
     "firstName",
     "lastName",
@@ -7,12 +12,11 @@ const ALLOWED_UPDATE_KEYS = [
     "password",
     "superAdmin"
 ]
-const otpGenerator = require('otp-generator');
-const otpLimitNumber = 6;
-const otpOption = {
+const OTP_LIMIT_NUMBER = 6;
+const OTP_OPTION = {
     digits: true,
     upperCaseAlphabets: true,
-    lowerCaseAlphabets: true,
+    lowerCaseAlphabets: false,
     specialChars: false
 }
 
@@ -25,6 +29,8 @@ async function readWardens(req, res) {
     const orderBy = req.query.orderby || 'w.firstName';
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
+    const searchPattern = `%${searchQuery}%`;
+    const queryParameters = [searchPattern, searchPattern, limit, offset];
 
     var wardensQuery = /*sql*/`
         SELECT 
@@ -57,9 +63,8 @@ async function readWardens(req, res) {
         WHERE deletedAt IS NULL`;
 
     try {
-        const searchPattern = `%${searchQuery}%`;
         const [wardens, totalCount] = await Promise.all([
-            mysqlQuery(wardensQuery, [searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(wardensQuery, queryParameters, mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -116,7 +121,7 @@ async function createWarden(req, res) {
         password,
         superAdmin
     } = req.body
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -124,7 +129,7 @@ async function createWarden(req, res) {
     }
 
     try {
-        const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ?`, [emailId], mysqlClient);
+        const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
         if (existingWarden.length > 0) {
             return res.status(409).send("emailId already exists");
         }
@@ -149,7 +154,7 @@ async function createWarden(req, res) {
 async function updateWardenById(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -194,7 +199,7 @@ async function updateWardenById(req, res) {
 async function deleteWardenById(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateWardenById(wardenId, mysqlClient)
@@ -232,12 +237,12 @@ async function authentication(req, res) {
             mysqlClient)
         if (user.length > 0) {
             req.session.isLogged = true
-            req.session.data = user[0]
+            req.session.warden = user[0]
 
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
-            req.session.data = null
+            req.session.warden = null
             res.status(409).send('Invalid emailId or password !')
         }
     } catch (error) {
@@ -245,136 +250,139 @@ async function authentication(req, res) {
     }
 }
 
-function logOut(req, res) {
+function userLogOut(req, res) {
     req.session.destroy((err) => {
         if (err) logger.error();
         res.redirect('http://localhost:1000/login')
     })
 }
 
-async function generateOtpAndSendOtp(req, res) {
-
+async function generateOtp(req, res) {
     const mysqlClient = req.app.mysqlClient;
+    const currentTime = new Date().getTime();
     const {
         emailId = null
     } = req.body
 
     try {
-        const isValidMail = await mysqlQuery(/*sql*/`
-        SELECT emailId, otpTiming FROM warden WHERE emailId = ? AND deletedAt IS NULL`,
-            [emailId],
-            mysqlClient)
+        const wardenResult = await mysqlQuery(/*sql*/`SELECT otpTiming FROM warden 
+            WHERE emailId = ? 
+            AND deletedAt IS NULL`, [emailId], mysqlClient)
 
-        if (isValidMail.length === 0) {
-            return res.status(404).send('Invalid EmailId')
-        }
-        // console.log(isValidMail[0].otpTiming >= new Date)
-        // console.log(isValidMail[0].otpTiming !== null)
-        if (isValidMail[0].otpTiming >= new Date) {
-            return res.status(401).send('User is Blocked for few hours')
+        if (wardenResult.length === 0) {
+            return res.status(404).send('Invalid Email.')
         }
 
-        var otp = otpGenerator.generate(otpLimitNumber, otpOption);
+        const UserOtpTiming = wardenResult[0].otpTiming
+        const blockedTime = new Date(UserOtpTiming).getTime()
 
-        const sendOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?`,
-            [otp, isValidMail[0].emailId],
+        if (currentTime < blockedTime) {
+            return res.status(401).send('User is blocked for a few hours')
+        }
+
+        var otp = otpGenerator.generate(OTP_LIMIT_NUMBER, OTP_OPTION);
+
+        const sendOtp = await mysqlQuery(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ?
+        AND deletedAt IS NULL`,
+            [otp, emailId],
             mysqlClient
         )
 
         if (sendOtp.affectedRows === 0) {
-            return res.status(404).send('No OTP made.')
+            return res.status(404).send('Enable to send OTP.')
         }
 
-        await sendEmail(isValidMail[0].emailId, otp, res)
-        req.session.warden = isValidMail[0].emailId
+        const mailOptions = {
+            to: emailId,
+            subject: 'Password Reset OTP',
+            html: `Your OTP code is <b>${otp}</b>. Please use this to complete your verification.`
+        }
+        await sendEmail(mailOptions)
 
+        req.session.resetPassword = emailId
         return res.status(200).send('success')
     } catch (error) {
         res.status(500).send(error.message)
     }
 }
 
-async function validateOtpSavePassword(req, res) {
+async function processResetPassword(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const emailId = req.session.warden;
+    const emailId = req.session.resetPassword;
     const { password = null, otp = null } = req.body;
+    const currentTime = new Date().getTime();
+    const otpAttemptMax = 3;
 
     try {
-        if (!otp || otp.length < 6) {
-            return res.status(400).send('Invalid OTP');
-        }
-
-        if (!password || password.length < 6) {
-            return res.status(400).send('Invalid password');
-        }
-
-        const validOtp = await mysqlQuery(/*sql*/`
-            SELECT otp
-            FROM warden 
-            WHERE otp = ? AND emailId = ? AND deletedAt IS NULL`,
-            [otp, emailId],
-            mysqlClient
-        );
-
-        const validOtpTiming = await mysqlQuery(/*sql*/`
-            SELECT otpTiming
+        const userDetails = await mysqlQuery(/*sql*/`
+            SELECT otp, otpAttempt, otpTiming
             FROM warden 
             WHERE emailId = ? AND deletedAt IS NULL`,
             [emailId],
             mysqlClient
-        )
+        );
 
-        if (validOtp.length === 0 && validOtpTiming[0].otpTiming === null) {
-            var validOtpLengthZero = await mysqlQuery(/*sql*/`
-            UPDATE warden 
-                SET  
-                otpAttempt = CASE 
-                    WHEN otpAttempt IS NULL THEN 2  
-                    WHEN otpAttempt = 1 THEN NULL  
-                    WHEN otpAttempt >= 1 THEN otpAttempt - 1  
-                    ELSE otpAttempt
-                END,
-                otpTiming = CASE
-                    WHEN otpAttempt IS NULL THEN DATE_ADD(NOW(), INTERVAL 3 HOUR) 
-                    ELSE otpTiming  
-                END
-            WHERE emailId = ?`,
-                [emailId],
-                mysqlClient
-            )
+        if (userDetails.length === 0) {
+            return res.status(404).send('Oops! Something went wrong. Please contact admin.')
+        }
 
-            if (validOtpLengthZero.affectedRows === 0) {
-                return res.status(404).send('No content changed')
+        const userOtp = userDetails[0].otp;
+        const userOtpAttempt = userDetails[0].otpAttempt || 0;
+        const userOtpTiming = userDetails[0].otpTiming;
+
+        const blockedTime = new Date(userOtpTiming).getTime()
+
+        if (currentTime < blockedTime) {
+            return res.status(401).send('Access is currently blocked. Please retry after the designated wait time.')
+        }
+
+        if (userOtpAttempt >= otpAttemptMax) {
+            const updatedUser = await mysqlQuery(/*sql*/`UPDATE warden SET otp = null, otpAttempt = null, otpTiming = DATE_ADD(NOW(), INTERVAL 3 HOUR)
+            WHERE emailId = ? AND deletedAt IS NULL `, [emailId], mysqlClient)
+
+            req.session.destroy(err => {
+                if (err) {
+                    return res.status(500).send('Error destroying session.');
+                }
+                console.log(req.session)
+                if (updatedUser.affectedRows === 0) {
+                    return res.status(404).send('Oops! Something went wrong. Please contact admin.')
+                }
+                return res.status(401).send('You are temporarily blocked. Please try again in 3 hours.')
+            });
+        }
+
+        if (otp === userOtp) {
+            const resetPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ?, otp = null, otpAttempt = null
+            WHERE emailId = ? AND deletedAt IS NULL`, [password, emailId], mysqlClient)
+
+            if (resetPassword.affectedRows === 0) {
+                return res.status(404).send('Oops! Something went wrong. Please contact admin.')
             }
 
-            return res.status(500).send('OTP invalid');
-        } else if (validOtp.length > 0 && (validOtpTiming[0].otpTiming === null || validOtpTiming[0].otpTiming <= new Date())) {
-
-            var updatedNewPassword = await mysqlQuery(/*sql*/` 
-            UPDATE warden SET password = ?, otp = ?, otpTiming = ?
-                WHERE emailId = ? AND otp = ? AND deletedAt IS NULL`,
-                [password, null, null, emailId, otp],
-                mysqlClient)
-
-            if (updatedNewPassword.affectedRows === 0) {
-                return res.status(404).send('No Content updated')
-            }
             return res.status(200).send('success')
+        } else {
+            if (userOtpAttempt === 2) {
+                var updateBlockedTime = await mysqlQuery(/*sql*/`UPDATE warden SET otp = null, otpAttempt = null,
+                otpTiming = DATE_ADD(NOW(), INTERVAL 3 HOUR) WHERE emailId = ? AND deletedAt IS NULL`,
+                    [emailId], mysqlClient)
+
+                if (updateBlockedTime.affectedRows === 0) {
+                    return res.status(404).send('Oops! Something went wrong. Please contact admin.')
+                }
+                return res.status(401).send('You are temporarily blocked. Please try again in 3 hours.')
+            } else {
+                var updateOtpAttempt = await mysqlQuery(/*sql*/`UPDATE warden SET otpAttempt = ? + 1
+                WHERE emailId = ? AND deletedAt IS NULL`, [userOtpAttempt, emailId], mysqlClient)
+
+                if (updateOtpAttempt.affectedRows === 0) {
+                    return res.status(404).send('Oops! Something went wrong. Please contact admin.')
+                }
+                return res.status(400).send({ errorType: 'OTP', message: 'Invalid OTP. Please try again.' })
+            }
         }
-
-        const setNullOtp = await mysqlQuery(/*sql*/` UPDATE warden SET otp = ?
-            WHERE emailId = ?`,
-            [null, emailId],
-            mysqlClient)
-
-        if (setNullOtp.affectedRows === 0) {
-            return res.status(404).send('otp null is not set')
-        }
-
-        return res.status(401).send('User is Blocked for few hours')
     } catch (error) {
-        console.log(error);
-        return res.status(500).send('An error occurred');
+        return res.status(500).send(error.message)
     }
 }
 
@@ -467,34 +475,14 @@ async function validateWardenById(wardenId, mysqlClient) {
     return false
 }
 
-// function isOtpNull(emailId, mysqlClient) {
-//     return new Promise((resolve, reject) => {
-//         mysqlClient.query(/*sql*/`UPDATE warden SET otp = ? WHERE emailId = ? AND deletedAt IS NULL`,
-//             [null, emailId], (err, setNull) => {
-//                 if (err) {
-//                     return reject(err)
-//                 }
-//                 resolve(setNull.length > 0 ? setNull[0] : null)
-//             })
-//     })
-// }
-
-// async function setOtpNull(emailId, mysqlClient) {
-//     var setNullOtp = await isOtpNull(emailId, mysqlClient)
-//     if (setNullOtp !== null) {
-//         return true
-//     }
-//     return false
-// }
-
 module.exports = (app) => {
-    app.post('/api/warden/generateOtp', generateOtpAndSendOtp)
-    app.put('/api/warden/validateOtp/newPassword', validateOtpSavePassword)
+    app.post('/api/warden/generateotp', generateOtp)
+    app.put('/api/warden/resetpassword', processResetPassword)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', createWarden)
     app.put('/api/warden/:wardenId', updateWardenById)
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
-    app.get('/api/logout', logOut)
+    app.get('/api/logout', userLogOut)
 }

@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEYS = [
     "blockId",
     "floorNumber",
@@ -14,9 +14,7 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern]
-    const status = req.query.isActive;
-    console.log(status)
+    const queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset]
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -37,20 +35,9 @@ async function readBlockFloors(req, res) {
               warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
-            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)`;
-
-    if (status !== undefined) {
-        console.log('Adding');
-        blockFloorsQuery += ` AND b.isActive = 1`;
-        console.log('Adding isActive condition');
-    }
-
-    blockFloorsQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blockFloorsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit, offset);
-    }
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
+            ORDER BY ${orderBy} ${sort}
+            LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 
@@ -111,35 +98,6 @@ async function readBlockFloorById(req, res) {
     }
 }
 
-// async function readRoomBlockFloorCount(req, res) {
-//     const mysqlClient = req.app.mysqlClient;
-//     const blockId = req.query.blockId;
-//     try {
-//         var roomBlockFloorCount = await mysqlQuery(/*sql*/`SELECT 
-//             blockFloorId, 
-//             floorNumber,
-//             (SELECT COUNT(*)
-//             FROM room AS r
-//             WHERE r.blockFloorId = b.blockFloorId
-//             AND r.deletedAt IS NULL) AS roomCount
-//             FROM blockfloor AS b
-//             WHERE b.blockId = ? AND b.isActive = 1
-//             AND b.deletedAt IS NULL`,
-//             [blockId], 
-//             mysqlClient
-//         )
-
-//     if (roomBlockFloorCount.length === 0) {
-//         return res.status(404).send('No blockfloors found');
-//     }
-//         res.status(200).send(roomBlockFloorCount)
-//     } catch (error) {
-//         res.status(500).send(error.message)
-//     }
-// }
-
-
-
 async function readRoomBlockFloorCountOrFloorCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
@@ -158,9 +116,9 @@ async function readRoomBlockFloorCountOrFloorCount(req, res) {
 
         sqlQuery += ` FROM blockfloor AS b
             WHERE b.blockId = ? AND b.isActive = 1
-            AND b.deletedAt IS NULL`;
+            AND b.deletedAt IS NULL ORDER BY b.floorNumber ASC`;
 
-        const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
+            const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
 
         if (roomBlockFloorCount.length === 0) {
             return res.status(404).send('No BlockFloors found');
@@ -178,7 +136,7 @@ async function createBlockFloor(req, res) {
         floorNumber,
         isActive
     } = req.body
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
 
     const isValidInsert = await validateInsertItems(req.body);
@@ -207,7 +165,7 @@ async function updateBlockFloorById(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const values = []
     const updates = []
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
 
 
     ALLOWED_UPDATE_KEYS.forEach(key => {
@@ -262,7 +220,7 @@ async function updateBlockFloorById(req, res) {
 async function deleteBlockFloorById(req, res) {
     const blockFloorId = req.params.blockfloorId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateBlockFloorById(blockFloorId, mysqlClient)

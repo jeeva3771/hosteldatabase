@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEYS = [
     "roomId",
     "blockFloorId",
@@ -24,7 +24,7 @@ async function readStudents(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern]
+    const queryParameters = [searchPattern, searchPattern, limit, offset];
 
     var studentsQuery = /*sql*/`
         SELECT 
@@ -58,12 +58,8 @@ async function readStudents(req, res) {
             s.deletedAt IS NULL 
             AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
             ORDER BY 
-            ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        studentsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit,offset)
-    }
+            ${orderBy} ${sort}
+            LIMIT ? OFFSET ?`;
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 
@@ -117,7 +113,7 @@ async function readStudentById(req, res) {
             LEFT JOIN 
             warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
-            s.deletedAt IS NULL AND studentId = ?`, 
+            s.deletedAt IS NULL AND studentId = ?`,
             [studentId], mysqlClient)
         if (student.length === 0) {
             return res.status(404).send("StudentId not valid");
@@ -140,10 +136,28 @@ async function readStudentsByRoomId(req, res) {
         if (students.length === 0) {
             return res.status(404).send("RoomId not valid");
         }
-    
-       res.status(200).send(students)
+
+        res.status(200).send(students)
     } catch (error) {
         res.status(500).send(error.message)
+    }
+}
+
+async function getStudentsForAttendanceReport(req, res) {
+    const mysqlClient = req.app.mysqlClient
+    try {
+        var studentsForAttendanceReport = await mysqlQuery(/*sql*/`
+        SELECT name, registerNumber FROM student WHERE deletedAt IS NULL ORDER BY name ASC`,
+        [], mysqlClient
+        )
+
+        if (studentsForAttendanceReport.length === 0) {
+            return res.status(404).send('No content found')
+        }
+
+      return res.status(200).send(studentsForAttendanceReport)
+    } catch (error) {
+        res.status(200).send(error.message)
     }
 }
 
@@ -163,7 +177,7 @@ async function createStudent(req, res) {
         fatherNumber,
         address
     } = req.body;
-    const createdBy = req.session.data.wardenId
+    const createdBy = req.session.warden.wardenId
     const validateExistingItems = [
         { name: 'phoneNumber', value: phoneNumber },
         { name: 'fatherNumber', value: fatherNumber },
@@ -213,7 +227,7 @@ async function createStudent(req, res) {
 async function updateStudentById(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
     const values = []
     const updates = []
 
@@ -260,7 +274,7 @@ async function updateStudentById(req, res) {
 async function deleteStudentById(req, res) {
     const studentId = req.params.studentId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateStudentById(studentId, mysqlClient)
@@ -449,8 +463,9 @@ function validateInsertItems(body, isUpdate = false) {
 
 module.exports = (app) => {
     app.get('/api/student', readStudents)
+    app.get('/api/student/getstudent',getStudentsForAttendanceReport)
     app.get('/api/student/:studentId', readStudentById)
-    app.get('/api/student/room/:roomId',readStudentsByRoomId)
+    app.get('/api/student/room/:roomId', readStudentsByRoomId)
     app.post('/api/student', createStudent)
     app.put('/api/student/:studentId', updateStudentById)
     app.delete('/api/student/:studentId', deleteStudentById)

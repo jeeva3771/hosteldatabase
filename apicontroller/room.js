@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient.js')
+const { mysqlQuery } = require('../utilityclient/query')
 const ALLOWED_UPDATE_KEYS = [
     'blockFloorId',
     'blockId',
@@ -13,11 +13,9 @@ async function readRooms(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'r.roomNumber';
-    const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern]
+    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
 
     var roomsQuery = /*sql*/`
         SELECT 
@@ -43,12 +41,8 @@ async function readRooms(req, res) {
               r.deletedAt IS NULL 
             AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR r.roomNumber LIKE ? OR r.isActive LIKE ?)
             ORDER BY 
-              ${orderBy} ${sort}`
-
-    if (limit && offset !== null) {
-        roomsQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit, offset);
-    }
+            r.roomNumber ASC 
+            LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
     SELECT COUNT(*) AS totalRoomCount 
@@ -129,7 +123,7 @@ async function readStudentOrRoomNumberCountByRoomId(req, res) {
         sqlQuery += ` FROM room AS r
                       WHERE r.blockFloorId = ?
                       AND r.isActive = 1
-                      AND r.deletedAt IS NULL`;
+                      AND r.deletedAt IS NULL ORDER BY r.roomNumber ASC`;
 
         const studentCountByRoomId = await mysqlQuery(sqlQuery, [blockFloorId], mysqlClient);
 
@@ -153,7 +147,7 @@ async function createRoom(req, res) {
         isActive,
         isAirConditioner
     } = req.body;
-    const createdBy = req.session.data.wardenId;
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -180,7 +174,7 @@ async function createRoom(req, res) {
 async function updateRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
-    const updatedBy = req.session.data.wardenId;
+    const updatedBy = req.session.warden.wardenId;
 
     const values = []
     const updates = []
@@ -231,7 +225,7 @@ async function updateRoomById(req, res) {
 async function deleteRoomById(req, res) {
     const roomId = req.params.roomId;
     const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.data.wardenId;
+    const deletedBy = req.session.warden.wardenId;
 
     try {
         const isValid = await validateRoomById(roomId, mysqlClient)
