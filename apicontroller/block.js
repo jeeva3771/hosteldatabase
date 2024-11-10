@@ -33,10 +33,11 @@ async function readBlocks(req, res) {
         WHERE 
             bk.deletedAt IS NULL AND 
             (bk.blockCode LIKE ? OR 
+            bk.blockLocation LIKE ? OR
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)
+            bk.isActive LIKE ? OR
+            bk.createdBy LIKE ?)
         ORDER BY ${orderBy} ${sort}
         LIMIT ? OFFSET ?`
 
@@ -47,7 +48,7 @@ async function readBlocks(req, res) {
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 

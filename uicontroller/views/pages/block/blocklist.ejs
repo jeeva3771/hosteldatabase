@@ -43,6 +43,8 @@
                                         </div>
                                     </div>
 
+
+
                                     <!-- Table with stripped rows -->
                                     <table class="table datatable">
                                         <thead>
@@ -66,44 +68,46 @@
                                                 <th scope="col" onclick="sortByColumn('blockLocation')">Location
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                         fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockLocation', 'DESC')">
+                                                        viewBox="0 0 16 16"
+                                                        onclick="sortByColumn('blockLocation', 'DESC')">
                                                         <path fill-rule="evenodd"
                                                             d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                                                     </svg>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                         fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockLocation', 'ASC')">
+                                                        viewBox="0 0 16 16"
+                                                        onclick="sortByColumn('blockLocation', 'ASC')">
                                                         <path fill-rule="evenodd"
                                                             d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                                     </svg>
                                                 </th>
                                                 <th scope="col" onclick="sortByColumn('isActive')">Status
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                    viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
-                                                    <path fill-rule="evenodd"
-                                                        d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                </svg>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                    viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'ASC')">
-                                                    <path fill-rule="evenodd"
-                                                        d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                </svg>
+                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
+                                                        <path fill-rule="evenodd"
+                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'ASC')">
+                                                        <path fill-rule="evenodd"
+                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                                    </svg>
                                                 </th>
                                                 <th scope="col" onclick="sortByColumn('createdBy')">Created By
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                    viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
-                                                    <path fill-rule="evenodd"
-                                                        d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                </svg>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                    fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                    viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'ASC')">
-                                                    <path fill-rule="evenodd"
-                                                        d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                </svg>
+                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
+                                                        <path fill-rule="evenodd"
+                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                                    </svg>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'ASC')">
+                                                        <path fill-rule="evenodd"
+                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                                    </svg>
                                                 </th>
                                                 <th scope="col">Action</th>
                                             </tr>
@@ -146,13 +150,17 @@
 
             function changeLimit() {
                 limit = document.getElementById("limit").value
-                blockPage()
+                blockPage(currentPage)
             }
 
             function handleSearch(event) {
-                event.preventDefault();
-                searchQuery = document.getElementById("searchInput").value;
-                blockPage();
+                if (event === '') {
+                    blockPage(currentPage);
+                    return 
+                }
+                searchQuery = event.target.value;
+                blockPage(currentPage);
+                
             }
 
             function sortByColumn(column, sortOrder) {
