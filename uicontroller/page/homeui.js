@@ -8,7 +8,7 @@ module.exports = (app) => {
         if (req.session.isLogged === true) {
             res.render('pages/home', {
                 user: getUserProfile(req.session),
-                breadcrumb: [{ name: 'Home', link: '/home' }]
+                breadCrumb: [{ name: 'Home', link: '/home' }]
             })
         }
         else {

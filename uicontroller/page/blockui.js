@@ -3,7 +3,7 @@ const { getUserProfile } = require('../../utilityclient/query')
 function blockPageUi(req, res) {
     res.render('pages/block/blocklist.ejs', {
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumb: [
             {name:'Home', link:'/home'},
             {name:'Block', link:'/block'}
         ]
@@ -14,7 +14,7 @@ function addBlockUi(req, res) {
     res.render('pages/block/blockform.ejs', {
         blockId: '',
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumb: [
             {name:'Home', link:'/home'},
             {name:'Block', link:'/block'},
             {name:'Add', link:'/block/add'}
@@ -27,7 +27,7 @@ function editBlockUi(req, res) {
     res.render('pages/block/blockform.ejs', {
             blockId: blockId,
             user: getUserProfile(req.session),
-            breadcrumb: [
+            breadCrumb: [
                 {name:'Home', link:'/home'},
                 {name:'Block', link:'/block'},
                 {name:'Edit', link:'/block/add'}
