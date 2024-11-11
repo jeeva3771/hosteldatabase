@@ -100,7 +100,7 @@
                                         body: raw
                                     };
 
-                                    let url = "http://localhost:1000/api/block";
+                                    let url = "http://localhost:1005/api/block";
                                     if (blockId) {
                                         url = url + '/' + blockId
                                     }
@@ -120,7 +120,7 @@
                                         method: "GET"
                                     };
 
-                                    fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
+                                    fetch("http://localhost:1005/api/block/" + blockId, requestOptions)
                                         .then((response) => response.json())
                                         .then((block) => {
                                             blockCode.value = block.blockCode

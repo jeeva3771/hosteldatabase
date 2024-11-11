@@ -1,4 +1,4 @@
-<%- include('../partials/header.ejs', { isMenuVisible: false, title: 'Login' }) %>
+<%- include('../partials/header.ejs', { appURL: appURL, isMenuVisible: false, title: 'Login', isSubTitleAndBreadCrumbVisible: false  }) %>
 
   <main>
     <div class="container">
@@ -90,10 +90,10 @@
         redirect: "follow"
       };
 
-      const request = fetch("http://localhost:1000/api/login", requestOptions)
+      const request = fetch("http://localhost:1005/api/login", requestOptions)
       request.then(async (response) => {
         if (response.status === 200) {
-          window.location.replace("http://localhost:1000/home")
+          window.location.replace("http://localhost:1005/home")
         } else {
           alert(await response.text())
         }

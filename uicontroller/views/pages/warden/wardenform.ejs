@@ -72,7 +72,7 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/warden";
+                let url = "http://localhost:1005/api/warden";
                 if (wardenId) {
                     url = url + '/' + wardenId
                 }
@@ -102,7 +102,7 @@
                     method: "GET"
                 };
 
-                fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
                     .then((response) => response.json())
                     .then((warden) => {
                         firstName.value = warden.firstName;

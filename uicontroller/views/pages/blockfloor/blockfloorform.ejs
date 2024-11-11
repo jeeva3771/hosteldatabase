@@ -59,7 +59,7 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/blockfloor";
+                let url = "http://localhost:1005/api/blockfloor";
                 if (blockFloorId) {
                     url = url + '/' + blockFloorId
                 }
@@ -94,7 +94,7 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block/blockloor/blockCodeCount');
+                    const response = await fetch('http://localhost:1005/api/block/blockloor/blockCodeCount');
                     const blocks = await response.json();
 
                     const activeOptions = [];
@@ -129,7 +129,7 @@
 
             async function getBlockFloorById(blockFloorId) {
                 try {
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/${blockFloorId}`);
+                    const response = await fetch(`http://localhost:1005/api/blockfloor/${blockFloorId}`);
                     const blockFloor = await response.json();
 
                     blockCode.value = blockFloor.blockId;

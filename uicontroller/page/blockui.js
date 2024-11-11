@@ -2,6 +2,7 @@ const { getUserProfile } = require('../../utilityclient/query')
 
 function blockPageUi(req, res) {
     res.render('pages/block/blocklist.ejs', {
+        appURL: process.env.APP_URL,
         user: getUserProfile(req.session),
         breadCrumb: [
             {name:'Home', link:'/home'},

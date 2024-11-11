@@ -93,7 +93,7 @@
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/warden?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
+                fetch(`http://localhost:1005/api/warden?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
                         const { wardens, wardenCount } = responseData;
@@ -150,7 +150,7 @@
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
                     .then(response => response.json())
                     .then(warden => {
                         const existingModal = document.getElementById('wardenModal');
@@ -260,7 +260,7 @@
                     method: 'DELETE',
                 };
 
-                fetch("http://localhost:1000/api/warden/" + wardenId, requestOptions)
+                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
                     .then(response => response.text())
                     .then(deleted =>
                         window.location = '/warden'

@@ -90,7 +90,7 @@
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/student?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
+                fetch(`http://localhost:1005/api/student?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
 
@@ -147,7 +147,7 @@
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
+                fetch("http://localhost:1005/api/student/" + studentId, requestOptions)
                     .then(response => response.json())
                     .then(student => {
                         const existingModal = document.getElementById('studentModal');
@@ -312,7 +312,7 @@
                     method: 'DELETE',
                 };
 
-                fetch("http://localhost:1000/api/student/" + studentId, requestOptions)
+                fetch("http://localhost:1005/api/student/" + studentId, requestOptions)
                     .then(response => response.text())
                     .then(deleted =>
                         window.location = '/student'

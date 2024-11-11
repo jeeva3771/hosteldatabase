@@ -122,7 +122,7 @@
                     method: 'GET'
                 }
 
-                fetch(`http://localhost:1000/api/attendance?limit=${limit}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
+                fetch(`http://localhost:1005/api/attendance?limit=${limit}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok ' + response.statusText)
@@ -179,7 +179,7 @@
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1000/api/attendance/" + attendanceId, requestOptions)
+                fetch("http://localhost:1005/api/attendance/" + attendanceId, requestOptions)
                     .then(response => response.json())
                     .then(attendance => {
 

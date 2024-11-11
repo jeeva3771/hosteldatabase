@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Course List' }) %>
+<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Room List' }) %>
 <div class="contentMain">
     <div class="d-flex justify-content-between align-items-center my-2">
-        <h3 class="col-auto me-2 controlAlign">Course</h3>
+        <h3 class="col-auto me-2 controlAlign">Room</h3>
         <div class="d-flex align-items-center">
             <div class="mx-1">
                 <select class="form-select" id="limit" onchange="changeLimit()">
@@ -17,47 +17,23 @@
                 </form>
             </div>
             <div class="mx-1">
-                <a class="btn btn-info" href="/course/add">Add</a>
+                <a class="btn btn-info" href="/room/add">Add</a>
             </div>
         </div>
     </div>
-
     <table class="table table-striped table-hover table-bordered">
         <thead>
             <tr>
                 <th scope="col">Sno</th>
-                <th scope="col">Course Name
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                        class="bi bi-arrow-down-short sortIcon" viewBox="0 0 16 16"
-                        onclick="sortByColumn('courseName', 'DESC')">
-                        <path fill-rule="evenodd"
-                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                    </svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                        class="bi bi-arrow-up-short sortIcon" viewBox="0 0 16 16"
-                        onclick="sortByColumn('courseName', 'ASC')">
-                        <path fill-rule="evenodd"
-                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                    </svg>
-                </th>
-                <th scope="col">Created By
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                        class="bi bi-arrow-down-short sortIcon" viewBox="0 0 16 16"
-                        onclick="sortByColumn('createdBy', 'DESC')">
-                        <path fill-rule="evenodd"
-                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                    </svg>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor"
-                        class="bi bi-arrow-up-short sortIcon" viewBox="0 0 16 16"
-                        onclick="sortByColumn('createdBy', 'ASC')">
-                        <path fill-rule="evenodd"
-                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                    </svg>
-                </th>
+                <th scope="col" onclick="sortByColumn('blockId')">Block Code</th>
+                <th scope="col" onclick="sortByColumn('blockFloorId')">Floor Number</th>
+                <th scope="col" onclick="sortByColumn('roomNumber')">Room Number</th>
+                <th scope="col" onclick="sortByColumn('isActive')">Status</th>
+                <th scope="col" onclick="sortByColumn('createdBy')">Created By</th>
                 <th scope="col">Action</th>
             </tr>
         </thead>
-        <tbody id="courseData">
+        <tbody id="roomsData">
             <tr>
                 <td>
                     <div class="d-flex justify-content-center">
@@ -71,82 +47,88 @@
     </table>
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-center" id="pagination">
+
         </ul>
     </nav>
-    </div>
+</div>
     <%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
-            var searchQuery = '';
-            var tableData = document.getElementById("courseData");
+            var searchQuery = ''
+            var tableData = document.getElementById("roomsData");
             var limit = document.getElementById("limit").value;
             var paginationDom = document.getElementById("pagination");
-
             var columnSortOrders = {
-                courseName: 'ASC'
+                blockId: 'ASC',
+                floorNumber: 'ASC',
+                roomNumber: 'ASC',
+                isActive: 'ASC'
             };
             var currentColumn = 'createdAt';
-            var url = `&orderby=c.${currentColumn}&sort=DESC`;
+            var url = `&orderby=r.${currentColumn}&sort=DESC`;
 
             function changeLimit() {
                 limit = document.getElementById("limit").value
-                coursePage()
+                roomPage()
             }
 
             function handleSearch(event) {
                 event.preventDefault();
                 searchQuery = document.getElementById("searchInput").value;
-                coursePage();
+                roomPage();
             }
 
             function sortByColumn(column, sortOrder) {
                 columnSortOrders[column] = sortOrder;
                 currentColumn = column;
-                url = `&orderby=c.${currentColumn}&sort=${sortOrder}`;
-                coursePage(currentPage);
+                url = `&orderby=r.${currentColumn}&sort=${sortOrder}`;
+                roomPage(currentPage);
             }
 
-            function coursePage(pageNo = 1) {
+            function roomPage(pageNo = 1) {
                 currentPage = pageNo
                 var requestOptions = {
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1005/api/course?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`,
-                    requestOptions)
+                fetch(`http://localhost:1000/api/room?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
-                        const { courses, courseCount } = responseData;
-                        let trHtml = '';
-                        for (let i = 0; i < courses.length; i++) {
-                            const course = courses[i];
-                            trHtml += `<tr>
+                        const { rooms, roomCount } = responseData;
+                        var trHtml = ''
+                        for (var i = 0; i < rooms.length; i++) {
+                            var room = rooms[i]
+                            trHtml = trHtml + `<tr>
                             <td>${(pageNo - 1) * limit + i + 1}</td>
-                            <td>${course.courseName}</td>
-                            <td>${course.createdFirstName} ${course.createdLastName}</td>
-                            <td>   
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readCourseById(${course.courseId})">
+                            <td>${room.blockCode}</td>
+                            <td>${room.floorNumber}</td>
+                            <td>${room.roomNumber}</td>
+                            <td>${room.isActive === 1 ? 'Active' : ''}</td>
+                            <td>${room.createdFirstName} ${room.createdLastName}</td>
+                            <td>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle focus mr-2" viewBox="0 0 16 16" onclick="readRoomById(${room.roomId})">
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                                 <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                                 </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16" onclick="editCourseById(${course.courseId})">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16" onclick="editRoomById(${room.roomId})">
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                                 </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus" onClick="deleteCourseById(${course.courseId})" viewBox="0 0 16 16">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus mr-2" onClick="deleteRoomById(${room.roomId})" viewBox="0 0 16 16">
                                   <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
                                 </svg>
                             </td>
-                        </tr>`;
+                        </tr>`
                         }
-                        tableData.innerHTML = trHtml;
 
-                        var totalPages = Math.ceil(responseData.courseCount / limit)
+                        tableData.innerHTML = trHtml
+                        var totalPages = Math.ceil(responseData.roomCount / limit)
                         var paginationHtml = ''
+
                         for (var i = 1; i <= totalPages; i++) {
                             paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="coursePage(${i})">${i}</a>
+                          <a class="page-link" href="#" onclick="roomPage(${i})">${i}</a>
                        </li>`;
                         }
                         paginationDom.innerHTML = paginationHtml;
@@ -154,28 +136,27 @@
                     .catch((error) => console.error(error));
             }
 
-            function editCourseById(courseId) {
-                window.location.href = `/course/${courseId}`;
+            function editRoomById(roomId) {
+                window.location.href = `/room/${roomId}`;
             }
 
-            function readCourseById(courseId) {
+            function readRoomById(roomId) {
                 var myHeaders = new Headers();
                 var requestOptions = {
                     method: 'GET',
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1005/api/course/" + courseId, requestOptions)
+                fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
                     .then(response => response.json())
-                    .then(course => {
+                    .then(room => {
 
-                        const existingModal = document.getElementById('courseModal');
+                        const existingModal = document.getElementById('roomModal');
                         if (existingModal) {
                             existingModal.remove();
                         }
-
                         const modalHtml = `
-                        <div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal fade" id="roomModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
                                 <div class="modal-content">
                                     <div class="modal-header">
@@ -185,10 +166,50 @@
                                     <div class="modal-body">
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <strong>Course Name</strong>
+                                                <strong>Block Code</strong>
                                             </div>
                                             <div class="col-sm-8">
-                                                <strong> : </strong>${course.courseName}
+                                                <strong> : </strong>${room.blockCode}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Floor Number</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${room.floorNumber}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Room Number</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${room.roomNumber}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Room Capacity</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${room.roomCapacity}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>Status</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${room.isActive === 1 ? 'Active' : 'InActive'}
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-sm-4">
+                                                <strong>AirConditioner</strong>
+                                            </div>
+                                            <div class="col-sm-8">
+                                                <strong> : </strong>${room.isAirConditioner === 1 ? 'Yes' : 'No'}
                                             </div>
                                         </div>
                                         <div class="row">
@@ -196,7 +217,7 @@
                                                 <strong>Created At</strong>
                                             </div>
                                             <div class="col-sm-8">
-                                                <strong> : </strong>${course.createdTimeStamp}
+                                                <strong> : </strong>${room.createdTimeStamp}
                                             </div>
                                         </div>
                                         <div class="row">
@@ -204,7 +225,7 @@
                                                 <strong>Created By</strong>
                                             </div>
                                             <div class="col-sm-8">
-                                                <strong> : </strong>${course.createdFirstName} ${course.createdLastName}
+                                                <strong> : </strong>${room.createdFirstName} ${room.createdLastName}
                                             </div>
                                         </div>
                                         <div class="row">
@@ -212,7 +233,7 @@
                                                 <strong>updated At</strong>
                                             </div>
                                             <div class="col-sm-8">
-                                                <strong> : </strong>${course.updatedTimeStamp}
+                                                <strong> : </strong>${room.updatedTimeStamp}
                                             </div>
                                         </div>
                                         <div class="row">
@@ -220,7 +241,7 @@
                                                 <strong>updated By</strong>
                                             </div>
                                             <div class="col-sm-8">
-                                                <strong> : </strong>${course.updatedFirstName !== null ? course.updatedFirstName : '---'} ${course.updatedLastName !== null ? course.updatedLastName : ''}
+                                                <strong> : </strong>${room.updatedFirstName !== null ? room.updatedFirstName : '---'} ${room.updatedLastName !== null ? room.updatedLastName : ''}
                                             </div>
                                         </div>
                                     </div>
@@ -228,14 +249,15 @@
                             </div>
                         </div>`;
                         document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(document.getElementById('courseModal'));
+                        var modal = new bootstrap.Modal(document.getElementById('roomModal'));
                         modal.show();
 
                     })
                     .catch(error => console.log('error', error));
             }
 
-            function deleteCourseById(courseId) {
+
+            function deleteRoomById(roomId) {
                 var validateDelete = confirm('are you sure you want to delete?')
 
                 if (!validateDelete)
@@ -245,25 +267,16 @@
                     method: 'DELETE',
                 };
 
-                fetch("http://localhost:1005/api/course/" + courseId, requestOptions)
+                fetch("http://localhost:1000/api/room/" + roomId, requestOptions)
                     .then(response => response.text())
-                    .then(deleted => 
-                        window.location = '/course'
+                    .then(deleted =>
+                        window.location = '/room'
                     )
                     .catch(error => console.log('error', error));
             }
 
-            document.querySelectorAll('.sortIcon').forEach(function (element) {
-                element.addEventListener('mouseenter', function () {
-                    element.focus();
-                });
-                element.addEventListener('sortIcon', function () {
-                    element.blur();
-                });
-            });
-
             window.addEventListener('load', () => {
-                coursePage()
+                roomPage()
             })
 
         </script>

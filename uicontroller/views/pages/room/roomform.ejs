@@ -97,7 +97,7 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/room";
+                let url = "http://localhost:1005/api/room";
                 if (roomId) {
                     url = url + '/' + roomId
                 }
@@ -142,7 +142,7 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const response = await fetch('http://localhost:1005/api/block/blockFloor/blockCodeCount');
                     const blocks = await response.json();
 
                     const activeOptions = [];
@@ -184,7 +184,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
+                    const response = await fetch(`http://localhost:1005/api/blockfloor/room/floorCount?blockId=${blockId}`);
                     const blockFloors = await response.json();
 
                     const activeOptions = [];
@@ -219,7 +219,7 @@
             
             async function getRoomById(roomId) {
                 try {
-                    const response = await fetch("http://localhost:1000/api/room/" + roomId);
+                    const response = await fetch("http://localhost:1005/api/room/" + roomId);
                     const room = await response.json();
 
                     blockCode.value = room.blockId
