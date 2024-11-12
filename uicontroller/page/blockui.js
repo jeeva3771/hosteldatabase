@@ -1,10 +1,10 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
 
 function blockPageUi(req, res) {
     res.render('pages/block/blocklist.ejs', {
-        appURL: process.env.APP_URL,
+        appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadCrumb: [
+        breadsCrumb: [
             {name:'Home', link:'/home'},
             {name:'Block', link:'/block'}
         ]
@@ -13,10 +13,10 @@ function blockPageUi(req, res) {
 
 function addBlockUi(req, res) {
     res.render('pages/block/blockform.ejs', {
-        appURL: process.env.APP_URL,
+        appURL: getAppUrl(),
         blockId: '',
         user: getUserProfile(req.session),
-        breadCrumb: [
+        breadsCrumb: [
             {name:'Home', link:'/home'},
             {name:'Block', link:'/block'},
             {name:'Add', link:'/block/add'}
@@ -27,10 +27,10 @@ function addBlockUi(req, res) {
 function editBlockUi(req, res) {
     const blockId = req.params.blockId;
     res.render('pages/block/blockform.ejs', {
-            appURL: process.env.APP_URL,
+            appURL: getAppUrl(),
             blockId: blockId,
             user: getUserProfile(req.session),
-            breadCrumb: [
+            breadsCrumb: [
                 {name:'Home', link:'/home'},
                 {name:'Block', link:'/block'},
                 {name:'Edit', link:'/block/add'}

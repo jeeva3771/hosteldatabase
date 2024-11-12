@@ -1,12 +1,14 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Blockfloor',
-isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadCrumb}) %>
+<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block floor form',
+isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor form', breadsCrumb: breadsCrumb}) %>
+<%- include('../../partials/aside.ejs') %>
+
 
 <section class="section">
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">Block Floor Form</h5>
+                    <h5 class="card-title"></h5>
 
                     <!-- Horizontal Form -->
                     <form>
@@ -45,9 +47,9 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadC
 
                         <div class="text-center">
                             <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
+                            <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="submit" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
-                            <button type="reset" class="btn btn-secondary">Reset</button>
                         </div>
                     </form><!-- End Horizontal Form -->
                 </div>
@@ -56,8 +58,8 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadC
         </div>
     </section>
 
-    
     <%- include('../../partials/footer.ejs') %>
+
         <script>
             var blockCode = document.getElementById('blockCode');
             var floorNumber = document.getElementById('floorNumber');
@@ -92,16 +94,22 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadC
                     body: raw
                 };
 
-                let url = "http://localhost:1005/api/blockfloor";
+                let url = `${appURL}api/blockfloor`;
                 if (blockFloorId) {
                     url = url + '/' + blockFloorId
                 }
 
                 fetch(url, requestOptions)
-                    .then(response => response.text())
-                    .then(blockFloors => window.location = '/blockfloor')
+                    .then(async (response) => {
+                        if (response.status === 201 || 200) {
+                            window.location = `${appURL}blockfloor`;
+                        } else {
+                            alert(await response.text())
+                        }
+                    })
                     .catch(error => console.error('error', error));
             }
+            
 
             function toggleSubmitButton() {
                 const selectedStatusValue = getSelectedStatus();
@@ -127,7 +135,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadC
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1005/api/block/blockfloor/blockcodecount');
+                    const response = await fetch(`${appURL}api/block/blockfloor/blockcodecount`);
                     const blocks = await response.json();
 
                     const activeOptions = [];
@@ -162,7 +170,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor' breadCrumb: breadC
 
             async function getBlockFloorById(blockFloorId) {
                 try {
-                    const response = await fetch(`http://localhost:1005/api/blockfloor/${blockFloorId}`);
+                    const response = await fetch(`${appURL}api/blockfloor/${blockFloorId}`);
                     const blockFloor = await response.json();
 
                     blockCode.value = blockFloor.blockId;

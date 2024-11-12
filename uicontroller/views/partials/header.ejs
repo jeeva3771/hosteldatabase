@@ -16,9 +16,9 @@
   <link href="<%=appURL%>assets/img/apple-touch-icon.png" rel="apple-touch-icon">
 
   <!-- Google Fonts -->
-  <link href="<%=appURL%>https://fonts.gstatic.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect">
   <link
-    href="<%=appURL%>https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
     rel="stylesheet">
 
   <!-- Vendor CSS Files -->
@@ -74,7 +74,7 @@
       </div><!-- End Logo -->
 
       <div class="search-bar">
-        <form class="search-form d-flex align-items-center" method="POST" action="#">
+        <form class="search-form d-flex align-items-center" method="" action="#">
           <input type="text" name="query" placeholder="Search" title="Enter search keyword">
           <button type="submit" title="Search"><i class="bi bi-search"></i></button>
         </form>
@@ -182,7 +182,7 @@
 
               <li class="message-item">
                 <a href="#">
-                  <img src="assets/img/messages-1.jpg" alt="" class="rounded-circle">
+                  <img src="<%=appURL%>assets/img/messages-1.jpg" alt="" class="rounded-circle">
                   <div>
                     <h4>Maria Hudson</h4>
                     <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
@@ -196,7 +196,7 @@
 
               <li class="message-item">
                 <a href="#">
-                  <img src="assets/img/messages-2.jpg" alt="" class="rounded-circle">
+                  <img src="<%=appURL%>assets/img/messages-2.jpg" alt="" class="rounded-circle">
                   <div>
                     <h4>Anna Nelson</h4>
                     <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
@@ -210,7 +210,7 @@
 
               <li class="message-item">
                 <a href="#">
-                  <img src="assets/img/messages-3.jpg" alt="" class="rounded-circle">
+                  <img src="<%=appURL%>assets/img/messages-3.jpg" alt="" class="rounded-circle">
                   <div>
                     <h4>David Muldon</h4>
                     <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
@@ -308,10 +308,10 @@
             <h1><%=subTitle%></h1>
               <nav>
                 <ol class="breadcrumb">
-                  <% for(i = 0; i < breadCrumb.length; i++) { %>
+                  <% for(i = 0; i < breadsCrumb.length; i++) { %>
                       <li class="breadcrumb-item">
-                        <a href="<%= breadCrumb[i].link %>">
-                          <%= breadCrumb[i].name %>
+                        <a href="<%= breadsCrumb[i].link %>">
+                          <%= breadsCrumb[i].name %>
                         </a>
                       </li>
                    <% } %>

@@ -25,7 +25,7 @@
                     <p class="text-center small">Enter your email & password to login</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
+                  <div class="row g-3 needs-validation" novalidate>
 
                     <div class="col-12">
                       <label for="email" class="form-label">Email</label>
@@ -55,7 +55,7 @@
                       <button class="btn btn-primary w-100" type="submit" id="loginButton" onclick="loginUser()"
                         disabled>Login</button>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
               <div class="credits">
@@ -91,10 +91,10 @@
         redirect: "follow"
       };
 
-      const request = fetch("http://localhost:1005/api/login", requestOptions)
+      const request = fetch(`${appURL}api/login`, requestOptions)
       request.then(async (response) => {
         if (response.status === 200) {
-          window.location.replace("http://localhost:1005/home")
+          window.location.replace("/home")
         } else {
           alert(await response.text())
         }

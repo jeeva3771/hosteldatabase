@@ -1,5 +1,5 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, isMenuVisible : true, title: 'Block List' ,
-    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block', breadCrumb: breadCrumb }) %>
+<%- include('../../partials/header.ejs', { appURL: appURL, isMenuVisible : true, title: 'Block list' ,
+    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block list' , breadsCrumb: breadsCrumb }) %>
     <%- include('../../partials/aside.ejs') %>
 
         <section class="section">
@@ -8,16 +8,15 @@
 
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Block</h5>
-                            <div class="d-flex justify-content-end mb-1"><a href="/block/add"
-                                    class="btn btn-primary">Add</a></div>
-
-                            <div class="datatable-top">
+                            
+                            <div class="datatable-top mt-4">
                                 <div class="datatable-search">
                                     <input class="datatable-input" id="searchInput" onkeyup="handleSearch(event)"
-                                        placeholder="Search blockcode, location, createdby" type="search" name="search"
+                                        placeholder="Search..." type="search" name="search"
                                         title="Search within table">
                                 </div>
+                                <div class="d-flex justify-content-end mb-1"><a href="/block/add"
+                                    class="btn btn-primary">Add</a></div>
                                 <div class="datatable-dropdown">
                                     <label>
                                         <select class="datatable-selector" name="per-page" id="limit"
@@ -106,13 +105,10 @@
                                 <ul class="pagination justify-content-center" id="pagination">
                                 </ul>
                             </nav>
-
                         </div>
                     </div>
-
                 </div>
             </div>
-
         </section>
 
         </main><!-- End #main -->
@@ -154,7 +150,7 @@
                 columnSortOrders[column] = sortOrder;
                 currentColumn = column;
                 url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
-                
+
                 const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
                 activeIcons.forEach(icon => {
                     icon.classList.remove('light');
@@ -169,7 +165,7 @@
                 var requestOptions = {
                     method: 'GET'
                 };
-                fetch(`http://localhost:1005/api/block?limit=${limit}&page=${pageNo}${url}&search=${searchQuery}`, requestOptions)
+                fetch(`${appURL}api/block?limit=${limit}&page=${pageNo}${url}&search=${searchQuery}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
                         const { blocks, blockCount } = responseData;
@@ -229,7 +225,7 @@
             }
 
             function editBlockById(blockId) {
-                window.location.href = `/block/${blockId}`;
+                window.location = `${appURL}block/${blockId}`;
             }
 
             function readBlockById(blockId) {
@@ -239,7 +235,7 @@
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1005/api/block/" + blockId, requestOptions)
+                fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then(response => response.json())
                     .then(block => {
 
@@ -335,10 +331,10 @@
                     method: 'DELETE',
                 };
 
-                fetch("http://localhost:1005/api/block/" + blockId, requestOptions)
+                fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then(response => response.text())
                     .then(result =>
-                        window.location = '/block'
+                        window.location = `${appURL}/block`
                     )
                     .catch(error => console.log('error', error));
             }

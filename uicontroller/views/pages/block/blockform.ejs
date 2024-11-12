@@ -1,5 +1,5 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block' ,
-    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block' , breadCrumb: breadCrumb}) %>
+<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block form' ,
+    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block form' , breadsCrumb: breadsCrumb}) %>
     <%- include('../../partials/aside.ejs') %>
 
         <section class="section">
@@ -7,7 +7,7 @@
                 <div class="col-lg-12">
                     <div class="card">
                         <div class="card-body">
-                            <h5 class="card-title">Block form</h5>
+                            <h5 class="card-title"></h5>
 
                             <!-- Horizontal Form -->
                             <form>
@@ -45,9 +45,9 @@
 
                                 <div class="text-center">
                                     <input type="hidden" id="blockId" value="<%=blockId %>" />
+                                    <button type="reset" class="btn btn-secondary">Reset</button>
                                     <button type="submit" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                         id="submitButton" disabled>Submit</button>
-                                    <button type="reset" class="btn btn-secondary">Reset</button>
                                 </div>
                             </form><!-- End Horizontal Form -->
                         </div>
@@ -55,6 +55,7 @@
                 </div>
             </div>
         </section>
+        <%- include('../../partials/footer.ejs') %>
         <script>
             var blockCode = document.getElementById('blockCode');
             var blockLocation = document.getElementById('blockLocation');
@@ -90,15 +91,16 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1005/api/block";
+                let url = `${appURL}api/block`;
                 if (blockId) {
                     url = url + '/' + blockId
                 }
 
                 fetch(url, requestOptions)
                     .then(async (response) => {
+                        console.log(response.status)
                         if (response.status === 201 || 200) {
-                            window.location = '/block';
+                            window.location = `${appURL}block`;
                         } else {
                             alert(await response.text())
                         }
@@ -116,7 +118,7 @@
                     method: "GET"
                 };
 
-                fetch("http://localhost:1005/api/block/" + blockId, requestOptions)
+                fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then((response) => response.json())
                     .then((block) => {
                         blockCode.value = block.blockCode
@@ -143,4 +145,3 @@
             blockLocation.addEventListener('input', toggleSubmitButton);
             document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
         </script>
-        <%- include('../../partials/footer.ejs') %>

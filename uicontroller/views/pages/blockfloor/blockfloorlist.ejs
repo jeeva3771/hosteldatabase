@@ -1,5 +1,5 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Blockfloor List',
-isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: breadCrumb}) %>
+<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block floor list',
+isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor list', breadsCrumb: breadsCrumb}) %>
     <%- include('../../partials/aside.ejs') %>
 
             <section class="section">
@@ -7,16 +7,15 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                     <div class="col-lg-12">
                         <div class="card">
                             <div class="card-body">
-                                <h5 class="card-title">Block floor</h5>
-                                <div class="d-flex justify-content-end mb-1"><a href="/blockfloor/add"
-                                        class="btn btn-primary">Add</a></div>
-
-                                <div class="datatable-top">
+                               
+                                <div class="datatable-top mt-4">
                                     <div class="datatable-search">
                                         <input class="datatable-input" id="searchInput" onkeyup="handleSearch(event)"
-                                            placeholder="Search blockcode, floornumber, createdby" type="search"
+                                            placeholder="Search..." type="search"
                                             name="search" title="Search within table">
                                     </div>
+                                    <div class="d-flex justify-content-end mb-1"><a href="/blockfloor/add"
+                                        class="btn btn-primary">Add</a></div>
                                     <div class="datatable-dropdown">
                                         <label>
                                             <select class="datatable-selector" name="per-page" id="limit"
@@ -35,7 +34,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                                         <tr>
                                         <tr>
                                             <th scope="col">Sno</th>
-                                            <th scope="col" onclick="sortByColumn('blockCode')">Block Code
+                                            <th scope="col">Block Code
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                     fill="currentColor" class="bi bi-arrow-down-short sortIcon"
                                                     viewBox="0 0 16 16" onclick="sortByColumn('blockId', 'DESC')">
@@ -49,7 +48,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                                                         d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                                 </svg>
                                             </th>
-                                            <th scope="col" onclick="sortByColumn('blockLocation')">Floor Number
+                                            <th scope="col">Floor Number
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                     fill="currentColor" class="bi bi-arrow-down-short sortIcon"
                                                     viewBox="0 0 16 16" onclick="sortByColumn('floorNumber', 'DESC')">
@@ -63,7 +62,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                                                         d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                                 </svg>
                                             </th>
-                                            <th scope="col" onclick="sortByColumn('isActive')">Status
+                                            <th scope="col">Status
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                     fill="currentColor" class="bi bi-arrow-down-short sortIcon"
                                                     viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
@@ -77,7 +76,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                                                         d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                                 </svg>
                                             </th>
-                                            <th scope="col" onclick="sortByColumn('createdBy')">Created By
+                                            <th scope="col">Created By
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                     fill="currentColor" class="bi bi-arrow-down-short sortIcon"
                                                     viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
@@ -170,7 +169,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                         method: 'GET'
                     };
 
-                    fetch(`http://localhost:1005/api/blockfloor?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
+                    fetch(`${appURL}api/blockfloor?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`, requestOptions)
                         .then(response => response.json())
                         .then(responseData => {
                             const { blockFloors, blockFloorCount } = responseData;
@@ -231,7 +230,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                 }
 
                 function editBlockFloorById(blockFloorId) {
-                    window.location.href = `/blockfloor/${blockFloorId}`;
+                    window.location = `${appURL}blockfloor/${blockFloorId}`;
                 }
 
                 function readBlockFloorById(blockFloorId) {
@@ -241,7 +240,7 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                         headers: myHeaders
                     };
 
-                    fetch("http://localhost:1005/api/blockfloor/" + blockFloorId, requestOptions)
+                    fetch(`${appURL}api/blockfloor/` + blockFloorId, requestOptions)
                         .then(response => response.json())
                         .then(blockFloor => {
 
@@ -336,10 +335,10 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: bread
                         method: 'DELETE',
                     };
 
-                    fetch("http://localhost:1005/api/blockfloor/" + blockFloorId, requestOptions)
+                    fetch(`${appURL}api/blockfloor/` + blockFloorId, requestOptions)
                         .then(response => response.text())
                         .then(deleted =>
-                            window.location = '/blockfloor'
+                            window.location = `${appURL}/blockfloor`
                         )
                         .catch(error => console.log('error', error));
                 }

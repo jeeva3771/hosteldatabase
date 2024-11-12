@@ -153,6 +153,7 @@ async function createBlockFloor(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -325,7 +326,7 @@ async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
     app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
-    app.get('/api/blockfloor/room/floorCount', readRoomBlockFloorCountOrFloorCount)
+    app.get('/api/blockfloor/room/floorcount', readRoomBlockFloorCountOrFloorCount)
     app.post('/api/blockfloor', createBlockFloor)
     app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
     app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloorById)

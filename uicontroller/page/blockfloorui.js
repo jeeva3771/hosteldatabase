@@ -1,10 +1,10 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
 
 function blockFloorPageUi(req, res) {
     res.render('pages/blockfloor/blockfloorlist.ejs', {
-        appURL: process.env.APP_URL,
+        appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadCrumb: [
+        breadsCrumb: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'}
         ]
@@ -13,10 +13,10 @@ function blockFloorPageUi(req, res) {
 
 function addBlockFloorUi(req, res) {
     res.render('pages/blockfloor/blockfloorform.ejs', {
-        appURL: process.env.APP_URL,
+        appURL: getAppUrl(),
         blockFloorId: '',
         user: getUserProfile(req.session),
-        breadCrumb: [
+        breadsCrumb: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'},
             {name:'Add', link:'/blockfloor/add'}
@@ -27,10 +27,10 @@ function addBlockFloorUi(req, res) {
 function editBlockFloorUi(req, res) {
     const blockFloorId = req.params.blockFloorId;
     res.render('pages/blockfloor/blockfloorform.ejs', {
-        appURL: process.env.APP_URL,
+        appURL: getAppUrl(),
         blockFloorId: blockFloorId,
         user: getUserProfile(req.session),
-        breadCrumb: [
+        breadsCrumb: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'},
             {name:'Edit', link:'/blockfloor/add'}

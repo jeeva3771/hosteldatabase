@@ -60,11 +60,13 @@ app.use((req, res, next) => {
 
     if (req.originalUrl !== '/login') {
         if (req.session.isLogged !== true) {
-            return res.status(401).redirect('http://localhost:1005/login')
+            return res.status(401).redirect('/login')
         }
     } else {
+        console.log('true')
         if (req.session.isLogged === true) {
-            return res.status(200).redirect('http://localhost:1005/home')
+            console.log('true2')
+            return res.status(200).redirect('/home')
         }
     }
     return next()
