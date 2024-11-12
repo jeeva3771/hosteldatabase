@@ -1,15 +1,7 @@
-<%- include('../partials/header.ejs', { 
-  appURL: appURL,
-  isMenuVisible : true,
-  title: 'Home',
-  user: user,
-  isSubTitleAndBreadCrumbVisible: true,
-  subTitle: 'Dashboard',
-  breadsCrumb: breadsCrumb
-}) %>
-
+<%- include('../partials/header.ejs', { appURL: appURL, title: 'Home' }) %>
+<%- include('../partials/nonloginlayout.ejs', { user: user, subTitle: 'Dashboard' }) %>
+<%- include('../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
 <%- include('../partials/aside.ejs') %>
-
 
     <section class="section dashboard">
       <div class="row">

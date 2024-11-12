@@ -1,6 +1,8 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible: true, title: 'Room form',
-isSubTitleAndBreadCrumbVisible: true, subTitle: 'Room form', breadsCrumb: breadsCrumb}) %>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Room form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Room form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
 <%- include('../../partials/aside.ejs') %>
+
 
 <section class="section">
     <div class="row">

@@ -1,6 +1,7 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block form' ,
-    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block form' , breadsCrumb: breadsCrumb}) %>
-    <%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/aside.ejs') %>
 
         <section class="section">
             <div class="row">

@@ -1,6 +1,7 @@
-<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Block floor list',
-isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor list', breadsCrumb: breadsCrumb}) %>
-    <%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/aside.ejs') %>
 
             <section class="section">
                 <div class="row">
@@ -9,10 +10,11 @@ isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor list', breadsCrumb:
                             <div class="card-body">
                                
                                 <div class="datatable-top mt-4">
-                                    <div class="datatable-search">
+                                    <div class="datatable-search d-flex gap-1 align-items-center">
                                         <input class="datatable-input" id="searchInput" onkeyup="handleSearch(event)"
                                             placeholder="Search..." type="search"
                                             name="search" title="Search within table">
+                                        <button type="button" class="btn btn-secondary" onclick="handleSearch(event)">Search</button>
                                     </div>
                                     <div class="d-flex justify-content-end mb-1"><a href="/blockfloor/add"
                                         class="btn btn-primary">Add</a></div>
