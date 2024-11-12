@@ -379,7 +379,7 @@ module.exports = (app) => {
     app.get('/api/block', readBlocks)
     app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
-    app.get('/api/block/blockfloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/blockfloor/blockcodecount', readBlockFloorBlockCodeCount)
     app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)

@@ -6,6 +6,12 @@ module.exports = (app) => {
         })
     });
 
+    app.get('/api/logout', (req, res) => {
+        res.render('pages/login', {
+            appURL: process.env.APP_URL
+        })
+    })
+
     app.get('/home', (req, res) => {
         if (req.session.isLogged === true) {
             res.render('pages/home', {

@@ -313,3 +313,27 @@
 
       <!-- Template Main JS File -->
       <script src="<%=appURL%>assets/js/main.js"></script>
+
+              <% if (isSubTitleAndBreadCrumbVisible===true) { %>
+        <main id="main" class="main">
+
+        <div class="pagetitle">
+          <h1><%=subTitle%></h1>
+            <nav>
+              <ol class="breadcrumb">
+                <% for(i = 0; i < breadCrumb.length; i++) { %>
+                  <% if (i === breadCrumb.length - 1) { %>
+                    <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
+                        <%= breadCrumb[i].home %>
+                      </a></li>
+                    <% } else { %>
+                      <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
+                          <%= breadCrumb[i].home %>
+                        </a></li>
+                      <% } %>
+                  <% } %>
+              </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <% } %>

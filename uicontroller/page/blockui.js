@@ -13,6 +13,7 @@ function blockPageUi(req, res) {
 
 function addBlockUi(req, res) {
     res.render('pages/block/blockform.ejs', {
+        appURL: process.env.APP_URL,
         blockId: '',
         user: getUserProfile(req.session),
         breadCrumb: [
@@ -26,6 +27,7 @@ function addBlockUi(req, res) {
 function editBlockUi(req, res) {
     const blockId = req.params.blockId;
     res.render('pages/block/blockform.ejs', {
+            appURL: process.env.APP_URL,
             blockId: blockId,
             user: getUserProfile(req.session),
             breadCrumb: [

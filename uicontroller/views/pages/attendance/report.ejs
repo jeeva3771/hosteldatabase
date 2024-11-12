@@ -68,7 +68,7 @@
             selectedStudent.addEventListener('change', renderReport);
 
             function populateDropDownStudents() {
-                fetch("http://localhost:1000/api/student/getstudent")
+                fetch("http://localhost:1005/api/student/getstudent")
                     .then(response => response.json())
                     .then(students => {
                         students.forEach(student => {
@@ -119,7 +119,7 @@
                 dateLabel.innerHTML = '';
 
                 try {
-                    const response = await fetch(`http://localhost:1000/api/attendance/studentattendancereport?month=${month + 1}&year=${year}&studentName=${selectedStudent.value}`);
+                    const response = await fetch(`http://localhost:1005/api/attendance/studentattendancereport?month=${month + 1}&year=${year}&studentName=${selectedStudent.value}`);
 
                     if (!response.ok) {
                         if (response.status === 404) {

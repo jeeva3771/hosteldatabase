@@ -1,17 +1,6 @@
-<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Blockfloor List' }) %>
+<%- include('../../partials/header.ejs',{ appURL: appURL, isMenuVisible : true, title: 'Blockfloor List',
+isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block floor', breadCrumb: breadCrumb}) %>
     <%- include('../../partials/aside.ejs') %>
-
-        <main id="main" class="main">
-            <div class="pagetitle">
-                <h1>Block floor</h1>
-                <nav>
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item">Home</li>
-                        <li class="breadcrumb-item">Blockfloor</li>
-                        <li class="breadcrumb-item active">Add</li>
-                    </ol>
-                </nav>
-            </div><!-- End Page Title -->
 
             <section class="section">
                 <div class="row">

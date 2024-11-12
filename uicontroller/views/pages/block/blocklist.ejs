@@ -1,5 +1,5 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, isMenuVisible : true, title: 'Block List' ,
-    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block' }) %>
+    isSubTitleAndBreadCrumbVisible: true, subTitle: 'Block', breadCrumb: breadCrumb }) %>
     <%- include('../../partials/aside.ejs') %>
 
         <section class="section">
@@ -151,11 +151,10 @@
             }
 
             function sortByColumn(column, sortOrder) {
-
                 columnSortOrders[column] = sortOrder;
                 currentColumn = column;
                 url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
-
+                
                 const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
                 activeIcons.forEach(icon => {
                     icon.classList.remove('light');
