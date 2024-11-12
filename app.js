@@ -39,7 +39,7 @@ app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
     secret: 'keyboard',
-    resave: false,
+    resave: true,
     saveUninitialized: false,
     cookie: {
         maxAge: (1000 * 60 * 15)
@@ -53,9 +53,7 @@ const pageSessionExclude = [
     '/api/warden/generateotp',
     '/api/warden/resetpassword'
 ]
-
 app.use((req, res, next) => {
-    // logger.info(`listen ${process.env.APP_PORT} port`)
     if (pageSessionExclude.includes(req.originalUrl)) {
         return next()
     }

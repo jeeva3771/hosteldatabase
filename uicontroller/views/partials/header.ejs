@@ -35,7 +35,6 @@
   <script>
     var appURL = '<%=appURL %>'
   </script>
-
   <style>
     .focus:hover {
       fill: #007bff;
@@ -68,7 +67,7 @@
 
       <div class="d-flex align-items-center justify-content-between">
         <a href="index.html" class="logo d-flex align-items-center">
-          <img src="assets/img/logo.png" alt="">
+          <img src="<%=appURL%>assets/img/logo.png" alt="">
           <span class="d-none d-lg-block">Hostel</span>
         </a>
         <i class="bi bi-list toggle-sidebar-btn"></i>
@@ -234,7 +233,7 @@
           <li class="nav-item dropdown pe-3">
 
             <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-              <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+              <img src="<%=appURL%>assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
               <span class="d-none d-md-block dropdown-toggle ps-2">
                 <%= user.name %>
               </span>
@@ -299,41 +298,25 @@
     <% } %>
 
       <a href="#" class="back-to-top d-flex align-items-center justify-content-center">
-        <i class="bi bi-arrow-up-short"></i></a>
+        <i class="bi bi-arrow-up-short"></i>
+      </a>
 
-      <!-- Vendor JS Files -->
-      <script src="<%=appURL%>assets/vendor/apexcharts/apexcharts.min.js"></script>
-      <script src="<%=appURL%>assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-      <script src="<%=appURL%>assets/vendor/chart.js/chart.umd.js"></script>
-      <script src="<%=appURL%>assets/vendor/echarts/echarts.min.js"></script>
-      <script src="<%=appURL%>assets/vendor/quill/quill.js"></script>
-      <script src="<%=appURL%>assets/vendor/simple-datatables/simple-datatables.js"></script>
-      <script src="<%=appURL%>assets/vendor/tinymce/tinymce.min.js"></script>
-      <script src="<%=appURL%>assets/vendor/php-email-form/validate.js"></script>
-
-      <!-- Template Main JS File -->
-      <script src="<%=appURL%>assets/js/main.js"></script>
-
-              <% if (isSubTitleAndBreadCrumbVisible===true) { %>
+        <% if (isSubTitleAndBreadCrumbVisible===true) { %>
         <main id="main" class="main">
 
-        <div class="pagetitle">
-          <h1><%=subTitle%></h1>
-            <nav>
-              <ol class="breadcrumb">
-                <% for(i = 0; i < breadCrumb.length; i++) { %>
-                  <% if (i === breadCrumb.length - 1) { %>
-                    <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
-                        <%= breadCrumb[i].home %>
-                      </a></li>
-                    <% } else { %>
-                      <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
-                          <%= breadCrumb[i].home %>
-                        </a></li>
-                      <% } %>
-                  <% } %>
-              </ol>
-            </nav>
-        </div><!-- End Page Title -->
+          <div class="pagetitle">
+            <h1><%=subTitle%></h1>
+              <nav>
+                <ol class="breadcrumb">
+                  <% for(i = 0; i < breadCrumb.length; i++) { %>
+                      <li class="breadcrumb-item">
+                        <a href="<%= breadCrumb[i].link %>">
+                          <%= breadCrumb[i].name %>
+                        </a>
+                      </li>
+                   <% } %>
+                </ol>
+              </nav>
+          </div><!-- End Page Title -->
 
         <% } %>

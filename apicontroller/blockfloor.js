@@ -14,7 +14,7 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset]
+    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -22,8 +22,6 @@ async function readBlockFloors(req, res) {
             bk.blockCode,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
             DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
             DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM blockfloor AS b
@@ -31,11 +29,10 @@ async function readBlockFloors(req, res) {
               block AS bk ON bk.blockId = b.blockId
             LEFT JOIN 
               warden AS w ON w.wardenId = b.createdBy
-            LEFT JOIN 
-              warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
-            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
+            OR w.firstName LIKE ? OR w.lastName Like ?)
             ORDER BY ${orderBy} ${sort}
             LIMIT ? OFFSET ?`;
 
