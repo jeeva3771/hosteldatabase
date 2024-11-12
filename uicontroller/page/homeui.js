@@ -1,18 +1,35 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
 module.exports = (app) => {
     app.get('/login', (req, res) => {
-        res.render('pages/login')
+        if (req.session.isLogged === true) {
+            res.render('pages/home', {
+                appURL: getAppUrl(),
+                user: getUserProfile(req.session),
+                breadsCrumb: [{ name: 'Home', link: '/home' }]
+            })
+        } else {
+            res.render('pages/login', {
+                appURL: getAppUrl()
+            })
+        }
     });
+
+    app.get('/api/logout', (req, res) => {
+        res.render('pages/login', {
+            appURL: getAppUrl()
+        })
+    })
 
     app.get('/home', (req, res) => {
         if (req.session.isLogged === true) {
             res.render('pages/home', {
+                appURL: getAppUrl(),
                 user: getUserProfile(req.session),
-                breadcrumb: [{ name: 'Home', link: '/home' }]
+                breadsCrumb: [{ name: 'Home', link: '/home' }]
             })
         }
         else {
-            res.redirect('http://localhost:1000/login')
+            res.redirect(`${getAppUrl()}/login`)
         }
     })
 }

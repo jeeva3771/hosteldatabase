@@ -1,9 +1,10 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
 
 function roomPageUi(req, res) {
     res.render('pages/room/roomlist.ejs', {
+        appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadcrumb : [ 
+        breadsCrumb : [ 
             {name:'Home', link:'/home'},
             {name:'Room', link:'/room'}
         ]
@@ -12,9 +13,10 @@ function roomPageUi(req, res) {
 
 function addRoomUi(req, res) {
     res.render('pages/room/roomform.ejs', {
+        appURL: getAppUrl(),
         roomId: '',
         user: getUserProfile(req.session),
-        breadcrumb : [ 
+        breadsCrumb : [ 
             {name:'Home', link:'/home'},
             {name:'Room', link:'/room'},
             {name:'Add', link:'/room/add'}
@@ -26,11 +28,12 @@ function addRoomUi(req, res) {
 function editRoomUi(req, res) {
     const roomId = req.params.roomId;
     res.render('pages/room/roomform.ejs', {
+        appURL: getAppUrl(),
         roomId: roomId,
         user: getUserProfile(req.session),
-        breadcrumb : [ 
+        breadsCrumb : [ 
             {name:'Home', link:'/home'},
-            {name:'room', link:'/room'},
+            {name:'Room', link:'/room'},
             {name:'Edit', link:'/room/add'}
         ]
 

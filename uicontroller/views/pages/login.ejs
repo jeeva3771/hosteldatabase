@@ -1,4 +1,4 @@
-<%- include('../partials/header.ejs', { isMenuVisible: false, title: 'Login' }) %>
+<%- include('../partials/header.ejs', { appURL: appURL, title: 'Login' }) %>
 
   <main>
     <div class="container">
@@ -11,7 +11,7 @@
               <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
                   <img src="assets/img/logo.png" alt="">
-                  <span class="d-none d-lg-block">NiceAdmin</span>
+                  <span class="d-none d-lg-block">Hostel</span>
                 </a>
               </div><!-- End Logo -->
 
@@ -24,13 +24,13 @@
                     <p class="text-center small">Enter your email & password to login</p>
                   </div>
 
-                  <form class="row g-3 needs-validation" novalidate>
+                  <div class="row g-3 needs-validation" novalidate>
 
                     <div class="col-12">
                       <label for="email" class="form-label">Email</label>
                       <div class="input-group has-validation">
-                        <input type="email" name="email" class="form-control" id="email" 
-                        onkeyup="toggleLoginButton()" value="prem" required>
+                        <input type="email" name="email" class="form-control" id="email" onkeyup="toggleLoginButton()"
+                          value="prem" required>
                         <div class="invalid-feedback">Please enter your email.</div>
                       </div>
                     </div>
@@ -38,27 +38,27 @@
                     <div class="col-12">
                       <label for="password" class="form-label">Password</label>
                       <input type="password" name="password" class="form-control" id="password"
-                       onkeyup="toggleLoginButton()" value="prem234" required>
+                        onkeyup="toggleLoginButton()" value="prem234" required>
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
 
                     <div class="col-12">
                       <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe"
-                        value="true" onclick="secure()">
+                        <input class="form-check-input" type="checkbox" name="remember" id="rememberMe" value="true"
+                          onclick="secure()">
                         <label class="form-check-label me-2" for="rememberMe">Remember me</label>
                         <small><a href="/warden/resetpassword">Forgotten password?</a></small>
                       </div>
-                    </div> 
+                    </div>
                     <div class="col-12">
                       <button class="btn btn-primary w-100" type="submit" id="loginButton" onclick="loginUser()"
-                      disabled>Login</button>
+                        disabled>Login</button>
                     </div>
-                  </form>
+                  </div>
                 </div>
               </div>
               <div class="credits">
-                Designed by <a href="">Jeevanantham</a>
+                Designed by <a href="https://www.linkedin.com/in/jeeva377">Jeeva|Linkedin</a>
               </div>
 
             </div>
@@ -90,10 +90,10 @@
         redirect: "follow"
       };
 
-      const request = fetch("http://localhost:1000/api/login", requestOptions)
+      const request = fetch(`${appURL}api/login`, requestOptions)
       request.then(async (response) => {
         if (response.status === 200) {
-          window.location.replace("http://localhost:1000/home")
+          window.location.replace("/home")
         } else {
           alert(await response.text())
         }

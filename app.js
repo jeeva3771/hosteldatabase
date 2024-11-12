@@ -1,3 +1,5 @@
+const dotenv = require('dotenv');
+
 const express = require('express');
 const mysql = require('mysql');
 const logger = require('pino')();
@@ -7,6 +9,8 @@ var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var FileStore = require('session-file-store')(session);
 var fileStoreOptions = {};
+
+dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
 //apicontroller
 const course = require('./apicontroller/course.js');
@@ -35,7 +39,7 @@ app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
     secret: 'keyboard',
-    resave: false,
+    resave: true,
     saveUninitialized: false,
     cookie: {
         maxAge: (1000 * 60 * 15)
@@ -49,7 +53,6 @@ const pageSessionExclude = [
     '/api/warden/generateotp',
     '/api/warden/resetpassword'
 ]
-
 app.use((req, res, next) => {
     if (pageSessionExclude.includes(req.originalUrl)) {
         return next()
@@ -57,11 +60,13 @@ app.use((req, res, next) => {
 
     if (req.originalUrl !== '/login') {
         if (req.session.isLogged !== true) {
-            return res.status(401).redirect('http://localhost:1000/login')
+            return res.status(401).redirect('/login')
         }
     } else {
+        console.log('true')
         if (req.session.isLogged === true) {
-            return res.status(200).redirect('http://localhost:1000/home')
+            console.log('true2')
+            return res.status(200).redirect('/home')
         }
     }
     return next()
@@ -71,10 +76,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
 
 app.mysqlClient = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: 'root',
-    database: 'hosteldatabase'
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
 })
 
 app.mysqlClient.connect(function (err) {
@@ -89,7 +94,7 @@ app.mysqlClient.connect(function (err) {
         blockFloor(app)
         room(app)
         student(app)
-        attendance(app)
+        attendance(app)    
 
         homeUi(app)
         courseUi(app)
@@ -99,9 +104,10 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
+        
 
-        app.listen(1000, () => {
-            logger.info('listen 1000port')
+        app.listen(process.env.APP_PORT, () => {
+            logger.info(`listen ${process.env.APP_PORT} port`)
         })
     }
 })

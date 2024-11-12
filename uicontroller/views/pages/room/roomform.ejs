@@ -1,49 +1,97 @@
-<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Room' }) %>
-    <h2>Room form</h2>
-    <div class="form-group">
-        <label for="blockCode">Block Code</label>
-        <select class="form-control" id="blockCode">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="floorNumber">Floor Number</label>
-        <select class="form-control" id="floorNumber">
-        </select>
-    </div>
-    <div class="form-group">
-        <label for="roomNumber">Room Number</label>
-        <input type="number" class="form-control" id="roomNumber">
-    </div>
-    <div class="form-group">
-        <label for="roomCapacity">Room Capacity</label>
-        <input type="number" class="form-control" id="roomCapacity">
-    </div>
-    <div class="form-group">
-        <label for="status">Status</label><br>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" id="isActive" value="1">
-            <label class="form-check-label" for="isActive">Active</label>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Room form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Room form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/aside.ejs') %>
+
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Horizontal Form -->
+                    <form class="mt-4">
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
+                            <div class="col-sm-10">
+                              <select class="form-select" aria-label="Default select example" id="blockCode">
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" for="floorNumber">Floor Number</label>
+                            <div class="col-sm-10">
+                              <select class="form-select" aria-label="Default select example" id="floorNumber">
+                              </select>
+                            </div>
+                          </div>
+                          <div class="row mb-3">
+                            <label for="roomNumber" class="col-sm-2 col-form-label">Room Number</label>
+                            <div class="col-sm-10">
+                              <input type="number" class="form-control" id="roomNumber">
+                            </div>
+                          </div>
+                          <div class="row mb-3">
+                            <label for="roomCapacity" class="col-sm-2 col-form-label">Room Capacity</label>
+                            <div class="col-sm-10">
+                              <input type="number" class="form-control" id="roomCapacity">
+                            </div>
+                          </div>
+
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status"
+                                        id="isActive" value="1" >
+                                    <label class="form-check-label" for="isActive">
+                                        Active
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="status"
+                                        id="inActive" value="0">
+                                    <label class="form-check-label" for="inActive">
+                                        InActive
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAirConditioner"
+                                        id="isAir" value="1" >
+                                    <label class="form-check-label" for="isAir">
+                                        Yes
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAirConditioner"
+                                        id="notAir" value="0">
+                                    <label class="form-check-label" for="notAir">
+                                        No
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+
+
+                        <div class="text-center">
+                            <input type="hidden" id="roomId" value="<%=roomId %>" />
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="submit" onclick="saveOrUpdateRoom()" class="btn btn-primary"
+                                id="submitButton" disabled>Submit</button>
+                        </div>
+                    </form><!-- End Horizontal Form -->
+                </div>
+            </div>
+            </div>
         </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" id="inActive" value="0">
-            <label class="form-check-label" for="inActive">Inactive</label>
-        </div>
-    </div>
-    <div class="form-group">
-        <label for="airConditioner">AirConditioner</label><br>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="isAirConditioner" id="isAir" value="1">
-            <label class="form-check-label" for="isAir">Active</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="isAirConditioner" id="notAir" value="0">
-            <label class="form-check-label" for="notAir">Inactive</label>
-        </div>
-    </div>
-    <div class="submission">
-        <input type="hidden" id="roomId" value="<%=roomId %>" />
-        <button onclick="saveOrUpdateRoom()" class="btn btn-success" id="submitButton" disabled>Submit</button>
-    </div>
+    </section>
+
     <%- include('../../partials/footer.ejs') %>
         <script>
             var blockCode = document.getElementById('blockCode');
@@ -97,14 +145,14 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/room";
+                let url = `${appURL}api/room`;
                 if (roomId) {
                     url = url + '/' + roomId
                 }
 
                 fetch(url, requestOptions)
                     .then(response => response.text())
-                    .then(rooms => window.location = '/room')
+                    .then(rooms => window.location = `${appURL}/room`)
                     .catch(error => console.error('error', error));
             }
 
@@ -142,7 +190,7 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const response = await fetch(`${appURL}api/block/blockfloor/blockcodecount`);
                     const blocks = await response.json();
 
                     const activeOptions = [];
@@ -153,7 +201,7 @@
                     blocks.forEach(block => {
                         const option = document.createElement('option');
                         option.value = block.blockId;
-                        option.textContent = block.blockCode;
+                        option.textContent = `${block.blockCode} (Floors : ${block.floorCount})`;
                         if (block.floorCount === 0) {
                             option.disabled = true;
                             disabledOptions.push(option);
@@ -184,7 +232,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
+                    const response = await fetch(`${appURL}api/blockfloor/room/floorcount?blockId=${blockId}`);
                     const blockFloors = await response.json();
 
                     const activeOptions = [];
@@ -219,7 +267,7 @@
             
             async function getRoomById(roomId) {
                 try {
-                    const response = await fetch("http://localhost:1000/api/room/" + roomId);
+                    const response = await fetch(`${appURL}api/room/` + roomId);
                     const room = await response.json();
 
                     blockCode.value = room.blockId

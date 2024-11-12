@@ -1,399 +1,445 @@
-const { mysqlQuery } = require('../utilityclient/query')
-const ALLOWED_UPDATE_KEYS = [
-    "blockCode",
-    "blockLocation",
-    "isActive"
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+
+  <title>
+    <%=title%>
+  </title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.gstatic.com" rel="preconnect">
+  <link
+    href="https://fonts.googleapis.com/css?family=Open+Sans:300,300i,400,400i,600,600i,700,700i|Nunito:300,300i,400,400i,600,600i,700,700i|Poppins:300,300i,400,400i,500,500i,600,600i,700,700i"
+    rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="assets/vendor/boxicons/css/boxicons.min.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.snow.css" rel="stylesheet">
+  <link href="assets/vendor/quill/quill.bubble.css" rel="stylesheet">
+  <link href="assets/vendor/remixicon/remixicon.css" rel="stylesheet">
+  <link href="assets/vendor/simple-datatables/style.css" rel="stylesheet">
+
+  <!-- Template Main CSS File -->
+  <link href="assets/css/style.css" rel="stylesheet">
+
+  <style>
+    .focus:hover {
+      fill: #007bff;
+      cursor: pointer;
+    }
+
+    .focus:hover {
+      transform: scale(1.1);
+      transition: transform 0.2s ease;
+    }
+
+    .focus:focus {
+      fill: #007bff;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+
+<body>
+  <% if (isMenuVisible===true) { %>
+    <header id="header" class="header fixed-top d-flex align-items-center">
+
+      <div class="d-flex align-items-center justify-content-between">
+        <a href="index.html" class="logo d-flex align-items-center">
+          <img src="assets/img/logo.png" alt="">
+          <span class="d-none d-lg-block">Hostel</span>
+        </a>
+        <i class="bi bi-list toggle-sidebar-btn"></i>
+      </div><!-- End Logo -->
+
+      <div class="search-bar">
+        <form class="search-form d-flex align-items-center" method="POST" action="#">
+          <input type="text" name="query" placeholder="Search" title="Enter search keyword">
+          <button type="submit" title="Search"><i class="bi bi-search"></i></button>
+        </form>
+      </div><!-- End Search Bar -->
+
+      <nav class="header-nav ms-auto">
+        <ul class="d-flex align-items-center">
+
+          <li class="nav-item d-block d-lg-none">
+            <a class="nav-link nav-icon search-bar-toggle " href="#">
+              <i class="bi bi-search"></i>
+            </a>
+          </li><!-- End Search Icon-->
+
+          <li class="nav-item dropdown">
+
+            <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-bell"></i>
+              <span class="badge bg-primary badge-number">4</span>
+            </a><!-- End Notification Icon -->
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow notifications">
+              <li class="dropdown-header">
+                You have 4 new notifications
+                <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="notification-item">
+                <i class="bi bi-exclamation-circle text-warning"></i>
+                <div>
+                  <h4>Lorem Ipsum</h4>
+                  <p>Quae dolorem earum veritatis oditseno</p>
+                  <p>30 min. ago</p>
+                </div>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="notification-item">
+                <i class="bi bi-x-circle text-danger"></i>
+                <div>
+                  <h4>Atque rerum nesciunt</h4>
+                  <p>Quae dolorem earum veritatis oditseno</p>
+                  <p>1 hr. ago</p>
+                </div>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="notification-item">
+                <i class="bi bi-check-circle text-success"></i>
+                <div>
+                  <h4>Sit rerum fuga</h4>
+                  <p>Quae dolorem earum veritatis oditseno</p>
+                  <p>2 hrs. ago</p>
+                </div>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="notification-item">
+                <i class="bi bi-info-circle text-primary"></i>
+                <div>
+                  <h4>Dicta reprehenderit</h4>
+                  <p>Quae dolorem earum veritatis oditseno</p>
+                  <p>4 hrs. ago</p>
+                </div>
+              </li>
+
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+              <li class="dropdown-footer">
+                <a href="#">Show all notifications</a>
+              </li>
+
+            </ul><!-- End Notification Dropdown Items -->
+
+          </li><!-- End Notification Nav -->
+
+          <li class="nav-item dropdown">
+
+            <a class="nav-link nav-icon" href="#" data-bs-toggle="dropdown">
+              <i class="bi bi-chat-left-text"></i>
+              <span class="badge bg-success badge-number">3</span>
+            </a><!-- End Messages Icon -->
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow messages">
+              <li class="dropdown-header">
+                You have 3 new messages
+                <a href="#"><span class="badge rounded-pill bg-primary p-2 ms-2">View all</span></a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="message-item">
+                <a href="#">
+                  <img src="assets/img/messages-1.jpg" alt="" class="rounded-circle">
+                  <div>
+                    <h4>Maria Hudson</h4>
+                    <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                    <p>4 hrs. ago</p>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="message-item">
+                <a href="#">
+                  <img src="assets/img/messages-2.jpg" alt="" class="rounded-circle">
+                  <div>
+                    <h4>Anna Nelson</h4>
+                    <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                    <p>6 hrs. ago</p>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="message-item">
+                <a href="#">
+                  <img src="assets/img/messages-3.jpg" alt="" class="rounded-circle">
+                  <div>
+                    <h4>David Muldon</h4>
+                    <p>Velit asperiores et ducimus soluta repudiandae labore officia est ut...</p>
+                    <p>8 hrs. ago</p>
+                  </div>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li class="dropdown-footer">
+                <a href="#">Show all messages</a>
+              </li>
+
+            </ul><!-- End Messages Dropdown Items -->
+
+          </li><!-- End Messages Nav -->
+
+          <li class="nav-item dropdown pe-3">
+
+            <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
+              <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+              <span class="d-none d-md-block dropdown-toggle ps-2">
+                <%= user.name %>
+              </span>
+            </a><!-- End Profile Image Icon -->
+
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
+              <li class="dropdown-header">
+                <h6>
+                  <%= user.name%>
+                </h6>
+                <span>
+                  <%= user.professional%>
+                </span>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                  <i class="bi bi-person"></i>
+                  <span>My Profile</span>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="users-profile.html">
+                  <i class="bi bi-gear"></i>
+                  <span>Account Settings</span>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="pages-faq.html">
+                  <i class="bi bi-question-circle"></i>
+                  <span>Need Help?</span>
+                </a>
+              </li>
+              <li>
+                <hr class="dropdown-divider">
+              </li>
+
+              <li>
+                <a class="dropdown-item d-flex align-items-center" href="/api/logout">
+                  <i class="bi bi-box-arrow-right"></i>
+                  <span>Sign Out</span>
+                </a>
+              </li>
+            </ul><!-- End Profile Dropdown Items -->
+          </li><!-- End Profile Nav -->
+
+        </ul>
+      </nav><!-- End Icons Navigation -->
+
+    </header><!-- End Header -->
+    <% } %>
+        <% if (isSubTitleAndBreadCrumbVisible===true) { %>
+        <main id="main" class="main">
+
+        <div class="pagetitle">
+          <h1><%=subTitle%></h1>
+            <nav>
+              <ol class="breadcrumb">
+                <% for(i = 0; i < breadCrumb.length; i++) { %>
+                  <% if (i === breadCrumb.length - 1) { %>
+                    <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
+                        <%= breadCrumb[i].home %>
+                      </a></li>
+                    <% } else { %>
+                      <li class="breadcrumb-item"><a href="<%= breadCrumb[i].link %>">
+                          <%= breadCrumb[i].home %>
+                        </a></li>
+                      <% } %>
+                  <% } %>
+              </ol>
+            </nav>
+        </div><!-- End Page Title -->
+
+        <% } %>
+
+
+        const dotenv = require('dotenv');
+
+const express = require('express');
+const mysql = require('mysql');
+const logger = require('pino')();
+const pinoReqLogger = require('pino-http')();
+const path = require('path');
+var cookieParser = require('cookie-parser');
+var session = require('express-session');
+var FileStore = require('session-file-store')(session);
+var fileStoreOptions = {};
+
+dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
+
+//apicontroller
+const course = require('./apicontroller/course.js');
+const block = require('./apicontroller/block.js');
+const warden = require('./apicontroller/warden.js');
+const blockFloor = require('./apicontroller/blockfloor.js');
+const room = require('./apicontroller/room.js');
+const student = require('./apicontroller/student.js');
+const attendance = require('./apicontroller/attendance.js');
+
+//uicontroller
+const homeUi = require('./uicontroller/page/homeui.js');
+const courseUi = require('./uicontroller/page/courseui.js');
+const blockUi = require('./uicontroller/page/blockui.js');
+const blockFloorUi = require('./uicontroller/page/blockfloorui.js');
+const roomUi = require('./uicontroller/page/roomui.js');
+const wardenUi = require('./uicontroller/page/wardenui.js');
+const studentUi = require('./uicontroller/page/studentui.js');
+const attendanceUi = require('./uicontroller/page/attendanceui.js');
+
+const app = express()
+app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.json())
+app.use(pinoReqLogger)
+app.use(cookieParser());
+app.use(session({
+    store: new FileStore(fileStoreOptions),
+    secret: 'keyboard',
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+        maxAge: (1000 * 60 * 15)
+    }
+}));
+
+const pageSessionExclude = [
+    '/login',
+    '/api/login',
+    '/warden/resetpassword',
+    '/api/warden/generateotp',
+    '/api/warden/resetpassword'
 ]
-
-async function readBlocks(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const limit = req.query.limit ? parseInt(req.query.limit) : null;
-    const page = req.query.page ? parseInt(req.query.page) : null;
-    const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'bk.blockCode';
-    const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || '';
-    const searchPattern = `%${searchQuery}%`;
-    const status = req.query.isActive;
-
-    var blocksQuery = /*sql*/`
-        SELECT 
-            bk.*,
-            w.firstName AS createdFirstName,
-            w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
-            DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp,
-            (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL) AS floorCount 
-            FROM block AS bk
-        LEFT JOIN 
-            warden AS w ON w.wardenId = bk.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = bk.updatedBy
-        WHERE 
-            bk.deletedAt IS NULL AND 
-            (bk.blockCode LIKE ? OR 
-            w.firstName LIKE ? OR 
-            w.lastName LIKE ? OR 
-            w2.firstName LIKE ? OR 
-            w2.lastName LIKE ?)`
-
-    if (status !== undefined) {
-        blocksQuery += ` AND bk.isActive = 1`;
+app.use((req, res, next) => {
+    if (pageSessionExclude.includes(req.originalUrl)) {
+        return next()
     }
 
-    blocksQuery += ` ORDER BY ${orderBy} ${sort}`;
-
-    if (limit && offset !== null) {
-        blocksQuery += ` LIMIT ? OFFSET ?`;
-    }
-
-    const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`;
-
-    try {
-        const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
-        ]);
-
-        res.status(200).send({
-            blocks: blocks,
-            blockCount: totalCount[0].totalBlockCount
-        });
-
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockById(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const blockId = req.params.blockId;
-    try {
-        const block = await mysqlQuery(/*sql*/`
-             SELECT 
-                bk.*,
-                w.firstName AS createdFirstName,
-                w.lastName AS createdLastName,
-                w2.firstName AS updatedFirstName,
-                w2.lastName AS updatedLastName,
-                DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-                DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-                FROM block AS bk
-            LEFT JOIN 
-                warden AS w ON w.wardenId = bk.createdBy
-            LEFT JOIN 
-                warden AS w2 ON w2.wardenId = bk.updatedBy
-            WHERE 
-                bk.deletedAt IS NULL AND blockId = ?`,
-            [blockId],
-            mysqlClient
-        )
-        if (block.length === 0) {
-            return res.status(404).send("blockId not valid");
-        }
-        res.status(200).send(block[0])
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockFloorBlockCodeCount(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const blockId = req.query.blockId;
-    try {
-        let query = /*sql*/`SELECT 
-                blockId, 
-                blockCode,
-                (SELECT COUNT(*) FROM blockfloor b
-                WHERE b.blockId = bk.blockId 
-                AND b.deletedAt IS NULL) AS floorCount 
-                FROM block bk 
-                WHERE isActive = 1 
-                AND deletedAt IS NULL ORDER BY bk.blockCode ASC`;
-
-        const queryParams = [];
-        if (blockId) {
-            query += ` AND blockId = ?`;
-            queryParams.push(blockId);
-        }
-
-        const blockFloorBlockCodeCount = await mysqlQuery(query, queryParams, mysqlClient);
-
-        if (blockFloorBlockCodeCount.length === 0) {
-            return res.status(404).send('No blocks found');
-        }
-
-        res.status(200).send(blockFloorBlockCodeCount);
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockAttendancePercentage(req, res) {
-    const mysqlClient = req.app.mysqlClient
-    const blockId = req.query.blockId
-    console.log(blockId)
-    try {
-        const blockCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student WHERE blockId = ?`,
-            [blockId], mysqlClient)
-
-        if (blockCount.length === 0) {
-            return res.status(404).send('No student in block')
-        }
-
-        const checkInDateCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM attendance WHERE 
-        blockId = ? AND checkInDate = DATE(NOW())`, [blockId], mysqlClient)
-
-        var calculationPercentage = blockCount[0].count / checkInDateCount[0].count * 100
-        
-        res.status(200).send(calculationPercentage)
-    } catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
-    }
-}
-
-async function createBlock(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-
-    const {
-        blockCode,
-        blockLocation,
-        isActive
-    } = req.body
-    const createdBy = req.session.warden.wardenId;
-
-    const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert)
-    }
-
-    try {
-        const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
-            [blockCode, blockLocation, isActive, createdBy], mysqlClient)
-
-        if (newBlock.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged === true) {
+            return res.status(200).redirect('/home')
         } else {
-            res.status(201).send('insert successfully')
+            return res.status(401).redirect('/login')
         }
-    } catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
+    } else {
+        if (req.originalUrl === '/login') {
+            if (req.session.isLogged === true) {
+                return res.status(200).redirect('/home')
+            }
+        }
     }
-}
+    return next()
+})
 
-async function updateBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const updatedBy = req.session.warden.wardenId;
-    const values = []
-    const updates = []
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, '/uicontroller/views'));
 
-    ALLOWED_UPDATE_KEYS.forEach((key) => {
-        const keyValue = req.body[key]
-        if (keyValue !== undefined) {
-            values.push(keyValue)
-            updates.push(` ${key} = ? `)
-        }
-    })
+app.mysqlClient = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+})
 
-    updates.push("updatedBy = ?")
-    values.push(updatedBy, blockId)
-    const mysqlClient = req.app.mysqlClient
+app.mysqlClient.connect(function (err) {
+    if (err) {
+        console.error(err)
+    } else {
+        console.log('mysql connected')
 
-    try {
-        const block = await validateBlockById(blockId, mysqlClient);
-        if (!block) {
-            return res.status(404).send("Block not found or already deleted");
-        }
+        course(app)
+        block(app)
+        warden(app)
+        blockFloor(app)
+        room(app)
+        student(app)
+        attendance(app)
 
-        const isValid = await validateUpdateBlock(blockId, mysqlClient, req.body)
-        if (!isValid) {
-            return res.status(409).send("students in block shift to another block");
-        }
+        homeUi(app)
+        courseUi(app)
+        blockUi(app)
+        blockFloorUi(app)
+        roomUi(app)
+        wardenUi(app)
+        studentUi(app)
+        attendanceUi(app)
 
-        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
-        }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE block SET  ${updates.join(', ')} WHERE blockId = ? AND deletedAt IS NULL`,
-            values, mysqlClient
-        )
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Block not found or no changes made")
-        }
-
-        const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
-            [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'successfull',
-            data: getUpdatedBlock[0]
+        app.listen(process.env.APP_PORT, () => {
+            logger.info(`listen ${process.env.APP_PORT} port`)
         })
     }
-    catch (error) {
-        res.status(500).send(error.message)
-    }
-}
+})
 
-async function deleteBlockById(req, res) {
-    const blockId = req.params.blockId;
-    const mysqlClient = req.app.mysqlClient;
-    const deletedBy = req.session.warden.wardenId;
 
-    try {
-        const isValid = await validateBlockById(blockId, mysqlClient)
-        if (!isValid) {
-            return res.status(404).send("blockId is not defined")
-        }
+        <a href="#" class="back-to-top d-flex align-items-center justify-content-center"><i
+            class="bi bi-arrow-up-short"></i></a>
 
-        const deletedBlock = await mysqlQuery(/*sql*/` UPDATE block 
-            SET blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
-                deletedAt = NOW(), 
-                deletedBy = ? 
-            WHERE blockId = ? 
-            AND deletedAt IS NULL`,
-            [deletedBy, blockId],
-            mysqlClient)
-        if (deletedBlock.affectedRows === 0) {
-            return res.status(404).send("Block not found or already deleted")
-        }
+        <!-- Vendor JS Files -->
+        <script src="assets/vendor/apexcharts/apexcharts.min.js"></script>
+        <script src="assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <script src="assets/vendor/chart.js/chart.umd.js"></script>
+        <script src="assets/vendor/echarts/echarts.min.js"></script>
+        <script src="assets/vendor/quill/quill.js"></script>
+        <script src="assets/vendor/simple-datatables/simple-datatables.js"></script>
+        <script src="assets/vendor/tinymce/tinymce.min.js"></script>
+        <script src="assets/vendor/php-email-form/validate.js"></script>
 
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
-        res.status(200).send({
-            status: 'deleted',
-            data: getDeletedBlock[0]
-        });
-    }
-    catch (error) {
-        console.log(error)
-        res.status(500).send(error.message)
-    }
-}
-
-async function readBlockCount(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-
-    try {
-    const getBlockCount = await mysqlQuery(/*sql*/`
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`, [], mysqlClient)
- 
-        if (getBlockCount) {
-            return res.status(404).send('No Block count content found')
-        }
-
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
-
-function getBlockById(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
-            if (err) {
-                return reject(err)
-            }
-            resolve(block.length ? block[0] : null)
-
-        })
-    })
-}
-
-async function validateBlockById(blockId, mysqlClient) {
-    var block = await getBlockById(blockId, mysqlClient)
-    if (block !== null) {
-        return true
-    }
-    return false
-}
-
-async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
-    const { blockCode, blockLocation, isActive } = body;
-    const errors = [];
-
-    try {
-        if (blockCode !== undefined) {
-            if (blockCode.length < 1) {
-                errors.push("BlockCode is invalid");
-            } else {
-                let query;
-                let params;
-
-                if (isUpdate === true) {
-                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
-                    params = [blockCode, blockId];
-                } else {
-                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
-                    params = [blockCode];
-                }
-
-                const isValidBlockCode = await mysqlQuery(query, params, mysqlClient);
-                if (isValidBlockCode[0].count > 0) {
-                    errors.push("BlockCode already exists");
-                }
-            }
-        } else {
-            errors.push("BlockCode is missing");
-        }
-
-        if (blockLocation !== undefined) {
-            if (blockLocation.length < 1) {
-                errors.push("location is invalid")
-            }
-        } else {
-            errors.push("location is missing")
-        }
-
-        if (isActive !== undefined) {
-            if (![0, 1].includes(isActive)) {
-                errors.push("isActive is invalid")
-            }
-        } else {
-            errors.push("isActive is missing")
-        }
-        return errors
-    } catch (error) {
-        console.log(error)
-    }
-}
-
-function getBlockFloorCountByBlockId(blockId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM blockfloor WHERE blockId = ? AND deletedAt IS NULL`,
-            [blockId],
-            (err, blockIdCount) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(blockIdCount)
-            })
-    })
-}
-
-async function validateUpdateBlock(blockId, mysqlClient, body) {
-    if (body.isActive === 0) {
-        var [blockFloorBlock] = await getBlockFloorCountByBlockId(blockId, mysqlClient)
-        if (blockFloorBlock.count > 0) {
-            return false
-        }
-    }
-    return true
-}
-
-module.exports = (app) => {
-    app.get('/api/block', readBlocks)
-    app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
-    app.get('/api/block/:blockId', readBlockById)
-    app.get('/api/block/blockFloor/blockCodeCount', readBlockFloorBlockCodeCount)
-    app.get('/api/block/count', readBlockCount)
-    app.post('/api/block', createBlock)
-    app.put('/api/block/:blockId', updateBlockById)
-    app.delete('/api/block/:blockId', deleteBlockById)
-}
+        <!-- Template Main JS File -->
+        <script src="assets/js/main.js"></script>

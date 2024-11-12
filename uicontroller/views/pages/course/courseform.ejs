@@ -30,7 +30,7 @@
             body: raw
         };
 
-        let url = "http://localhost:1000/api/course"
+        let url = "http://localhost:1005/api/course"
         if (courseId) {
             url = url + '/' + courseId
         }
@@ -52,7 +52,7 @@
             method: "GET",
         };
 
-        fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+        fetch("http://localhost:1005/api/course/" + courseId, requestOptions)
             .then((response) => response.json())
             .then((course) => {
                 courseName.value = course.courseName

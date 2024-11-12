@@ -14,7 +14,7 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset]
+    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
 
     var blockFloorsQuery = /*sql*/`
         SELECT 
@@ -22,8 +22,6 @@ async function readBlockFloors(req, res) {
             bk.blockCode,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
             DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
             DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
             FROM blockfloor AS b
@@ -31,11 +29,10 @@ async function readBlockFloors(req, res) {
               block AS bk ON bk.blockId = b.blockId
             LEFT JOIN 
               warden AS w ON w.wardenId = b.createdBy
-            LEFT JOIN 
-              warden AS w2 ON w2.wardenId = b.updatedBy
             WHERE 
               b.deletedAt IS NULL
-            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?)
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
+            OR w.firstName LIKE ? OR w.lastName Like ?)
             ORDER BY ${orderBy} ${sort}
             LIMIT ? OFFSET ?`;
 
@@ -156,6 +153,7 @@ async function createBlockFloor(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -328,7 +326,7 @@ async function validateUpdateBlockFloor(blockFloorId, mysqlClient, body) {
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
     app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
-    app.get('/api/blockfloor/room/floorCount', readRoomBlockFloorCountOrFloorCount)
+    app.get('/api/blockfloor/room/floorcount', readRoomBlockFloorCountOrFloorCount)
     app.post('/api/blockfloor', createBlockFloor)
     app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
     app.delete('/api/blockfloor/:blockfloorId', deleteBlockFloorById)

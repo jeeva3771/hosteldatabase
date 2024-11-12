@@ -153,7 +153,7 @@
                         body: raw
                     };
 
-                    let url = `http://localhost:1000/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
+                    let url = `http://localhost:1005/api/attendance/${blockCode.value}/${floorNumber.value}/${roomNumber.value}`;
 
                     fetch(url, requestOptions)
                         .then(async (response) => {
@@ -196,8 +196,8 @@
                     }
 
                     const myParam = urlParams.get('blockId');
-                    const url = myParam ? `http://localhost:1000/api/attendance/block?blockId=${myParam}` :
-                        `http://localhost:1000/api/attendance/block?date=${checkIn.value}`;
+                    const url = myParam ? `http://localhost:1005/api/attendance/block?blockId=${myParam}` :
+                        `http://localhost:1005/api/attendance/block?date=${checkIn.value}`;
 
                     if (myParam) {
                         blockCode.value = myParam;
@@ -277,8 +277,8 @@
                     }
 
                     const myParam = urlParams.get('blockFloorId');
-                    const url = myParam ? `http://localhost:1000/api/attendance/blockfloor?date=${checkIn.value}&blockId=${myParam}` :
-                        `http://localhost:1000/api/attendance/blockfloor?date=${checkIn.value}&blockId=${blockId}`;
+                    const url = myParam ? `http://localhost:1005/api/attendance/blockfloor?date=${checkIn.value}&blockId=${myParam}` :
+                        `http://localhost:1005/api/attendance/blockfloor?date=${checkIn.value}&blockId=${blockId}`;
 
                     if (myParam) {
                         floorNumber.value = myParam;
@@ -356,8 +356,8 @@
                     }
 
                     const myParam = urlParams.get('roomId');
-                    const url = myParam ? `http://localhost:1000/api/attendance/room?date=${checkIn.value}&blockFloorId=${myParam}` :
-                        `http://localhost:1000/api/attendance/room?date=${checkIn.value}&blockFloorId=${blockFloorId}`;
+                    const url = myParam ? `http://localhost:1005/api/attendance/room?date=${checkIn.value}&blockFloorId=${myParam}` :
+                        `http://localhost:1005/api/attendance/room?date=${checkIn.value}&blockFloorId=${blockFloorId}`;
 
                     if (myParam) {
                         roomNumber.value = myParam;
@@ -432,7 +432,7 @@
                 studentList.innerHTML = '';
 
                 try {
-                    const response = await fetch(`http://localhost:1000/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
+                    const response = await fetch(`http://localhost:1005/api/attendance/student/${roomId}?checkIn=${checkIn.value}`);
                     const students = await response.json();
 
                     const table = document.createElement('table');

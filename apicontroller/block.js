@@ -20,16 +20,12 @@ async function readBlocks(req, res) {
             bk.*,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
             DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
             DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp,
             (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL) AS floorCount 
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = bk.updatedBy
         WHERE 
             bk.deletedAt IS NULL AND 
             (bk.blockCode LIKE ? OR 
@@ -37,7 +33,7 @@ async function readBlocks(req, res) {
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
             bk.isActive LIKE ? OR
-            bk.createdBy LIKE ?)
+            w.firstName LIKE ? OR w.lastName Like ?)
         ORDER BY ${orderBy} ${sort}
         LIMIT ? OFFSET ?`
 
@@ -48,7 +44,7 @@ async function readBlocks(req, res) {
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
+            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
             mysqlQuery(countQuery, [], mysqlClient)
         ]);
 
@@ -384,7 +380,7 @@ module.exports = (app) => {
     app.get('/api/block', readBlocks)
     app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
-    app.get('/api/block/blockfloor/blockCodeCount', readBlockFloorBlockCodeCount)
+    app.get('/api/block/blockfloor/blockcodecount', readBlockFloorBlockCodeCount)
     app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)

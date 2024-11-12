@@ -230,7 +230,7 @@ async function authentication(req, res) {
         emailId,
         password
     } = req.body
-
+    
     try {
         const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ?`,
             [emailId, password],
@@ -253,7 +253,7 @@ async function authentication(req, res) {
 function userLogOut(req, res) {
     req.session.destroy((err) => {
         if (err) logger.error();
-        res.redirect('http://localhost:1000/login')
+        res.redirect('/login')
     })
 }
 

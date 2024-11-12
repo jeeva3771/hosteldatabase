@@ -1,29 +1,62 @@
-<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Block' }) %>
-    <h2>Block form</h2>
-    <div class="form-group">
-        <label for="blockCode">Block Code</label>
-        <input type="text" class="form-control" id="blockCode">
-    </div>
-    <div class="form-group">
-        <label for="blockLocation">Location</label>
-        <input type="text" class="form-control" id="blockLocation">
-    </div>
-    <div class="form-group">
-        <label for="status">Status</label><br>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" id="isActive" value="1">
-            <label class="form-check-label" for="isActive">Active</label>
-        </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="status" id="inActive" value="0">
-            <label class="form-check-label" for="inActive">Inactive</label>
-        </div>
-    </div>
-    <div class="submission">
-        <input type="hidden" id="blockId" value="<%=blockId %>" />
-        <button onclick="saveOrUpdateBlock()" class="btn btn-success" id="submitButton" disabled>Submit</button>
-    </div>
-    <%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/aside.ejs') %>
+
+        <section class="section">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title"></h5>
+
+                            <!-- Horizontal Form -->
+                            <form>
+                                <div class="row mb-3">
+                                    <label for="blockCode" class="col-sm-2 col-form-label">Block Code</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="blockCode">
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <label for="blockLocation" class="col-sm-2 col-form-label">Location</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" id="blockLocation">
+                                    </div>
+                                </div>
+                                <fieldset class="row mb-3">
+                                    <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                                    <div class="col-sm-10">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="status" id="isActive"
+                                                value="1">
+                                            <label class="form-check-label" for="isActive">
+                                                Active
+                                            </label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="status" id="inActive"
+                                                value="0">
+                                            <label class="form-check-label" for="inActive">
+                                                InActive
+                                            </label>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                                <div class="text-center">
+                                    <input type="hidden" id="blockId" value="<%=blockId %>" />
+                                    <button type="reset" class="btn btn-secondary">Reset</button>
+                                    <button type="submit" onclick="saveOrUpdateBlock()" class="btn btn-primary"
+                                        id="submitButton" disabled>Submit</button>
+                                </div>
+                            </form><!-- End Horizontal Form -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <%- include('../../partials/footer.ejs') %>
         <script>
             var blockCode = document.getElementById('blockCode');
             var blockLocation = document.getElementById('blockLocation');
@@ -59,16 +92,23 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/block";
+                let url = `${appURL}api/block`;
                 if (blockId) {
                     url = url + '/' + blockId
                 }
 
                 fetch(url, requestOptions)
-                    .then(response => response.text())
-                    .then(blocks => window.location = '/block')
+                    .then(async (response) => {
+                        console.log(response.status)
+                        if (response.status === 201 || 200) {
+                            window.location = `${appURL}block`;
+                        } else {
+                            alert(await response.text())
+                        }
+                    })
                     .catch(error => console.error('error', error));
             }
+
 
             if (blockId) {
                 getBlock(blockId)
@@ -79,7 +119,7 @@
                     method: "GET"
                 };
 
-                fetch("http://localhost:1000/api/block/" + blockId, requestOptions)
+                fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then((response) => response.json())
                     .then((block) => {
                         blockCode.value = block.blockCode

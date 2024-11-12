@@ -108,7 +108,7 @@
                     body: raw
                 };
 
-                let url = "http://localhost:1000/api/student";
+                let url = "http://localhost:1005/api/student";
                 if (studentId) {
                     url = url + '/' + studentId
                 }
@@ -169,7 +169,7 @@
 
             async function populateCourse() {
                 try {
-                    const response = await fetch("http://localhost:1000/api/course")
+                    const response = await fetch("http://localhost:1005/api/course")
                     const responseData = await response.json()
                     const { courses } = responseData
                     var optionsList = '<option>Select a Course</option>'
@@ -184,7 +184,7 @@
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch('http://localhost:1000/api/block/blockFloor/blockCodeCount');
+                    const response = await fetch('http://localhost:1005/api/block/blockFloor/blockCodeCount');
                     const blocks = await response.json();
 
                     const activeOptions = [];
@@ -226,7 +226,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/blockfloor/room/floorCount?blockId=${blockId}`);
+                    const response = await fetch(`http://localhost:1005/api/blockfloor/room/floorCount?blockId=${blockId}`);
                     const blockFloors = await response.json();
                     console.log(blockFloors)
                     const activeOptions = [];
@@ -268,7 +268,7 @@
                         return;
                     }
 
-                    const response = await fetch(`http://localhost:1000/api/room/student/count?blockFloorId=${blockFloorId}`);
+                    const response = await fetch(`http://localhost:1005/api/room/student/count?blockFloorId=${blockFloorId}`);
                     const rooms = await response.json();
                     if (rooms.length === 0) {
                         roomNumber.innerHTML = '<option selected>No rooms available</option>';
@@ -307,7 +307,7 @@
 
             async function getStudentById(studentId) {
                 try {
-                    const response = await fetch("http://localhost:1000/api/student/" + studentId);
+                    const response = await fetch("http://localhost:1005/api/student/" + studentId);
                     const student = await response.json();
                     studentName.value = student.name
                     registerNum.value = student.registerNumber

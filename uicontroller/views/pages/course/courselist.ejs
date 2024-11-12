@@ -112,7 +112,7 @@
                     method: 'GET'
                 };
 
-                fetch(`http://localhost:1000/api/course?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`,
+                fetch(`http://localhost:1005/api/course?limit=${limit}&page=${pageNo}` + url + `&search=${encodeURIComponent(searchQuery)}`,
                     requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
@@ -165,7 +165,7 @@
                     headers: myHeaders
                 };
 
-                fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+                fetch("http://localhost:1005/api/course/" + courseId, requestOptions)
                     .then(response => response.json())
                     .then(course => {
 
@@ -245,7 +245,7 @@
                     method: 'DELETE',
                 };
 
-                fetch("http://localhost:1000/api/course/" + courseId, requestOptions)
+                fetch("http://localhost:1005/api/course/" + courseId, requestOptions)
                     .then(response => response.text())
                     .then(deleted => 
                         window.location = '/course'
