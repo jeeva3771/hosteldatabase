@@ -12,7 +12,7 @@
                     <h5 class="card-title"></h5>
 
                     <!-- Horizontal Form -->
-                    <form>
+                    <div>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
                             <div class="col-sm-10">
@@ -52,7 +52,7 @@
                             <button type="submit" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
-                    </form><!-- End Horizontal Form -->
+                    </div><!-- End Horizontal Form -->
                 </div>
             </div>
             </div>
@@ -115,7 +115,7 @@
             function toggleSubmitButton() {
                 const selectedStatusValue = getSelectedStatus();
                 submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
+                    blockCode.value !== 'Select a Block' &&
                     floorNumber.value.length > 0 &&
                     selectedStatusValue !== null
                 )
@@ -139,28 +139,12 @@
                     const response = await fetch(`${appURL}api/block/blockfloor/blockcodecount`);
                     const blocks = await response.json();
 
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
                     blockCode.innerHTML = '<option selected>Select a Block</option>';
 
                     blocks.forEach(block => {
-                        const option = document.createElement('option');
+                        var option = document.createElement('option');
                         option.value = block.blockId;
                         option.textContent = `${block.blockCode} (Floors : ${block.floorCount})`;
-                        if (block.floorCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
-                        }
-                    });
-
-                    activeOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
-
-                    disabledOptions.forEach(option => {
                         blockCode.appendChild(option);
                     });
 

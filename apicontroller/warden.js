@@ -344,7 +344,7 @@ async function processResetPassword(req, res) {
                 if (err) {
                     return res.status(500).send('Error destroying session.');
                 }
-                console.log(req.session)
+
                 if (updatedUser.affectedRows === 0) {
                     return res.status(404).send('Oops! Something went wrong. Please contact admin.')
                 }

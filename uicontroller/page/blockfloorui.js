@@ -1,4 +1,5 @@
-const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
+const { getUserProfile } = require('../../utilityclient/query');
+const { getAppUrl } = require('../../utilityclient/url');
 
 function blockFloorPageUi(req, res) {
     res.render('pages/blockfloor/blockfloorlist.ejs', {

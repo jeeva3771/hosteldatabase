@@ -10,7 +10,7 @@
 
               <div class="d-flex justify-content-center py-4">
                 <a href="index.html" class="logo d-flex align-items-center w-auto">
-                  <img src="assets/img/logo.png" alt="">
+                  <img src="<%=appURL%>assets/img/logo.png" alt="">
                   <span class="d-none d-lg-block">Hostel</span>
                 </a>
               </div><!-- End Logo -->
@@ -70,9 +70,9 @@
   </main>
 
   <script>
-    const loginButton = document.getElementById('loginButton')
-    const email = document.getElementById('email')
-    const password = document.getElementById('password')
+    const loginButton = document.getElementById('loginButton');
+    const email = document.getElementById('email');
+    const password = document.getElementById('password');
 
     function loginUser() {
       const myHeaders = new Headers();
@@ -93,7 +93,7 @@
       const request = fetch(`${appURL}api/login`, requestOptions)
       request.then(async (response) => {
         if (response.status === 200) {
-          window.location.replace("/home")
+          window.location = `${appURL}home`
         } else {
           alert(await response.text())
         }

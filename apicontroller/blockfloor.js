@@ -226,7 +226,9 @@ async function deleteBlockFloorById(req, res) {
             return res.status(404).send("blockFloorId is not defined")
         }
 
-        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
+        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET 
+        floorNumber = CONCAT(IFNULL(floorNumber, ''), '-', NOW()),
+        deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
             [deletedBy, blockFloorId],
             mysqlClient
         )

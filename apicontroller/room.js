@@ -13,6 +13,8 @@ async function readRooms(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
@@ -37,8 +39,7 @@ async function readRooms(req, res) {
               r.deletedAt IS NULL 
             AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR r.roomNumber LIKE ? OR r.isActive LIKE ? OR
             w.firstName LIKE ? OR w.lastName Like ?)
-            ORDER BY 
-            r.roomNumber ASC 
+            ORDER BY ${orderBy} ${sort}
             LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
@@ -58,6 +59,7 @@ async function readRooms(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }

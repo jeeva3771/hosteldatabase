@@ -1,5 +1,4 @@
 const dotenv = require('dotenv');
-
 const express = require('express');
 const mysql = require('mysql');
 const logger = require('pino')();
@@ -31,6 +30,8 @@ const wardenUi = require('./uicontroller/page/wardenui.js');
 const studentUi = require('./uicontroller/page/studentui.js');
 const attendanceUi = require('./uicontroller/page/attendanceui.js');
 
+const { getAppUrl } = require('./utilityclient/url.js');
+
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
@@ -60,13 +61,7 @@ app.use((req, res, next) => {
 
     if (req.originalUrl !== '/login') {
         if (req.session.isLogged !== true) {
-            return res.status(401).redirect('/login')
-        }
-    } else {
-        console.log('true')
-        if (req.session.isLogged === true) {
-            console.log('true2')
-            return res.status(200).redirect('/home')
+            return res.status(401).redirect(getAppUrl('login'))
         }
     }
     return next()

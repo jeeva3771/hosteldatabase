@@ -102,8 +102,8 @@ async function readBlockFloorBlockCodeCount(req, res) {
                 WHERE b.blockId = bk.blockId 
                 AND b.deletedAt IS NULL) AS floorCount 
                 FROM block bk 
-                WHERE isActive = 1 
-                AND deletedAt IS NULL ORDER BY bk.blockCode ASC`;
+                WHERE bk.isActive = 1 
+                AND bk.deletedAt IS NULL ORDER BY bk.blockCode ASC`;
 
         const queryParams = [];
         if (blockId) {

@@ -18,7 +18,7 @@
                                         <button type="button" class="btn btn-secondary" onclick="handleSearch(event)">Search</button>
 
                                 </div>
-                                <div class="d-flex justify-content-end mb-1"><a href="/block/add"
+                                <div class="d-flex justify-content-end mb-1"><a href="<%=appURL%>block/add"
                                     class="btn btn-primary">Add</a></div>
                                 <div class="datatable-dropdown">
                                     <label>
@@ -139,13 +139,13 @@
             })
 
             function changeLimit() {
-                limit = document.getElementById("limit").value
-                blockPage()
+                limit = document.getElementById("limit").value;
+                blockPage();
             }
 
             function handleSearch(event) {
-                event.preventDefault();
                 searchQuery = searchDom.value;
+                currentPage = 1;
                 blockPage();
             }
 
@@ -168,6 +168,7 @@
                 var requestOptions = {
                     method: 'GET'
                 };
+
                 fetch(`${appURL}api/block?limit=${limit}&page=${pageNo}${url}&search=${searchQuery}`, requestOptions)
                     .then(response => response.json())
                     .then(responseData => {
@@ -298,7 +299,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <strong>updated At</strong>
+                                                <strong>Updated At</strong>
                                             </div>
                                             <div class="col-sm-8">
                                                 <strong> : </strong>${block.updatedTimeStamp}
@@ -306,7 +307,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-sm-4">
-                                                <strong>updated By</strong>
+                                                <strong>Updated By</strong>
                                             </div>
                                             <div class="col-sm-8">
                                                 <strong> : </strong>${block.updatedFirstName !== null ? block.updatedFirstName : '---'} ${block.updatedLastName !== null ? block.updatedLastName : ''}
@@ -337,7 +338,7 @@
                 fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then(response => response.text())
                     .then(result =>
-                        window.location = `${appURL}/block`
+                        window.location = `${appURL}block`
                     )
                     .catch(error => console.log('error', error));
             }

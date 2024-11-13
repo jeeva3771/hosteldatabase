@@ -11,7 +11,7 @@
                             <h5 class="card-title"></h5>
 
                             <!-- Horizontal Form -->
-                            <form>
+                            <div>
                                 <div class="row mb-3">
                                     <label for="blockCode" class="col-sm-2 col-form-label">Block Code</label>
                                     <div class="col-sm-10">
@@ -50,7 +50,7 @@
                                     <button type="submit" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                         id="submitButton" disabled>Submit</button>
                                 </div>
-                            </form><!-- End Horizontal Form -->
+                            </div><!-- End Horizontal Form -->
                         </div>
                     </div>
                 </div>
@@ -99,7 +99,7 @@
 
                 fetch(url, requestOptions)
                     .then(async (response) => {
-                        console.log(response.status)
+                        console.log(appURL)
                         if (response.status === 201 || 200) {
                             window.location = `${appURL}block`;
                         } else {
