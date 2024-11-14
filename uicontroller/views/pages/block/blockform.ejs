@@ -11,7 +11,7 @@
                             <h5 class="card-title"></h5>
 
                             <!-- Horizontal Form -->
-                            <div>
+                            <form>
                                 <div class="row mb-3">
                                     <label for="blockCode" class="col-sm-2 col-form-label">Block Code</label>
                                     <div class="col-sm-10">
@@ -47,10 +47,10 @@
                                 <div class="text-center">
                                     <input type="hidden" id="blockId" value="<%=blockId %>" />
                                     <button type="reset" class="btn btn-secondary">Reset</button>
-                                    <button type="submit" onclick="saveOrUpdateBlock()" class="btn btn-primary"
+                                    <button type="button" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                         id="submitButton" disabled>Submit</button>
                                 </div>
-                            </div><!-- End Horizontal Form -->
+                            </form><!-- End Horizontal Form -->
                         </div>
                     </div>
                 </div>
@@ -58,15 +58,15 @@
         </section>
         <%- include('../../partials/footer.ejs') %>
         <script>
-            var blockCode = document.getElementById('blockCode');
-            var blockLocation = document.getElementById('blockLocation');
-            var selectedStatus = document.querySelectorAll('input[name="status"]')
-            var submitButton = document.getElementById('submitButton');
+            var blockCodeDom = document.getElementById('blockCode');
+            var blockLocationDom = document.getElementById('blockLocation');
+            var selectedStatusDom = document.querySelectorAll('input[name="status"]')
+            var submitButtonDom = document.getElementById('submitButton');
             var blockId = document.getElementById('blockId').value;
 
             function getSelectedStatus() {
                 let selectedStatusValue = null;
-                selectedStatus.forEach(radio => {
+                selectedStatusDom.forEach(radio => {
                     if (radio.checked) {
                         selectedStatusValue = parseInt(radio.value);
                     }
@@ -81,8 +81,8 @@
                 myHeaders.append("Content-Type", "application/json");
 
                 var raw = JSON.stringify({
-                    "blockCode": blockCode.value,
-                    "blockLocation": blockLocation.value,
+                    "blockCode": blockCodeDom.value,
+                    "blockLocation": blockLocationDom.value,
                     "isActive": selectedStatusValue
                 });
 
@@ -92,16 +92,15 @@
                     body: raw
                 };
 
-                let url = `${appURL}api/block`;
+                let url = getAppUrl('api/block');
                 if (blockId) {
-                    url = url + '/' + blockId
+                    url += blockId
                 }
 
                 fetch(url, requestOptions)
                     .then(async (response) => {
-                        console.log(appURL)
                         if (response.status === 201 || 200) {
-                            window.location = `${appURL}block`;
+                            window.location = getAppUrl('block');
                         } else {
                             alert(await response.text())
                         }
@@ -122,8 +121,8 @@
                 fetch(`${appURL}api/block/` + blockId, requestOptions)
                     .then((response) => response.json())
                     .then((block) => {
-                        blockCode.value = block.blockCode
-                        blockLocation.value = block.blockLocation
+                        blockCodeDom.value = block.blockCode
+                        blockLocationDom.value = block.blockLocation
                         if (block.isActive) {
                             document.getElementById('isActive').checked = true;
                         } else {
@@ -136,13 +135,13 @@
             function toggleSubmitButton() {
                 const selectedStatusValue = getSelectedStatus();
                 submitButton.disabled = !(
-                    blockCode.value.length > 0 &&
-                    blockLocation.value.length > 0 &&
+                    blockCodeDom.value.length > 0 &&
+                    blockLocationDom.value.length > 0 &&
                     selectedStatusValue !== null
                 )
             }
 
-            blockCode.addEventListener('input', toggleSubmitButton);
-            blockLocation.addEventListener('input', toggleSubmitButton);
+            blockCodeDom.addEventListener('input', toggleSubmitButton);
+            blockLocationDom.addEventListener('input', toggleSubmitButton);
             document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
         </script>

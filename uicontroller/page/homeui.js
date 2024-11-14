@@ -3,7 +3,7 @@ const { getAppUrl } = require('../../utilityclient/url');
 
 module.exports = (app) => {
 
-    app.get('/login', (req, res) => {
+    app.get(['/login'], (req, res) => {
         if (req.session.isLogged === true) {
             res.status(302).redirect(getAppUrl('home'))
         } else {

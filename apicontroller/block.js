@@ -14,6 +14,7 @@ async function readBlocks(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
+    var queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
 
     var blocksQuery = /*sql*/`
         SELECT 
@@ -32,20 +33,27 @@ async function readBlocks(req, res) {
             bk.blockLocation LIKE ? OR
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
-            bk.isActive LIKE ? OR
-            w.firstName LIKE ? OR w.lastName Like ?)
+            bk.isActive LIKE ?)
         ORDER BY ${orderBy} ${sort}
         LIMIT ? OFFSET ?`
 
     const countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`;
+        FROM block AS bk
+        LEFT JOIN warden AS w ON w.wardenId = bk.createdBy
+        WHERE bk.deletedAt IS NULL AND
+        (bk.blockCode LIKE ? OR 
+        bk.blockLocation LIKE ? OR
+        w.firstName LIKE ? OR 
+        w.lastName LIKE ? OR 
+        bk.isActive LIKE ?)
+        ORDER BY ${orderBy} ${sort}
+        LIMIT ? OFFSET ?`;
 
     try {
         const [blocks, totalCount] = await Promise.all([
-            mysqlQuery(blocksQuery, [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset], mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(blocksQuery, queryParameters, mysqlClient),
+            mysqlQuery(countQuery, queryParameters, mysqlClient)
         ]);
 
         res.status(200).send({
@@ -54,7 +62,6 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -139,7 +146,7 @@ async function readBlockAttendancePercentage(req, res) {
         blockId = ? AND checkInDate = DATE(NOW())`, [blockId], mysqlClient)
 
         var calculationPercentage = blockCount[0].count / checkInDateCount[0].count * 100
-        
+
         res.status(200).send(calculationPercentage)
     } catch (error) {
         console.log(error)
@@ -241,6 +248,15 @@ async function deleteBlockById(req, res) {
             return res.status(404).send("blockId is not defined")
         }
 
+        const checkBlockReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM blockfloor 
+        WHERE blockId = ?
+        AND deletedAt IS NULL`, [blockId], mysqlClient )
+
+
+        if (checkBlockReference[0].count > 0) {
+            return res.status(409).send('Block is referenced by a floor and cannot be deleted')
+        }
+
         const deletedBlock = await mysqlQuery(/*sql*/` UPDATE block 
             SET blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
                 deletedAt = NOW(), 
@@ -269,11 +285,11 @@ async function readBlockCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-    const getBlockCount = await mysqlQuery(/*sql*/`
+        const getBlockCount = await mysqlQuery(/*sql*/`
         SELECT COUNT(*) AS totalBlockCount 
         FROM block 
         WHERE deletedAt IS NULL`, [], mysqlClient)
- 
+
         if (getBlockCount) {
             return res.status(404).send('No Block count content found')
         }
@@ -285,11 +301,11 @@ async function readBlockCount(req, res) {
 
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
+        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
             if (err) {
                 return reject(err)
             }
-            resolve(block.length ? block[0] : null)
+            resolve(block[0].count > 0 ? block[0] : null)
 
         })
     })

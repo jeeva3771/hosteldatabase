@@ -12,7 +12,7 @@
                     <h5 class="card-title"></h5>
 
                     <!-- Horizontal Form -->
-                    <div>
+                    <form>
                         <div class="row mb-3">
                             <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
                             <div class="col-sm-10">
@@ -49,10 +49,10 @@
                         <div class="text-center">
                             <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
                             <button type="reset" class="btn btn-secondary">Reset</button>
-                            <button type="submit" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
+                            <button type="button" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
-                    </div><!-- End Horizontal Form -->
+                    </form><!-- End Horizontal Form -->
                 </div>
             </div>
             </div>
@@ -62,15 +62,15 @@
     <%- include('../../partials/footer.ejs') %>
 
         <script>
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var selectedStatus = document.querySelectorAll('input[name="status"]');
-            var submitButton = document.getElementById('submitButton');
+            var blockCodeDom = document.getElementById('blockCode');
+            var floorNumberDom = document.getElementById('floorNumber');
+            var selectedStatusDom = document.querySelectorAll('input[name="status"]');
+            var submitButtonDom = document.getElementById('submitButton');
             var blockFloorId = document.getElementById('blockFloorId').value;
 
             function getSelectedStatus() {
                 let selectedStatusValue = null;
-                selectedStatus.forEach(radio => {
+                selectedStatusDom.forEach(radio => {
                     if (radio.checked) {
                         selectedStatusValue = parseInt(radio.value);
                     }
@@ -84,8 +84,8 @@
                 myHeaders.append("Content-Type", "application/json");
 
                 var raw = JSON.stringify({
-                    "blockId": blockCode.value,
-                    "floorNumber": parseInt(floorNumber.value),
+                    "blockId": blockCodeDom.value,
+                    "floorNumber": parseInt(floorNumberDom.value),
                     "isActive": selectedStatusValue
                 });
 
@@ -95,15 +95,14 @@
                     body: raw
                 };
 
-                let url = `${appURL}api/blockfloor`;
+                let url = getAppUrl('api/blockfloor');
                 if (blockFloorId) {
-                    url = url + '/' + blockFloorId
+                    url +=  blockFloorId
                 }
-
                 fetch(url, requestOptions)
                     .then(async (response) => {
                         if (response.status === 201 || 200) {
-                            window.location = `${appURL}blockfloor`;
+                            window.location = getAppUrl('blockfloor');
                         } else {
                             alert(await response.text())
                         }
@@ -114,9 +113,9 @@
 
             function toggleSubmitButton() {
                 const selectedStatusValue = getSelectedStatus();
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select a Block' &&
-                    floorNumber.value.length > 0 &&
+                submitButtonDom.disabled = !(
+                    blockCodeDom.value !== 'Select a Block' &&
+                    floorNumberDom.value.length > 0 &&
                     selectedStatusValue !== null
                 )
             }
@@ -128,24 +127,24 @@
                     await getBlockFloorById(blockFloorId);
                 }
 
-                blockCode.addEventListener('input', toggleSubmitButton);
-                floorNumber.addEventListener('input', toggleSubmitButton);
+                blockCodeDom.addEventListener('input', toggleSubmitButton);
+                floorNumberDom.addEventListener('input', toggleSubmitButton);
                 document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
             }
             initializeForm();
 
             async function populateBlockCode() {
                 try {
-                    const response = await fetch(`${appURL}api/block/blockfloor/blockcodecount`);
+                    const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
                     const blocks = await response.json();
 
-                    blockCode.innerHTML = '<option selected>Select a Block</option>';
+                    blockCodeDom.innerHTML = '<option selected>Select a Block</option>';
 
                     blocks.forEach(block => {
                         var option = document.createElement('option');
                         option.value = block.blockId;
-                        option.textContent = `${block.blockCode} (Floors : ${block.floorCount})`;
-                        blockCode.appendChild(option);
+                        option.textContent = block.blockCode;
+                        blockCodeDom.appendChild(option);
                     });
 
                 } catch (error) {
@@ -155,11 +154,11 @@
 
             async function getBlockFloorById(blockFloorId) {
                 try {
-                    const response = await fetch(`${appURL}api/blockfloor/${blockFloorId}`);
+                    const response = await fetch(getAppUrl(`api/blockfloor/${blockFloorId}`));
                     const blockFloor = await response.json();
 
-                    blockCode.value = blockFloor.blockId;
-                    floorNumber.value = blockFloor.floorNumber;
+                    blockCodeDom.value = blockFloor.blockId;
+                    floorNumberDom.value = blockFloor.floorNumber;
 
                     if (blockFloor.isActive) {
                         document.getElementById('isActive').checked = true;

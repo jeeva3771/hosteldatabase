@@ -11,7 +11,7 @@
                                 <div class="card-body">
 
                                     <!-- Horizontal Form -->
-                                    <div class="mt-4">
+                                    <form class="mt-4">
                                         <div class="row mb-3">
                                             <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
                                             <div class="col-sm-10">
@@ -86,10 +86,10 @@
                                         <div class="text-center">
                                             <input type="hidden" id="roomId" value="<%=roomId %>" />
                                             <button type="reset" class="btn btn-secondary">Reset</button>
-                                            <button type="submit" onclick="saveOrUpdateRoom()" class="btn btn-primary"
+                                            <button type="button" onclick="saveOrUpdateRoom()" class="btn btn-primary"
                                                 id="submitButton" disabled>Submit</button>
                                         </div>
-                                    </div><!-- End Horizontal Form -->
+                                    </form><!-- End Horizontal Form -->
                                 </div>
                             </div>
                         </div>
@@ -200,7 +200,7 @@
                                 blocks.forEach(block => {
                                     const option = document.createElement('option');
                                     option.value = block.blockId;
-                                    option.textContent = `${block.blockCode} (Floors : ${block.floorCount})`;
+                                    option.textContent = `${block.blockCode} (Floors Count : ${block.floorCount})`;
                                     if (block.floorCount === 0) {
                                         option.disabled = true;
                                         disabledOptions.push(option);
