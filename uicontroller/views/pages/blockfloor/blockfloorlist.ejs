@@ -31,7 +31,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="d-flex justify-content-end"><a href="<%=appURL%>blockfloor/add"
+                                        <div class="d-flex justify-content-end"><a href="<%=appURL%>blockfloor/add/"
                                                 class="btn btn-primary">Add</a></div>
                                     </div>
 
@@ -43,13 +43,13 @@
                                                 <th scope="col">Block Code
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                         fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockId', 'DESC')">
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'DESC')">
                                                         <path fill-rule="evenodd"
                                                             d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                                                     </svg>
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                                         fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockId', 'ASC')">
+                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'ASC')">
                                                         <path fill-rule="evenodd"
                                                             d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                                     </svg>
@@ -131,7 +131,7 @@
                         var searchDom = document.getElementById("searchInput");
 
                         var columnSortOrders = {
-                            blockId: 'ASC',
+                            blockCode: 'ASC',
                             floorNumber: 'ASC',
                             isActive: 'ASC',
                             createdBy: 'ASC'
@@ -147,14 +147,19 @@
                             blockFloorPage()
                         }
 
-                        function handleSearch(event) {
+                        function handleSearch() {
                             blockFloorPage();
                         }
 
                         function sortByColumn(column, sortOrder) {
                             columnSortOrders[column] = sortOrder;
                             currentColumn = column;
-                            url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+
+                            if (column === 'blockCode') {
+                                url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
+                            } else {
+                                url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+                            } 
 
                             const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
                             activeIcons.forEach(icon => {
@@ -167,7 +172,7 @@
 
 
                         function blockFloorPage(pageNo = 1) {
-                            var fetchUrl = `${appURL}api/blockfloor?limit=${limitDom.value}&page=${pageNo}${url}`;
+                            var fetchUrl = `${getAppUrl('api/blockfloor')}?limit=${limitDom.value}&page=${pageNo}${url}`;
 
                             if (searchDom.value.length > 0) {
                                 var searchText = searchDom.value.trim();
@@ -339,7 +344,7 @@
                             fetch(`${appURL}api/blockfloor/` + blockFloorId, requestOptions)
                                 .then(async (response) => {
                                     if (response.status === 200) {
-                                        return window.location = `${appURL}blockfloor`
+                                        return window.location = getAppUrl('blockfloor')
                                     }
                                     return alert(await response.text())
 

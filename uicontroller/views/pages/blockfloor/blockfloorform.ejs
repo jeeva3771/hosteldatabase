@@ -47,7 +47,6 @@
                         </fieldset>
 
                         <div class="text-center">
-                            <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="button" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
@@ -66,7 +65,7 @@
             var floorNumberDom = document.getElementById('floorNumber');
             var selectedStatusDom = document.querySelectorAll('input[name="status"]');
             var submitButtonDom = document.getElementById('submitButton');
-            var blockFloorId = document.getElementById('blockFloorId').value;
+            var blockFloorId = <%=blockFloorId %>;
 
             function getSelectedStatus() {
                 let selectedStatusValue = null;
@@ -95,10 +94,8 @@
                     body: raw
                 };
 
-                let url = getAppUrl('api/blockfloor');
-                if (blockFloorId) {
-                    url +=  blockFloorId
-                }
+                let url = getAppUrl(`api/blockfloor${blockFloorId ? `/${blockFloorId}` : ''}`);
+               
                 fetch(url, requestOptions)
                     .then(async (response) => {
                         if (response.status === 201 || 200) {

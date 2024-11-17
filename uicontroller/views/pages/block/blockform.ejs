@@ -45,7 +45,6 @@
                                 </fieldset>
 
                                 <div class="text-center">
-                                    <input type="hidden" id="blockId" value="<%=blockId %>" />
                                     <button type="reset" class="btn btn-secondary">Reset</button>
                                     <button type="button" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                         id="submitButton" disabled>Submit</button>
@@ -62,7 +61,7 @@
             var blockLocationDom = document.getElementById('blockLocation');
             var selectedStatusDom = document.querySelectorAll('input[name="status"]')
             var submitButtonDom = document.getElementById('submitButton');
-            var blockId = document.getElementById('blockId').value;
+            var blockId = <%=blockId %>;
 
             function getSelectedStatus() {
                 let selectedStatusValue = null;
@@ -92,11 +91,8 @@
                     body: raw
                 };
 
-                let url = getAppUrl('api/block');
-                if (blockId) {
-                    url += blockId
-                }
-
+                let url = getAppUrl(`api/block${blockId ? `/${blockId}` : ''}`);
+        
                 fetch(url, requestOptions)
                     .then(async (response) => {
                         if (response.status === 201 || 200) {
@@ -108,7 +104,6 @@
                     .catch(error => console.error('error', error));
             }
 
-
             if (blockId) {
                 getBlock(blockId)
             }
@@ -119,8 +114,8 @@
                 };
 
                 fetch(`${appURL}api/block/` + blockId, requestOptions)
-                    .then((response) => response.json())
-                    .then((block) => {
+                    .then(async (response) => {
+                        const block = await response.json()
                         blockCodeDom.value = block.blockCode
                         blockLocationDom.value = block.blockLocation
                         if (block.isActive) {

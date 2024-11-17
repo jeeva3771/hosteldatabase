@@ -16,7 +16,7 @@ async function readBlocks(req, res) {
     const searchPattern = `%${searchQuery}%`;
     var queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
 
-    var blocksQuery = /*sql*/`
+    let blocksQuery = /*sql*/`
         SELECT 
             bk.*,
             w.firstName AS createdFirstName,
@@ -34,10 +34,9 @@ async function readBlocks(req, res) {
             w.firstName LIKE ? OR 
             w.lastName LIKE ? OR 
             bk.isActive LIKE ?)
-        ORDER BY ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`
+        ORDER BY ${orderBy} ${sort}`
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
         FROM block AS bk
         LEFT JOIN warden AS w ON w.wardenId = bk.createdBy
@@ -47,8 +46,13 @@ async function readBlocks(req, res) {
         w.firstName LIKE ? OR 
         w.lastName LIKE ? OR 
         bk.isActive LIKE ?)
-        ORDER BY ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`;
+        ORDER BY ${orderBy} ${sort}`;
+
+        
+    if (limit >= 0) {
+        blocksQuery += ' LIMIT ? OFFSET ?'
+        countQuery += ' LIMIT ? OFFSET ?'
+    }
 
     try {
         const [blocks, totalCount] = await Promise.all([
@@ -257,7 +261,7 @@ async function deleteBlockById(req, res) {
             return res.status(409).send('Block is referenced by a floor and cannot be deleted')
         }
 
-        const deletedBlock = await mysqlQuery(/*sql*/` UPDATE block 
+        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block 
             SET blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
                 deletedAt = NOW(), 
                 deletedBy = ? 
@@ -269,7 +273,9 @@ async function deleteBlockById(req, res) {
             return res.status(404).send("Block not found or already deleted")
         }
 
-        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `, [blockId], mysqlClient)
+        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
+                                [blockId], mysqlClient)
+
         res.status(200).send({
             status: 'deleted',
             data: getDeletedBlock[0]

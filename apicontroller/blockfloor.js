@@ -16,7 +16,7 @@ async function readBlockFloors(req, res) {
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
 
-    var blockFloorsQuery = /*sql*/`
+    let blockFloorsQuery = /*sql*/`
         SELECT 
             b.*,
             bk.blockCode,
@@ -33,10 +33,9 @@ async function readBlockFloors(req, res) {
               b.deletedAt IS NULL
             AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
               OR w.firstName LIKE ? OR w.lastName Like ?)
-            ORDER BY ${orderBy} ${sort}
-            LIMIT ? OFFSET ?`;
+            ORDER BY ${orderBy} ${sort}`;
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 
         FROM blockfloor AS b
         LEFT JOIN 
@@ -46,8 +45,12 @@ async function readBlockFloors(req, res) {
         WHERE b.deletedAt IS NULL
         AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
             OR w.firstName LIKE ? OR w.lastName Like ?)
-        ORDER BY ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`;
+        ORDER BY ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        blockFloorsQuery += ' LIMIT ? OFFSET ?'
+        countQuery += ' LIMIT ? OFFSET ?'
+    }
 
     try {
         const [blockFloors, totalCount] = await Promise.all([
@@ -107,6 +110,7 @@ async function readRoomBlockFloorCountOrFloorCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
     const includeBlockFloor = req.query.blockFloor === 'true';
+    console.log(includeBlockFloor)
     try {
         let sqlQuery = /*sql*/`SELECT 
             blockFloorId, 
@@ -237,7 +241,7 @@ async function deleteBlockFloorById(req, res) {
 
         const checkBlockFloorReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM room 
         WHERE blockFloorId = ?
-        AND deletedAt IS NULL`, [blockFloorId], mysqlClient )
+        AND deletedAt IS NULL`, [blockFloorId], mysqlClient)
 
 
         if (checkBlockFloorReference[0].count > 0) {

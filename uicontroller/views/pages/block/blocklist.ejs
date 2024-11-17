@@ -32,7 +32,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="d-flex justify-content-end"><a href="<%=appURL%>block/add"
+                                        <div class="d-flex justify-content-end"><a href="<%=appURL%>block/add/"
                                                 class="btn btn-primary">Add</a></div>
                                     </div>
                                     <!-- Table with stripped rows -->
@@ -163,7 +163,7 @@
                         }
 
                         function blockPage(pageNo = 1) {
-                            var fetchUrl = `${appURL}api/block?limit=${limitDom.value}&page=${pageNo}${url}`;
+                            var fetchUrl = `${getAppUrl('api/block')}?limit=${limitDom.value}&page=${pageNo}${url}`;
 
                             if (searchDom.value.length > 0) {
                                 var searchText = searchDom.value.trim();
@@ -334,10 +334,10 @@
                                 method: 'DELETE',
                             };
 
-                            fetch(`${appURL}api/block/` + blockId, requestOptions)
+                            fetch(getAppUrl(`api/block/${blockId}`), requestOptions)
                                 .then(async (response) => {
                                     if (response.status === 200) {
-                                        return window.location = `${appURL}block`
+                                        return window.location = getAppUrl('block')
                                     }
                                     return alert(await response.text())
 

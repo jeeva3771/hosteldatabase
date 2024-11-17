@@ -19,7 +19,7 @@ async function readRooms(req, res) {
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
 
-    var roomsQuery = /*sql*/`
+    let roomsQuery = /*sql*/`
         SELECT 
             r.*,
             b.floorNumber,
@@ -39,18 +39,33 @@ async function readRooms(req, res) {
               r.deletedAt IS NULL 
             AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR r.roomNumber LIKE ? OR r.isActive LIKE ? OR
             w.firstName LIKE ? OR w.lastName Like ?)
-            ORDER BY ${orderBy} ${sort}
-            LIMIT ? OFFSET ?`
+            ORDER BY ${orderBy} ${sort}`
 
-    const countQuery = /*sql*/ `
-    SELECT COUNT(*) AS totalRoomCount 
-    FROM room
-    WHERE deletedAt IS NULL`;
+    let countQuery = /*sql*/ `
+            SELECT 
+                COUNT(*) AS totalRoomCount 
+            FROM room AS r
+            LEFT JOIN 
+                blockfloor AS b ON b.blockFloorId = r.blockFloorId
+            LEFT JOIN 
+                block AS bk ON bk.blockId = r.blockId
+            LEFT JOIN 
+                warden AS w ON w.wardenId = r.createdBy
+            WHERE 
+                r.deletedAt IS NULL 
+            AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR r.roomNumber LIKE ? OR r.isActive LIKE ? OR
+                w.firstName LIKE ? OR w.lastName Like ?)
+            ORDER BY ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        roomsQuery += ' LIMIT ? OFFSET ?'
+        countQuery += ' LIMIT ? OFFSET ?'
+    }
 
     try {
         const [rooms, totalCount] = await Promise.all([
             mysqlQuery(roomsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, queryParameters, mysqlClient)
         ]);
 
         res.status(200).send({
@@ -232,21 +247,35 @@ async function deleteRoomById(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room SET deletedAt = NOW(), deletedBy = ? WHERE roomId = ? AND deletedAt IS NULL`,
+        const checkRoomReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
+        WHERE roomId = ?
+        AND deletedAt IS NULL`, [roomId], mysqlClient )
+
+
+        if (checkRoomReference[0].count > 0) {
+            return res.status(409).send('Student in room. Shift the student and try again')
+        }
+
+        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room 
+            SET roomNumber = CONCAT(IFNULL(roomNumber, ''), '-', NOW()), 
+                deletedAt = NOW(), 
+                deletedBy = ? 
+            WHERE roomId = ? 
+            AND deletedAt IS NULL`,
             [deletedBy, roomId],
             mysqlClient
         )
+
         if (deletedRoom.affectedRows === 0) {
             return res.status(404).send("Room not found or already deleted")
         }
 
-        const getDeletedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`,
-            [roomId],
-            mysqlClient
-        )
+        const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ? `,
+                                [roomId], mysqlClient)
+
         res.status(200).send({
             status: 'deleted',
-            data: getDeletedRoom[0]
+            data: getDeletedBlock[0]
         });
     } catch (error) {
         res.status(500).send(error.message)
@@ -255,12 +284,12 @@ async function deleteRoomById(req, res) {
 
 function getRoomById(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        var query = /*sql*/`SELECT * FROM room WHERE roomId = ? AND deletedAt IS NULL`
+        var query = /*sql*/`SELECT COUNT(*) AS count FROM room WHERE roomId = ? AND deletedAt IS NULL`
         mysqlClient.query(query, [roomId], (err, room) => {
             if (err) {
                 return reject(err)
             }
-            resolve(room.length ? room[0] : null)
+            resolve(room[0].count ? room[0] : null)
         })
     })
 }

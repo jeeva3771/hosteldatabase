@@ -14,7 +14,7 @@ async function readCourses(req, res) {
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, limit, offset];
 
-    var coursesQuery = /*sql*/ `
+    let coursesQuery = /*sql*/ `
         SELECT 
             c.*,
             w.firstName AS createdFirstName,
@@ -32,18 +32,29 @@ async function readCourses(req, res) {
         WHERE 
             c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ?)
         ORDER BY 
-            ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`;
+            ${orderBy} ${sort}`;
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalCourseCount 
-        FROM course 
-        WHERE deletedAt IS NULL`;
+        FROM course AS c
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        LEFT JOIN 
+            warden AS w2 ON w2.wardenId = c.updatedBy
+        WHERE 
+            c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ?)
+        ORDER BY 
+            ${orderBy} ${sort}`;
+    
+    if (limit >= 0) {
+        coursesQuery += ' LIMIT ? OFFSET ?'
+        countQuery += ' LIMIT ? OFFSET ?'
+    }
 
     try {
         const [courses, totalCount] = await Promise.all([
             mysqlQuery(coursesQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, queryParameters, mysqlClient)
         ]);
         
         res.status(200).send({

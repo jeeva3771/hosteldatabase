@@ -1,5 +1,22 @@
 const { mysqlQuery } = require('../utilityclient/query')
 const sendEmail = require('../utilityclient/email')
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const formData = require('form-data');
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/')
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname))
+    }
+})
+
+const upload = multer({ storage: storage })
+const multerMiddleware = upload.single('image');
 
 
 const otpGenerator = require('otp-generator');
@@ -111,7 +128,48 @@ async function readWardenById(req, res) {
     }
 }
 
-async function createWarden(req, res) {
+// async function createWarden(req, res) {
+//     const mysqlClient = req.app.mysqlClient;
+//     const {
+//         firstName,
+//         lastName,
+//         dob,
+//         emailId,
+//         password,
+//         superAdmin
+//     } = req.body
+//     const createdBy = req.session.warden.wardenId;
+
+//     const isValidInsert = validateInsertItems(req.body);
+//     if (isValidInsert.length > 0) {
+//         return res.status(400).send(isValidInsert);
+//     }
+
+//     try {
+//         const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
+//         if (existingWarden.length > 0) {
+//             return res.status(409).send("emailId already exists");
+//         }
+
+//         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
+//             warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
+//             VALUES(?,?,?,?,?,?,?)`,
+//             [firstName, lastName, dob, emailId, password, superAdmin, createdBy],
+//             mysqlClient
+//         )
+//         if (newWarden.affectedRows === 0) {
+//             return res.status(400).send("no insert was made")
+//         } else {
+//             res.status(201).send('insert successfully')
+//         }
+//     }
+//     catch (error) {
+//         res.status(500).send(error.message)
+//     }
+// }
+
+
+async function createWarden (req, res) {
     const mysqlClient = req.app.mysqlClient;
     const {
         firstName,
@@ -121,7 +179,14 @@ async function createWarden(req, res) {
         password,
         superAdmin
     } = req.body
-    const createdBy = req.session.warden.wardenId;
+    // const createdBy = req.session.warden.wardenId;
+    const createdBy = 8;
+    console.log(req.file)
+    if (!req.file) {
+        return res.status(400).send('no file uploaded')
+      }
+    const uploadedFile = req.file.filename
+
 
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
@@ -129,15 +194,15 @@ async function createWarden(req, res) {
     }
 
     try {
-        const existingWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
-        if (existingWarden.length > 0) {
+        const existingWarden = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
+        if (existingWarden[0].count > 0) {
             return res.status(409).send("emailId already exists");
         }
 
         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
-            warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
-            VALUES(?,?,?,?,?,?,?)`,
-            [firstName, lastName, dob, emailId, password, superAdmin, createdBy],
+            warden (firstName,lastName,dob,emailId,password,profilePath,superAdmin,createdBy)
+            VALUES(?,?,?,?,?,?,?,?)`,
+            [firstName, lastName, dob, emailId, password, uploadedFile, superAdmin, createdBy],
             mysqlClient
         )
         if (newWarden.affectedRows === 0) {
@@ -150,6 +215,48 @@ async function createWarden(req, res) {
         res.status(500).send(error.message)
     }
 }
+
+
+
+
+// async function createWarden(req, res) {
+//     const mysqlClient = req.app.mysqlClient;
+//     const {
+
+//         profilePath
+//     } = req.body
+//     // const createdBy = req.session.warden.wardenId;
+//     const createdBy = 8;
+//     console.log(req.file)
+//     if (!req.file) {
+//         return res.status(400).send('no file uploaded')
+//     }
+//     const uploadedFile = req.file.filename
+
+
+//     try {
+//         // const existingWarden = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
+//         // if (existingWarden[0].count > 0) {
+//         //     return res.status(409).send("emailId already exists");
+//         // }
+
+//         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
+//             warden (profilePath)
+//             VALUES(?)`,
+//             [uploadedFile],
+//             mysqlClient
+//         )
+//         if (newWarden.affectedRows === 0) {
+//             return res.status(400).send("no insert was made")
+//         } else {
+//             res.status(201).send('insert successfully')
+//         }
+//     }
+//     catch (error) {
+//         console.log(error)
+//         res.status(500).send(error.message)
+//     }
+// }
 
 async function updateWardenById(req, res) {
     const wardenId = req.params.wardenId;
@@ -230,7 +337,7 @@ async function authentication(req, res) {
         emailId,
         password
     } = req.body
-    
+
     try {
         const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ?`,
             [emailId, password],
@@ -480,7 +587,7 @@ module.exports = (app) => {
     app.put('/api/warden/resetpassword', processResetPassword)
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
-    app.post('/api/warden', createWarden)
+    app.post('/api/warden', multerMiddleware, createWarden)
     app.put('/api/warden/:wardenId', updateWardenById)
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
