@@ -1,298 +1,287 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, title: 'Room form' }) %>
 <%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Room form' }) %>
-<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
 <%- include('../../partials/aside.ejs') %>
 
-                <section class="section">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body">
-
-                                    <!-- Horizontal Form -->
-                                    <form class="mt-4">
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
-                                            <div class="col-sm-10">
-                                                <select class="form-select" aria-label="Default select example"
-                                                    id="blockCode">
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label class="col-sm-2 col-form-label" for="floorNumber">Floor
-                                                Number</label>
-                                            <div class="col-sm-10">
-                                                <select class="form-select" aria-label="Default select example"
-                                                    id="floorNumber">
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label for="roomNumber" class="col-sm-2 col-form-label">Room Number</label>
-                                            <div class="col-sm-10">
-                                                <input type="number" class="form-control" id="roomNumber">
-                                            </div>
-                                        </div>
-                                        <div class="row mb-3">
-                                            <label for="roomCapacity" class="col-sm-2 col-form-label">Room
-                                                Capacity</label>
-                                            <div class="col-sm-10">
-                                                <input type="number" class="form-control" id="roomCapacity">
-                                            </div>
-                                        </div>
-
-                                        <fieldset class="row mb-3">
-                                            <legend class="col-form-label col-sm-2 pt-0">Status</legend>
-                                            <div class="col-sm-10">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="status"
-                                                        id="isActive" value="1">
-                                                    <label class="form-check-label" for="isActive">
-                                                        Active
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="status"
-                                                        id="inActive" value="0">
-                                                    <label class="form-check-label" for="inActive">
-                                                        InActive
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-                                        <fieldset class="row mb-3">
-                                            <legend class="col-form-label col-sm-2 pt-0">Air Conditioner</legend>
-                                            <div class="col-sm-10">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="isAirConditioner"
-                                                        id="isAir" value="1">
-                                                    <label class="form-check-label" for="isAir">
-                                                        Yes
-                                                    </label>
-                                                </div>
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="radio" name="isAirConditioner"
-                                                        id="notAir" value="0">
-                                                    <label class="form-check-label" for="notAir">
-                                                        No
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </fieldset>
-
-
-                                        <div class="text-center">
-                                            <input type="hidden" value="<%=roomId%>" id="roomId"/>
-                                            <button type="reset" class="btn btn-secondary">Reset</button>
-                                            <button type="button" onclick="saveOrUpdateRoom()" class="btn btn-primary"
-                                                id="submitButton" disabled>Submit</button>
-                                        </div>
-                                    </form><!-- End Horizontal Form -->
-                                </div>
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <!-- Horizontal Form -->
+                    <form class="mt-4">
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" aria-label="Default select example"
+                                    id="blockCode">
+                                </select>
                             </div>
                         </div>
-                    </div>
-                </section>
+                        <div class="row mb-3">
+                            <label class="col-sm-2 col-form-label" for="floorNumber">Floor Number</label>
+                            <div class="col-sm-10">
+                                <select class="form-select" aria-label="Default select example"
+                                    id="floorNumber">
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="roomNumber" class="col-sm-2 col-form-label">Room Number</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" id="roomNumber">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="roomCapacity" class="col-sm-2 col-form-label">Room Capacity</label>
+                            <div class="col-sm-10">
+                                <input type="number" class="form-control" id="roomCapacity">
+                            </div>
+                        </div>
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                                <div class="col-sm-10">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status"
+                                            id="isActive" value="1">
+                                        <label class="form-check-label" for="isActive">Active</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="status"
+                                            id="inActive" value="0">
+                                        <label class="form-check-label" for="inActive">InActive</label>
+                                    </div>
+                                </div>
+                        </fieldset>
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Air Conditioner</legend>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAirConditioner"
+                                        id="isAir" value="1">
+                                    <label class="form-check-label" for="isAir">
+                                        Yes
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAirConditioner"
+                                        id="notAir" value="0">
+                                    <label class="form-check-label" for="notAir">
+                                        No
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="text-center">
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="button" onclick="saveOrUpdateRoom()" class="btn btn-primary"
+                                id="submitButton" disabled>Submit</button>
+                        </div>
+                    </form><!-- End Horizontal Form -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</main>                                                                    
+<%- include('../../partials/footer.ejs') %>
 
-                <%- include('../../partials/footer.ejs') %>
-                    <script>
-                        var blockCodeDom = document.getElementById('blockCode');
-                        var floorNumberDom = document.getElementById('floorNumber');
-                        var roomNumberDom = document.getElementById('roomNumber');
-                        var roomCapacityDom = document.getElementById('roomCapacity');
-                        // var selectedStatusDom = document.querySelectorAll('input[name="status"]');
-                        var isActiveDom = document.getElementById('isActive')
-                        var inActiveDom = document.getElementById('inActive')
-                        var isAirDom = document.getElementById('isAir')
-                        var notAirDom = document.getElementById('notAir')
-                        var submitButtonDom = document.getElementById('submitButton');
-                        var roomId = document.getElementById('roomId').value;
+<script>
+    var blockCodeDom = document.getElementById('blockCode');
+    var floorNumberDom = document.getElementById('floorNumber');
+    var roomNumberDom = document.getElementById('roomNumber');
+    var roomCapacityDom = document.getElementById('roomCapacity');
+    var isActiveDom = document.getElementById('isActive');
+    var inActiveDom = document.getElementById('inActive');
+    var isAirDom = document.getElementById('isAir');
+    var notAirDom = document.getElementById('notAir');
+    var submitButtonDom = document.getElementById('submitButton');
+    var roomId = <%= roomId || 'null' %>;
 
-                        function getSelectedRadioValue(radioName) {
-                            const radios = document.querySelectorAll(`input[name="${radioName}"]`);
-                            let selectedValue = null;
-                            radios.forEach(radio => {   
-                                if (radio.checked) {
-                                    selectedValue = parseInt(radio.value);
-                                }
-                            });
-                            return selectedValue;
-                        }
+    function getSelectedRadioValue(radioName) {
+        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
+        let selectedValue = null;
+        
+        radios.forEach(radio => {   
+            if (radio.checked) {
+                selectedValue = parseInt(radio.value);
+            }
+        });
+        return selectedValue;
+    }
+    
+    function saveOrUpdateRoom() {
+        const selectedStatusValue = getSelectedRadioValue('status');
+        const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
 
-                        function saveOrUpdateRoom() {
-                            const selectedStatusValue = getSelectedRadioValue('status');
-                            const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
+        var raw = JSON.stringify({
+            "blockId": blockCodeDom.value,
+            "blockFloorId": floorNumberDom.value,
+            "roomNumber": parseInt(roomNumberDom.value),
+            "roomCapacity": parseInt(roomCapacityDom.value),
+            "isActive": selectedStatusValue,
+            "isAirConditioner": selectedAirConditionerValue
+        });
 
-                            var myHeaders = new Headers();
-                            myHeaders.append("Content-Type", "application/json");
+        var requestOptions = {
+            method: roomId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
 
-                            var raw = JSON.stringify({
-                                "blockId": blockCodeDom.value,
-                                "blockFloorId": floorNumberDom.value,
-                                "roomNumber": parseInt(roomNumberDom.value),
-                                "roomCapacity": parseInt(roomCapacityDom.value),
-                                "isActive": selectedStatusValue,
-                                "isAirConditioner": selectedAirConditionerValue
-                            });
+        let url = getAppUrl(`api/room${roomId ? `/${roomId}` : ''}`);
 
-                            var requestOptions = {
-                                method: roomId ? 'PUT' : 'POST',
-                                headers: myHeaders,
-                                body: raw
-                            };
+        fetch(url, requestOptions)
+            .then(async (response) => {
+                if (response.status === 201 || 200) {
+                    window.location = `${appURL}room`;
+                } else {
+                    alert(await response.text())
+                }
+                })
+            .catch(error => console.error('error', error));
+    }
 
-                            let url = getAppUrl(`api/room${roomId ? `/${roomId}` : ''}`);
+    function toggleSubmitButton() {
+        const selectedStatusValue = getSelectedRadioValue('status');
+        const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
 
-                            fetch(url, requestOptions)
-                                .then(async (response) => {
-                                    if (response.status === 201 || 200) {
-                                        window.location = `${appURL}room`;
-                                    } else {
-                                        alert(await response.text())
-                                    }
-                                })
-                                .catch(error => console.error('error', error));
-                        }
+        submitButtonDom.disabled = !(
+        blockCodeDom.value !== 'Select a Block' &&
+        floorNumberDom.value !== 'Select a Floor' &&
+        roomNumberDom.value.length > 0 &&
+        roomCapacityDom.value.length > 0 &&
+        selectedStatusValue !== null &&
+        selectedAirConditionerValue !== null)
+    }
 
-                        function toggleSubmitButton() {
-                            const selectedStatusValue = getSelectedRadioValue('status');
-                            const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
+    async function initializeForm() {
+        await populateBlockCode();
+        await populateFloorNumber();
 
-                            submitButtonDom.disabled = !(
-                                blockCodeDom.value !== 'Select a Block' &&
-                                floorNumberDom.value !== 'Select a Floor' &&
-                                roomNumberDom.value.length > 0 &&
-                                roomCapacityDom.value.length > 0 &&
-                                selectedStatusValue !== null &&
-                                selectedAirConditionerValue !== null
-                            )
-                        }
+        if (roomId) {
+        await getRoomById(roomId);
+        }
 
-                        async function initializeForm() {
-                            await populateBlockCode();
-                            await populateFloorNumber();
+        blockCodeDom.addEventListener('input', populateFloorNumber);
+        floorNumberDom.addEventListener('input', toggleSubmitButton);
+        roomNumberDom.addEventListener('input', toggleSubmitButton);
+        roomCapacityDom.addEventListener('input', toggleSubmitButton);
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+        document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    }
+    initializeForm();
 
-                            if (roomId) {
-                                await getRoomById(roomId);
-                            }
+    async function populateBlockCode() {
 
-                            blockCodeDom.addEventListener('input', populateFloorNumber);
-                            floorNumberDom.addEventListener('input', toggleSubmitButton);
-                            roomNumberDom.addEventListener('input', toggleSubmitButton);
-                            roomCapacityDom.addEventListener('input', toggleSubmitButton);
-                            document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-                            document.querySelectorAll('input[name="isAirConditioner"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-                        }
+        try {
+            const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
+            const blocks = await response.json();
 
-                        initializeForm();
+            const activeOptions = [];
+            const disabledOptions = [];
 
-                        async function populateBlockCode() {
-                            try {
-                                const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
-                                const blocks = await response.json();
+            blockCodeDom.innerHTML = '<option selected>Select a Block</option>';
 
-                                const activeOptions = [];
-                                const disabledOptions = [];
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block.blockId;
+                option.textContent = `${block.blockCode} (Floors Count : ${block.floorCount})`;
+                if (block.floorCount === 0) {
+                option.disabled = true;
+                disabledOptions.push(option);
+                } else {
+                activeOptions.push(option);
+                }
+            });
 
-                                blockCodeDom.innerHTML = '<option selected>Select a Block</option>';
+            activeOptions.forEach(option => {
+                blockCodeDom.appendChild(option);
+            });
 
-                                blocks.forEach(block => {
-                                    const option = document.createElement('option');
-                                    option.value = block.blockId;
-                                    option.textContent = `${block.blockCode} (Floors Count : ${block.floorCount})`;
-                                    if (block.floorCount === 0) {
-                                        option.disabled = true;
-                                        disabledOptions.push(option);
-                                    } else {
-                                        activeOptions.push(option);
-                                    }
-                                });
+            disabledOptions.forEach(option => {
+                blockCodeDom.appendChild(option);
+            });
 
-                                activeOptions.forEach(option => {
-                                    blockCodeDom.appendChild(option);
-                                });
+        } catch (error) {
+            console.log('Error fetching block codes:', error);
+        }
+    }
 
-                                disabledOptions.forEach(option => {
-                                    blockCodeDom.appendChild(option);
-                                });
+    blockCodeDom.addEventListener('change', () => {
+        toggleSubmitButton();
+    });
 
-                            } catch (error) {
-                                console.log('Error fetching block codes:', error);
-                            }
-                        }
+    async function populateFloorNumber() {
+        try {
+            const blockId = blockCode.value;
 
-                        blockCodeDom.addEventListener('change', () => {
-                            toggleSubmitButton();
-                        });
+            if (blockId === 'Select a Block') {
+                toggleSubmitButton();
+                return;
+            }
 
-                        async function populateFloorNumber() {
-                            try {
-                                const blockId = blockCode.value;
+            const response = await fetch(`${getAppUrl('api/blockfloor/room/floorcount')}?blockId=${blockId}&blockFloor=true`);
+            const blockFloors = await response.json();
 
-                                if (blockId === 'Select a Block') {
-                                    toggleSubmitButton();
-                                    return;
-                                }
+            const activeOptions = [];
+            const disabledOptions = [];
 
-                                const response = await fetch(`${getAppUrl('api/blockfloor/room/floorcount')}?blockId=${blockId}&blockFloor=true`);
-                                const blockFloors = await response.json();
+            floorNumberDom.innerHTML = '<option selected>Select a Floor</option>';
 
-                                const activeOptions = [];
-                                const disabledOptions = [];
+            blockFloors.forEach(blockFloor => {
+                const option = document.createElement('option');
+                option.value = blockFloor.blockFloorId;
+                option.textContent = `${blockFloor.floorNumber} (Rooms Count : ${blockFloor.roomCount})`;
 
-                                floorNumberDom.innerHTML = '<option selected>Select a Floor</option>';
+                if (blockFloor.roomCount === 0) {
+                    option.disabled = true;
+                    disabledOptions.push(option);
+                } else {
+                    activeOptions.push(option);
+                }
+            });
 
-                                blockFloors.forEach(blockFloor => {
-                                    const option = document.createElement('option');
-                                    option.value = blockFloor.blockFloorId;
-                                    option.textContent = `${blockFloor.floorNumber} (Rooms Count : ${blockFloor.roomCount})`;
-                                    if (blockFloor.roomCount === 0) {
-                                        option.disabled = true;
-                                        disabledOptions.push(option);
-                                    } else {
-                                        activeOptions.push(option);
-                                    }
-                                });
+            activeOptions.forEach(option => {
+                floorNumberDom.appendChild(option);
+            });
 
-                                activeOptions.forEach(option => {
-                                    floorNumberDom.appendChild(option);
-                                });
+            disabledOptions.forEach(option => {
+                floorNumberDom.appendChild(option);
+            });
 
-                                disabledOptions.forEach(option => {
-                                    floorNumberDom.appendChild(option);
-                                });
+        } catch (error) {
+            console.log('Error fetching floor numbers:', error);
+        }
+    }
 
-                            } catch (error) {
-                                console.log('Error fetching floor numbers:', error);
-                            }
-                        }
+    async function getRoomById(roomId) {
+        try {
+            const response = await fetch(getAppUrl(`api/room/${roomId}`));
+            const room = await response.json();
 
-                        async function getRoomById(roomId) {
-                            try {
-                                const response = await fetch(getAppUrl(`api/room/${roomId}`));
-                                const room = await response.json();
+            blockCodeDom.value = room.blockId
+            await populateFloorNumber()
+            floorNumberDom.value = room.blockFloorId
+            roomNumberDom.value = room.roomNumber
+            roomCapacityDom.value = room.roomCapacity
+                                    
+            if (room.isActive) {
+                isActiveDom.checked = true;
+            } else {
+                inActiveDom.checked = true;
+            }
 
-                                blockCodeDom.value = room.blockId
-                                await populateFloorNumber()
-                                floorNumberDom.value = room.blockFloorId
-                                roomNumberDom.value = room.roomNumber
-                                roomCapacityDom.value = room.roomCapacity
-                        
-                                if (room.isActive) {
-                                    isActiveDom.checked = true;
-                                } else {
-                                    inActiveDom.checked = true;
-                                }
+            if (room.isAirConditioner) {
+                isAirDom.checked = true;
+            } else {
+                notAirDom.checked = true;
+            }
+        } catch (error) {
+            console.error('Error fetching room details:', error);
+        }
+    }
 
-                                if (room.isAirConditioner) {
-                                    isAirDom.checked = true;
-                                } else {
-                                    notAirDom.checked = true;
-                                }
-                            } catch (error) {
-                                console.error('Error fetching room details:', error);
-                            }
-                        }
-
-                    </script>
+</script>

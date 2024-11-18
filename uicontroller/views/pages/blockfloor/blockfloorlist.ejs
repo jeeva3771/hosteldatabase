@@ -1,197 +1,190 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
-    <%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
-        <%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
-            <%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
 
-                <section class="section">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="card">
-                                <div class="card-body">
-
-                                    <div class="datatable-top mt-4">
-                                        <div class="datatable-search d-flex justify-content-between align-items-center">
-                                            <!-- Search and entries per page -->
-                                            <div class="d-flex gap-2">
-                                                <div class="datatable-search">
-                                                    <input class="datatable-input" id="searchInput"
-                                                        onkeyup="handleSearch()" placeholder="Search..." type="search"
-                                                        name="search" title="Search within table">
-                                                </div>
-                                                <div class="datatable-dropdown">
-                                                    <label>
-                                                        <select class="datatable-selector" name="per-page" id="limit"
-                                                            onchange="changeLimit()">
-                                                            <option value="5">5</option>
-                                                            <option value="10" selected>10</option>
-                                                            <option value="15">15</option>
-                                                            <option value="-1">All</option>
-                                                        </select> entries per page
-                                                    </label>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="d-flex justify-content-end"><a href="<%=appURL%>blockfloor/add/"
-                                                class="btn btn-primary">Add</a></div>
-                                    </div>
-
-                                    <table class="table table-striped table-hover table-bordered">
-                                        <thead>
-                                            <tr>
-                                            <tr>
-                                                <th scope="col">Sno</th>
-                                                <th scope="col">Block Code
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'DESC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                    </svg>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'ASC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                    </svg>
-                                                </th>
-                                                <th scope="col">Floor Number
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16"
-                                                        onclick="sortByColumn('floorNumber', 'DESC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                    </svg>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16"
-                                                        onclick="sortByColumn('floorNumber', 'ASC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                    </svg>
-                                                </th>
-                                                <th scope="col">Status
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                    </svg>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'ASC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                    </svg>
-                                                </th>
-                                                <th scope="col">Created By
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                                    </svg>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                                        viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'ASC')">
-                                                        <path fill-rule="evenodd"
-                                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                                    </svg>
-                                                </th>
-                                                <th scope="col">Action</th>
-                                            </tr>
-                                            </tr>
-                                        </thead>
-                                        <tbody id="blockFloorsData">
-
-                                        </tbody>
-                                    </table>
-                                    <!-- End Table with stripped rows -->
-                                    <nav aria-label="Page navigation example">
-                                        <ul class="pagination justify-content-center" id="pagination">
-                                        </ul>
-                                    </nav>
-
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="datatable-top mt-4">
+                        <div class="datatable-search d-flex justify-content-between align-items-center">
+                            <!-- Search and entries per page -->
+                            <div class="d-flex gap-2">
+                                <div class="datatable-search">
+                                    <input class="datatable-input" id="searchInput"
+                                        onkeyup="handleSearch()" placeholder="Search..." type="search"
+                                        name="search" title="Search within table">
+                                </div>
+                                <div class="datatable-dropdown">
+                                    <label>
+                                        <select class="datatable-selector" name="per-page" id="limit"
+                                            onchange="changeLimit()">
+                                            <option value="5">5</option>
+                                            <option value="10" selected>10</option>
+                                            <option value="15">15</option>
+                                            <option value="-1">All</option>
+                                        </select> entries per page
+                                    </label>
                                 </div>
                             </div>
-
                         </div>
+                    <div class="d-flex justify-content-end"><a href="<%=appURL%>blockfloor/add/"
+                        class="btn btn-primary">Add</a></div>
                     </div>
 
-                </section>
+                    <table class="table table-striped table-hover table-bordered">
+                        <thead>
+                            <tr>
+                                <th scope="col">Sno</th>
+                                    <th scope="col">Block Code
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                            viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'DESC')">
+                                            <path fill-rule="evenodd"
+                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                            viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'ASC')">
+                                            <path fill-rule="evenodd"
+                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                        </svg>            
+                                    </th>
+                                    <th scope="col">Floor Number
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                            fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                            viewBox="0 0 16 16"
+                                            onclick="sortByColumn('floorNumber', 'DESC')">
+                                            <path fill-rule="evenodd"
+                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                        </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                        viewBox="0 0 16 16"
+                                        onclick="sortByColumn('floorNumber', 'ASC')">
+                                        <path fill-rule="evenodd"
+                                        d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                    </svg>
+                                </th>
+                                <th scope="col">Status
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
+                                        <path fill-rule="evenodd"
+                                        d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                    </svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                        viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'ASC')">
+                                        <path fill-rule="evenodd"
+                                        d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                    </svg>
+                                </th>
+                                <th scope="col">Created By
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                        viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
+                                        <path fill-rule="evenodd"
+                                        d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                    </svg>                   
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                    viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'ASC')">
+                                    <path fill-rule="evenodd"
+                                    d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                    </svg>
+                                </th>                 
+                                <th scope="col">Action</th>                
+                            </tr>
+                    </thead>
+                    <tbody id="blockFloorsData">
+                    </tbody>
+                </table>
+                    <!-- End Table with stripped rows -->
+                    <nav aria-label="Page navigation example">
+                        <ul class="pagination justify-content-center" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</main><!-- End #main -->
 
-                </main><!-- End #main -->
+<%- include('../../partials/footer.ejs') %>
 
-                <%- include('../../partials/footer.ejs') %>
-                    <script>
-                        var tableDataDom = document.getElementById("blockFloorsData");
-                        var limitDom = document.getElementById("limit");
-                        var paginationDom = document.getElementById("pagination");
-                        var orderIconDom = document.querySelectorAll('.sortIcon');
-                        var searchDom = document.getElementById("searchInput");
+<script>
+    var tableDataDom = document.getElementById("blockFloorsData");
+    var limitDom = document.getElementById("limit");
+    var paginationDom = document.getElementById("pagination");
+    var orderIconDom = document.querySelectorAll('.sortIcon');
+    var searchDom = document.getElementById("searchInput");
 
-                        var columnSortOrders = {
-                            blockCode: 'ASC',
-                            floorNumber: 'ASC',
-                            isActive: 'ASC',
-                            createdBy: 'ASC'
-                        };
-                        var currentColumn = 'createdAt'
-                        var url = `&orderby=b.${currentColumn}&sort=DESC`
+    var columnSortOrders = {
+        blockCode: 'ASC',
+        floorNumber: 'ASC',
+        isActive: 'ASC',
+        createdBy: 'ASC'
+    };                       
+    var currentColumn = 'createdAt'
+    var url = `&orderby=b.${currentColumn}&sort=DESC`
 
-                        orderIconDom.forEach((icon) => {
-                            icon.classList.add('light');
-                        })
+    orderIconDom.forEach((icon) => {
+        icon.classList.add('light');
+    })
+                       
+    function changeLimit() {
+       blockFloorPage()
+    }
 
-                        function changeLimit() {
-                            blockFloorPage()
-                        }
+    function handleSearch() {
+        blockFloorPage();
+    }
 
-                        function handleSearch() {
-                            blockFloorPage();
-                        }
+    function sortByColumn(column, sortOrder) {
+        columnSortOrders[column] = sortOrder;
+        currentColumn = column;
 
-                        function sortByColumn(column, sortOrder) {
-                            columnSortOrders[column] = sortOrder;
-                            currentColumn = column;
+        if (column === 'blockCode') {
+            url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
+        } else {
+            url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+        }                            
 
-                            if (column === 'blockCode') {
-                                url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
-                            } else {
-                                url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
-                            } 
+        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+        activeIcons.forEach(icon => {
+            icon.classList.remove('light');
+            icon.classList.add('dark');
+        });
 
-                            const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-                            activeIcons.forEach(icon => {
-                                icon.classList.remove('light');
-                                icon.classList.add('dark');
-                            });
-
-                            blockFloorPage();
-                        }
+        blockFloorPage();
+    }
 
 
-                        function blockFloorPage(pageNo = 1) {
-                            var fetchUrl = `${getAppUrl('api/blockfloor')}?limit=${limitDom.value}&page=${pageNo}${url}`;
+    function blockFloorPage(pageNo = 1) {
+        var fetchUrl = `${getAppUrl('api/blockfloor')}?limit=${limitDom.value}&page=${pageNo}${url}`;
 
-                            if (searchDom.value.length > 0) {
-                                var searchText = searchDom.value.trim();
-                                fetchUrl += `&search=${searchText}`;
-                            }
+        if (searchDom.value.length > 0) {
+            var searchText = searchDom.value.trim();
+            fetchUrl += `&search=${searchText}`;
+        }
 
-                            var requestOptions = {
-                                method: 'GET'
-                            };
+        var requestOptions = {
+            method: 'GET'
+        };
 
-                            fetch(fetchUrl, requestOptions)
-                                .then(async (response) => {
-                                    const responseData = await response.json()
-                                    const { blockFloors, blockFloorCount } = responseData;
+        fetch(fetchUrl, requestOptions)
+            .then(async (response) => {
+                const responseData = await response.json()
+                const { blockFloors, blockFloorCount } = responseData;
 
-                                    var trHtml = ''
-                                    for (var i = 0; i < blockFloors.length; i++) {
-                                        var blockFloor = blockFloors[i]
-                                        trHtml = trHtml + `<tr>
+                var trHtml = ''
+                    for (var i = 0; i < blockFloors.length; i++) {
+                        var blockFloor = blockFloors[i]
+                        trHtml = trHtml + `
+                        <tr>
                             <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
                             <td>${blockFloor.blockCode}</td>
                             <td>${blockFloor.floorNumber}</td>
@@ -212,149 +205,149 @@
                                 </svg>
                             </td>
                         </tr>`
-                                    }
-                                    tableDataDom.innerHTML = trHtml
-                                    var totalPages = Math.ceil(responseData.blockFloorCount / limitDom.value)
-                                    var paginationHtml = ''
+                    }
 
-                                    if (totalPages > 1) {
-                                        paginationHtml += `
-                            <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                                <a class="page-link" href="" onclick="blockFloorPage(${pageNo - 1})">Previous</a>
-                            </li>`;
+                tableDataDom.innerHTML = trHtml
+                var totalPages = Math.ceil(responseData.blockFloorCount / limitDom.value)
+                var paginationHtml = ''
 
-                                        for (let i = 1; i <= totalPages; i++) {
-                                            paginationHtml += `
-                                <li class="page-item${i === pageNo ? ' active' : ''}">
-                                    <a class="page-link" href="" onclick="blockFloorPage(${i})">${i}</a>
-                                </li>`;
-                                        }
+                if (totalPages > 1) {
+                    paginationHtml += `
+                    <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                        <a class="page-link" href="" onclick="blockFloorPage(${pageNo - 1})">Previous</a>
+                    </li>`;
 
-                                        paginationHtml += `
-                            <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                                <a class="page-link" href="" onclick="blockFloorPage(${pageNo + 1})">Next</a>
-                            </li>`;
-                                    }
-                                    paginationDom.innerHTML = paginationHtml;
-                                })
-                                .catch((error) => console.error(error));
-                        }
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationHtml += `
+                        <li class="page-item${i === pageNo ? ' active' : ''}">
+                        <a class="page-link" href="" onclick="blockFloorPage(${i})">${i}</a>
+                        </li>`;
+                    }
 
-                        function readBlockFloorById(blockFloorId) {
-                            var myHeaders = new Headers();
-                            var requestOptions = {
-                                method: 'GET',
-                                headers: myHeaders
-                            };
+                    paginationHtml += `
+                    <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                        <a class="page-link" href="" onclick="blockFloorPage(${pageNo + 1})">Next</a>
+                    </li>`;
+                }
+                paginationDom.innerHTML = paginationHtml;
+            })
+                .catch((error) => console.error(error));
+        }
 
-                            fetch(`${appURL}api/blockfloor/` + blockFloorId, requestOptions)
-                                .then(async (response) => {
-                                    var blockFloor = await response.json()
-                                    const existingModal = document.getElementById('blockFloorModal');
-                                    if (existingModal) {
-                                        existingModal.remove();
-                                    }
-                                    const modalHtml = `
-                        <div class="modal fade" id="blockFloorModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    function readBlockFloorById(blockFloorId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };                      
+
+        fetch(getAppUrl(`api/blockfloor/${blockFloorId}`), requestOptions)
+            .then(async (response) => {
+                var blockFloor = await response.json()
+                                    
+                const existingModal = document.getElementById('blockFloorModal');
+                    if (existingModal) {
+                        existingModal.remove();
+                    }
+
+                const modalHtml = `
+                    <div class="modal fade" id="blockFloorModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Block Code</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.blockCode}
+                                        </div>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Block Code</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.blockCode}
-                                            </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Floor Number</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Floor Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.floorNumber}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.floorNumber}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Status</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.isActive === 1 ? 'Active' : 'InActive'}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Status</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.createdTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.isActive === 1 ? 'Active' : 'InActive'}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.createdFirstName} ${blockFloor.createdLastName}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created At</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.updatedTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.createdTimeStamp}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${blockFloor.updatedFirstName !== null ? blockFloor.updatedFirstName : '---'} ${blockFloor.updatedLastName !== null ? blockFloor.updatedLastName : ''}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.createdFirstName} ${blockFloor.createdLastName}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated At</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.updatedTimeStamp}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${blockFloor.updatedFirstName !== null ? blockFloor.updatedFirstName : '---'} ${blockFloor.updatedLastName !== null ? blockFloor.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                                    document.body.insertAdjacentHTML('beforeend', modalHtml);
-                                    var modal = new bootstrap.Modal(document.getElementById('blockFloorModal'));
-                                    modal.show();
+                        </div>
+                    </div>`;
 
-                                })
-                                .catch(error => console.log('error', error));
-                        }
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                var modal = new bootstrap.Modal(document.getElementById('blockFloorModal'));
+                modal.show();
+            })
+                .catch(error => console.log('error', error));
+        }
 
-                        function deleteBlockFloorById(blockFloorId) {
-                            var validateDelete = confirm('are you sure you want to delete?')
+    function deleteBlockFloorById(blockFloorId) {
+        var validateDelete = confirm('are you sure you want to delete?')
 
-                            if (!validateDelete)
-                                return
+        if (!validateDelete)
+            return
 
-                            var requestOptions = {
-                                method: 'DELETE',
-                            };
+        var requestOptions = {
+            method: 'DELETE',
+        };
 
-                            fetch(`${appURL}api/blockfloor/` + blockFloorId, requestOptions)
-                                .then(async (response) => {
-                                    if (response.status === 200) {
-                                        return window.location = getAppUrl('blockfloor')
-                                    }
-                                    return alert(await response.text())
+        fetch(getAppUrl(`api/blockfloor/${blockFloorId}`), requestOptions)
+            .then(async (response) => {
+                if (response.status === 200) {
+                    return window.location = getAppUrl('blockfloor')
+                }
+                return alert(await response.text())
+            })
+            .catch((error) => alert(`An error occurred: ${error.message}`));
+    }
 
-
-                                })
-
-                                .catch((error) => alert(`An error occurred: ${error.message}`));
-                        }
-
-                        window.addEventListener('load', () => {
-                            blockFloorPage()
-                        })
-                    </script>
+    window.addEventListener('load', () => {
+        blockFloorPage()
+    })
+</script>

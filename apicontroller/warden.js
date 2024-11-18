@@ -1,9 +1,9 @@
 const { mysqlQuery } = require('../utilityclient/query')
 const sendEmail = require('../utilityclient/email')
 const multer = require('multer');
-const fs = require('fs');
 const path = require('path');
-const formData = require('form-data');
+const sharp = require('sharp');
+
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
@@ -179,21 +179,29 @@ async function createWarden (req, res) {
         password,
         superAdmin
     } = req.body
-    // const createdBy = req.session.warden.wardenId;
-    const createdBy = 8;
-    console.log(req.file)
+    const createdBy = req.session.warden.wardenId;
+
     if (!req.file) {
-        return res.status(400).send('no file uploaded')
+        return res.status(400).send('No file uploaded')
       }
-    const uploadedFile = req.file.filename
+
+    const uploadedFilePath = req.file.path;
 
 
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert);
-    }
+    const resizedFilePath = req.file.filename;
 
     try {
+        await sharp(uploadedFilePath)
+            .resize({ width: 300, height: 300 }) 
+            .toFile(resizedFilePath);
+
+        const uploadedFile = req.file.filename;
+
+        const isValidInsert = validateInsertItems(req.body);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert);
+        }
+
         const existingWarden = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM warden WHERE emailId = ? AND deletedAt IS NULL`, [emailId], mysqlClient);
         if (existingWarden[0].count > 0) {
             return res.status(409).send("emailId already exists");
@@ -503,6 +511,7 @@ function validateInsertItems(body, isUpdate = false) {
         superAdmin
     } = body
 
+    console.log(superAdmin)
     const errors = []
     if (firstName !== undefined) {
         if (firstName.length < 2) {
@@ -553,7 +562,7 @@ function validateInsertItems(body, isUpdate = false) {
     }
 
     if (superAdmin !== undefined) {
-        if (![0, 1].includes(superAdmin)) {
+        if (![0, 1].includes(parseInt(superAdmin))) {
             errors.push('superAdmin is invalid')
         }
     } else if (!isUpdate) {
@@ -564,12 +573,12 @@ function validateInsertItems(body, isUpdate = false) {
 
 function getWardenById(wardenId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        var query = /*sql*/`SELECT * FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
+        var query = /*sql*/`SELECT COUNT(*) AS count FROM warden WHERE wardenId = ? AND deletedAt IS NULL`
         mysqlClient.query(query, [wardenId], (err, warden) => {
             if (err) {
                 return reject(err)
             }
-            resolve(warden.length ? warden[0] : null)
+            resolve(warden[0].count > 0 ? warden[0] : null)
         })
     })
 }

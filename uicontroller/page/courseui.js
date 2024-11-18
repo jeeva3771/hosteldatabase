@@ -5,7 +5,7 @@ function coursePageUi(req, res) {
     res.status(200).render('pages/course/courselist.ejs', {
         appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
         ]
@@ -17,7 +17,7 @@ function addCourseUi(req, res) {
         appURL: getAppUrl(),
         courseId: '',
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
             {name:'Add', link:'/course/add'}
@@ -31,7 +31,7 @@ function editCourseUi(req, res) {
         appURL: getAppUrl(),
         courseId: courseId,
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
             {name:'Edit', link:'/course/add'}

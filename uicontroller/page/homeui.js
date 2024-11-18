@@ -24,7 +24,7 @@ module.exports = (app) => {
             res.render('pages/home', {
                 appURL: getAppUrl(),
                 user: getUserProfile(req.session),
-                breadsCrumb: [{ name: 'Home', link: '/home' }]
+                breadCrumbs: [{ name: 'Home', link: '/home' }]
             })
         }
         else {

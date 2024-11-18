@@ -14,7 +14,7 @@ async function readBlocks(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    var queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+    let queryParameters = null;
 
     let blocksQuery = /*sql*/`
         SELECT 
@@ -47,17 +47,20 @@ async function readBlocks(req, res) {
         w.lastName LIKE ? OR 
         bk.isActive LIKE ?)
         ORDER BY ${orderBy} ${sort}`;
-
         
-    if (limit >= 0) {
-        blocksQuery += ' LIMIT ? OFFSET ?'
-        countQuery += ' LIMIT ? OFFSET ?'
-    }
+        if (limit >= 0) {
+            blocksQuery += ' LIMIT ? OFFSET ?';
+            queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+        } else {
+            queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+        }
+
+        const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
 
     try {
         const [blocks, totalCount] = await Promise.all([
             mysqlQuery(blocksQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, queryParameters, mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({

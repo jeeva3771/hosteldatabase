@@ -139,6 +139,25 @@
       </li><!-- End Tables Nav -->
 
       <li class="nav-item">
+        <a class="nav-link collapsed" data-bs-target="#tables-structure" data-bs-toggle="collapse" href="#">
+          <i class="bi bi-layout-text-window-reverse"></i><span>Structure</span><i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul id="tables-structure" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+          <li>
+            <a href="<%=appURL%>course/">
+              <i class="bi bi-circle"></i><span>Course</span>
+            </a>
+          </li>
+          <li>
+            <a href="<%=appURL%>warden/">
+              <i class="bi bi-circle"></i><span>Warden</span>
+            </a>
+          </li>
+        </ul>
+      </li><!-- End Tables Nav -->
+
+
+      <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#charts-nav" data-bs-toggle="collapse" href="#">
           <i class="bi bi-bar-chart"></i><span>Charts</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
@@ -187,7 +206,7 @@
       <li class="nav-heading">Pages</li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="users-profile.html">
+        <a class="nav-link collapsed" href="<%=appURL%>warden/profile/">
           <i class="bi bi-person"></i>
           <span>Profile</span>
         </a>

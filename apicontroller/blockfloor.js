@@ -235,7 +235,6 @@ async function deleteBlockFloorById(req, res) {
     try {
         const isValid = await validateBlockFloorById(blockFloorId, mysqlClient)
         if (!isValid) {
-            console.log('hi')
             return res.status(404).send("blockFloorId is not defined")
         }
 

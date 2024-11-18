@@ -26,7 +26,7 @@ async function readStudents(req, res) {
     const searchPattern = `%${searchQuery}%`;
     const queryParameters = [searchPattern, searchPattern, limit, offset];
 
-    var studentsQuery = /*sql*/`
+    let studentsQuery = /*sql*/`
         SELECT 
             s.*,
             bk.blockCode,
@@ -35,8 +35,6 @@ async function readStudents(req, res) {
             c.courseName,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
             DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
             DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
             DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
@@ -52,8 +50,6 @@ async function readStudents(req, res) {
             course AS c ON c.courseId = s.courseId
             LEFT JOIN 
             warden AS w ON w.wardenId = s.createdBy
-            LEFT JOIN 
-            warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
             s.deletedAt IS NULL 
             AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
@@ -61,15 +57,34 @@ async function readStudents(req, res) {
             ${orderBy} ${sort}
             LIMIT ? OFFSET ?`;
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 
-        FROM student 
-        WHERE deletedAt IS NULL`;
+        FROM student AS s
+        LEFT JOIN 
+            block AS bk ON bk.blockId = s.blockId
+        LEFT JOIN 
+            blockfloor AS b ON b.blockFloorId = s.blockFloorId
+        LEFT JOIN 
+            room AS r ON r.roomId = s.roomId
+        LEFT JOIN 
+            course AS c ON c.courseId = s.courseId
+        LEFT JOIN 
+            warden AS w ON w.wardenId = s.createdBy
+        WHERE 
+            s.deletedAt IS NULL 
+        AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
+        ORDER BY 
+        ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        studentsQuery += ' LIMIT ? OFFSET ?'
+        countQuery += ' LIMIT ? OFFSET ?'
+    }
 
     try {
         const [students, totalCount] = await Promise.all([
             mysqlQuery(studentsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, queryParameters, mysqlClient)
         ]);
         res.status(200).send({
             students: students,
@@ -148,14 +163,14 @@ async function getStudentsForAttendanceReport(req, res) {
     try {
         var studentsForAttendanceReport = await mysqlQuery(/*sql*/`
         SELECT name, registerNumber FROM student WHERE deletedAt IS NULL ORDER BY name ASC`,
-        [], mysqlClient
+            [], mysqlClient
         )
 
         if (studentsForAttendanceReport.length === 0) {
             return res.status(404).send('No content found')
         }
 
-      return res.status(200).send(studentsForAttendanceReport)
+        return res.status(200).send(studentsForAttendanceReport)
     } catch (error) {
         res.status(200).send(error.message)
     }
@@ -463,7 +478,7 @@ function validateInsertItems(body, isUpdate = false) {
 
 module.exports = (app) => {
     app.get('/api/student', readStudents)
-    app.get('/api/student/getstudent',getStudentsForAttendanceReport)
+    app.get('/api/student/getstudent', getStudentsForAttendanceReport)
     app.get('/api/student/:studentId', readStudentById)
     app.get('/api/student/room/:roomId', readStudentsByRoomId)
     app.post('/api/student', createStudent)

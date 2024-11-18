@@ -1,6 +1,6 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, title: 'Course list' }) %>
 <%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Course list' }) %>
-<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
 <%- include('../../partials/aside.ejs') %>
 
 <section class="section">
@@ -89,44 +89,46 @@
 
 </main><!-- End #main -->
 <%- include('../../partials/footer.ejs') %>
-        <script>
-            var tableDataDom = document.getElementById("coursesData");
-            var limitDom = document.getElementById("limit");
-            var paginationDom = document.getElementById("pagination");
-            var courseModalDom = document.getElementById('courseModal');
-            var orderIconDom = document.querySelectorAll('.sortIcon');
-            var searchDom = document.getElementById("searchInput");
+<script>
+    var tableDataDom = document.getElementById("coursesData");
+    var limitDom = document.getElementById("limit");
+    var paginationDom = document.getElementById("pagination");
+    var orderIconDom = document.querySelectorAll('.sortIcon');
+    var searchDom = document.getElementById("searchInput");
+    let existingModalDom = document.getElementById('courseModal');
 
-            var columnSortOrders = {
-                courseName: 'ASC'
-            };
-            var currentColumn = 'createdAt';
-            var url = `&orderby=c.${currentColumn}&sort=DESC`;
 
-            orderIconDom.forEach((icon) => {
-                icon.classList.add('light');
-            })
+    var columnSortOrders = {
+      courseName: 'ASC'
+    };
 
-            function changeLimit() {
-                coursePage()
-            }
+    var currentColumn = 'createdAt';
+    var url = `&orderby=c.${currentColumn}&sort=DESC`;
 
-            function handleSearch() {
-                coursePage();
-            }
+    orderIconDom.forEach((icon) => {
+       icon.classList.add('light');
+    })
 
-            function sortByColumn(column, sortOrder) {
-                columnSortOrders[column] = sortOrder;
-                currentColumn = column;
-                url = `&orderby=c.${currentColumn}&sort=${sortOrder}`;
+    function changeLimit() {
+        coursePage()
+    }
 
-                const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-                activeIcons.forEach(icon => {
-                    icon.classList.remove('light');
-                    icon.classList.add('dark');
-                });
-                coursePage();
-            }
+    function handleSearch() {
+        coursePage();
+    }
+
+    function sortByColumn(column, sortOrder) {
+        columnSortOrders[column] = sortOrder;
+        currentColumn = column;
+        url = `&orderby=c.${currentColumn}&sort=${sortOrder}`;
+
+        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+        activeIcons.forEach(icon => {
+            icon.classList.remove('light');
+            icon.classList.add('dark');
+        });
+        coursePage();
+    }
 
             function coursePage(pageNo = 1) {
                 var fetchUrl = `${getAppUrl('api/course')}?limit=${limitDom.value}&page=${pageNo}${url}`;
@@ -144,6 +146,7 @@
                         const responseData = await response.json();
                         const { courses, courseCount } = responseData;
                         let trHtml = '';
+
                         for (let i = 0; i < courses.length; i++) {
                             const course = courses[i];
                             trHtml += `<tr>
@@ -155,7 +158,7 @@
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                                 <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                                 </svg>
-                                <a href="${getAppUrl(`course/${courseId}`)}" class="dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16">
+                                <a href="${getAppUrl(`course/${course.courseId}`)}" class="dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16">
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                                 </svg></a>
@@ -173,19 +176,19 @@
                        if (totalPages > 1) {
                             paginationHtml += `
                                 <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                                    <a class="page-link" href="#" onclick="coursePage(${pageNo - 1})">Previous</a>
+                                    <a class="page-link" href="" onclick="coursePage(${pageNo - 1})">Previous</a>
                                  </li>`;
 
                             for (let i = 1; i <= totalPages; i++) {
                                 paginationHtml += `
                                     <li class="page-item${i === pageNo ? ' active' : ''}">
-                                        <a class="page-link" href="#" onclick="coursePage(${i})">${i}</a>
+                                        <a class="page-link" href="" onclick="coursePage(${i})">${i}</a>
                                     </li>`;
                             }
 
                             paginationHtml += `
                                 <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                                        <a class="page-link" href="#" onclick="coursePage(${pageNo + 1})">Next</a>
+                                        <a class="page-link" href="" onclick="coursePage(${pageNo + 1})">Next</a>
                                 </li>`;
                         }
                             paginationDom.innerHTML = paginationHtml;
@@ -204,9 +207,9 @@
                 fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
                     .then(async (response) => {
                         const course = await response.json();
-
-                        if (courseModalDom) {
-                            courseModalDom.remove();
+                        
+                        if (existingModalDom) {
+                            existingModalDom.remove();
                         }
 
                         const modalHtml = `
@@ -263,9 +266,8 @@
                             </div>
                         </div>`;
                         document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(courseModalDom);
-                        modal.show();
-
+                            var modal = new bootstrap.Modal(existingModalDom);
+                            modal.show();
                     })
                     .catch(error => console.log('error', error));
             }
@@ -283,21 +285,12 @@
                 fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
                 .then(async (response) => {
                     if (response.status === 200) {
-                        return window.location = getAppUrl('room')
+                        return window.location = getAppUrl('course')
                     }
                     return alert(await response.text())
                 })
                 .catch(error => console.log('error', error));
-                }
-
-            // document.querySelectorAll('.sortIcon').forEach(function (element) {
-            //     element.addEventListener('mouseenter', function () {
-            //         element.focus();
-            //     });
-            //     element.addEventListener('sortIcon', function () {
-            //         element.blur();
-            //     });
-            // });
+            }
 
             window.addEventListener('load', () => {
                 coursePage()

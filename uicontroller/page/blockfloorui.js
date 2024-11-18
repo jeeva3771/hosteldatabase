@@ -5,7 +5,7 @@ function blockFloorPageUi(req, res) {
     res.render('pages/blockfloor/blockfloorlist.ejs', {
         appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadsCrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'}
         ]
@@ -17,7 +17,7 @@ function addBlockFloorUi(req, res) {
         appURL: getAppUrl(),
         blockFloorId: '',
         user: getUserProfile(req.session),
-        breadsCrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'},
             {name:'Add', link:'/blockfloor/add'}
@@ -31,7 +31,7 @@ function editBlockFloorUi(req, res) {
         appURL: getAppUrl(),
         blockFloorId: blockFloorId,
         user: getUserProfile(req.session),
-        breadsCrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Blockfloor', link:'/blockfloor'},
             {name:'Edit', link:'/blockfloor/add'}
