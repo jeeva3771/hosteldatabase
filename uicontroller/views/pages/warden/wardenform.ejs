@@ -88,54 +88,64 @@
 
 <%- include('../../partials/footer.ejs') %>
 
-      <script>
-            const firstNameDom = document.getElementById('firstName');
-            const lastNameDom = document.getElementById('lastName');
-            const dobDom = document.getElementById('dob');
-            var adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
-            const emailIdDom = document.getElementById('emailId');
-            const passwordDom = document.getElementById('password');
-            const conformDom = document.getElementById('conform');
-            const profileUploadDom = document.getElementById('profileUpload');
-            var wardenId = document.getElementById('wardenId').value;
-            const submitDom = document.getElementById('submitButton');
+<script>
+    const firstNameDom = document.getElementById('firstName');
+    const lastNameDom = document.getElementById('lastName');
+    const dobDom = document.getElementById('dob');
+    var adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
+    const emailIdDom = document.getElementById('emailId');
+    const passwordDom = document.getElementById('password');
+    const conformDom = document.getElementById('conform');
+    const profileUploadDom = document.getElementById('profileUpload');
+    var wardenId = document.getElementById('wardenId').value;
+    const submitDom = document.getElementById('submitButton');
 
-            function getAdminStatus() {
-                let adminStatusValue = null;
-                adminStatusDom.forEach(radio => {
-                    if (radio.checked) {
-                        adminStatusValue = radio.value;
+    function getAdminStatus() {
+        let adminStatusValue = null;
+        adminStatusDom.forEach(radio => {
+            if (radio.checked) {
+                adminStatusValue = radio.value;
+            }
+        });
+        return adminStatusValue;
+    }
+
+    function authentication() {
+        const selectedAdminStatus = getAdminStatus();
+
+        var myHeaders = new Headers();
+        var formData = new FormData();
+        formData.append("image", profileUploadDom.files[0]);
+        formData.append("firstName", firstNameDom.value);
+        formData.append("lastName", lastNameDom.value);
+        formData.append("dob", dobDom.value);
+        formData.append("emailId", emailIdDom.value);
+        formData.append("password", passwordDom.value);
+        formData.append("superAdmin", selectedAdminStatus);
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: formData,
+            redirect: 'follow'
+        };
+
+        fetch("http://localhost:1005/api/warden", requestOptions)
+            .then(async (response) => {
+                if (response.status === 201 || 200) {
+                    window.location = '/warden'
+                } else {
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
                     }
-                });
-                return adminStatusValue;
-            }
-
-            function authentication() {
-                const selectedAdminStatus = getAdminStatus();
-
-                var myHeaders = new Headers();
-                var formdata = new FormData();
-                formdata.append("image", profileUploadDom.files[0]);
-                formdata.append("firstName", firstNameDom.value);
-                formdata.append("lastName", lastNameDom.value);
-                formdata.append("dob", dobDom.value);
-                formdata.append("emailId", emailIdDom.value);
-                formdata.append("password", passwordDom.value);
-                formdata.append("superAdmin", selectedAdminStatus);
-
-                var requestOptions = {
-                    method: 'POST',
-                    headers: myHeaders,
-                    body: formdata,
-                    redirect: 'follow'
-                };
-
-                fetch("http://localhost:1005/api/warden", requestOptions)
-                .then(response => response.text())
-                .then(result => console.log(result))
-                .catch(error => console.log('error', error));
-
-            }
+                }
+            })
+            .catch(error => console.error('error', error));
+    }
+        
 
 
             //     const isAdmin = document.querySelector('input[name="isAdmin"]:checked');

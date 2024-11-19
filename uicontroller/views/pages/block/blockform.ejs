@@ -57,23 +57,11 @@
 <script>
     var blockCodeDom = document.getElementById('blockCode');
     var blockLocationDom = document.getElementById('blockLocation');
-    var selectedStatusDom = document.querySelectorAll('input[name="status"]')
     var submitButtonDom = document.getElementById('submitButton');
     var blockId = <%= blockId || 'null' %>;
 
-    function getSelectedStatus() {
-        let selectedStatusValue = null;
-
-        selectedStatusDom.forEach(radio => {
-            if (radio.checked) {
-                selectedStatusValue = parseInt(radio.value);
-            }
-        });
-        return selectedStatusValue;
-    }
-
     function saveOrUpdateBlock() {
-        const selectedStatusValue = getSelectedStatus();
+        const selectedStatusValue = getSelectedRadioValue('status');
 
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
@@ -99,7 +87,7 @@
                         // } else {
                         //     alert(await response.text())
                         // }        
-                const alertContainer = document.getElementById("alertContainer"); // Ensure this exists in your HTML
+                const alertContainer = document.getElementById("alertContainer");
                 alertContainer.innerHTML = `
                 <div class="alert alert-success alert-dismissible fade show w-25 mx-auto fs-6" role="alert">
                     success
@@ -107,7 +95,7 @@
                 </div>`;
 
                 setTimeout(() => {
-                window.location = getAppUrl('block');
+                    window.location = getAppUrl('block');
                 }, 1000);
             })
                 .catch(error => console.error('error', error));
@@ -129,17 +117,18 @@
                 blockLocationDom.value = block.blockLocation
             
                 if (block.isActive) {
-                document.getElementById('isActive').checked = true;
+                    document.getElementById('isActive').checked = true;
                 } else {
-                document.getElementById('inActive').checked = true;
+                    document.getElementById('inActive').checked = true;
                 }
             })
             .catch((error) => console.error(error));
     }
 
     function toggleSubmitButton() {
-        const selectedStatusValue = getSelectedStatus();
-            submitButton.disabled = !(
+        const selectedStatusValue = getSelectedRadioValue('status');
+
+        submitButtonDom.disabled = !(
             blockCodeDom.value.length > 0 &&
             blockLocationDom.value.length > 0 &&
             selectedStatusValue !== null)
@@ -147,5 +136,6 @@
 
     blockCodeDom.addEventListener('input', toggleSubmitButton);
     blockLocationDom.addEventListener('input', toggleSubmitButton);
-    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+    document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change',
+    toggleSubmitButton));
 </script>

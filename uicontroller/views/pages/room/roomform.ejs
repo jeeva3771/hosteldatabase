@@ -98,18 +98,6 @@
     var submitButtonDom = document.getElementById('submitButton');
     var roomId = <%= roomId || 'null' %>;
 
-    function getSelectedRadioValue(radioName) {
-        const radios = document.querySelectorAll(`input[name="${radioName}"]`);
-        let selectedValue = null;
-        
-        radios.forEach(radio => {   
-            if (radio.checked) {
-                selectedValue = parseInt(radio.value);
-            }
-        });
-        return selectedValue;
-    }
-    
     function saveOrUpdateRoom() {
         const selectedStatusValue = getSelectedRadioValue('status');
         const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');

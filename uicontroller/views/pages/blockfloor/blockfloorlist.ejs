@@ -14,7 +14,7 @@
                             <div class="d-flex gap-2">
                                 <div class="datatable-search">
                                     <input class="datatable-input" id="searchInput"
-                                        onkeyup="handleSearch()" placeholder="Search..." type="search"
+                                        oninput="handleSearch()" placeholder="Search..." type="search"
                                         name="search" title="Search within table">
                                 </div>
                                 <div class="datatable-dropdown">
@@ -214,19 +214,19 @@
                 if (totalPages > 1) {
                     paginationHtml += `
                     <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                        <a class="page-link" href="" onclick="blockFloorPage(${pageNo - 1})">Previous</a>
+                        <a class="page-link" onclick="blockFloorPage(${pageNo - 1})">Previous</a>
                     </li>`;
 
                     for (let i = 1; i <= totalPages; i++) {
                         paginationHtml += `
                         <li class="page-item${i === pageNo ? ' active' : ''}">
-                        <a class="page-link" href="" onclick="blockFloorPage(${i})">${i}</a>
+                        <a class="page-link" onclick="blockFloorPage(${i})">${i}</a>
                         </li>`;
                     }
 
                     paginationHtml += `
                     <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                        <a class="page-link" href="" onclick="blockFloorPage(${pageNo + 1})">Next</a>
+                        <a class="page-link" onclick="blockFloorPage(${pageNo + 1})">Next</a>
                     </li>`;
                 }
                 paginationDom.innerHTML = paginationHtml;

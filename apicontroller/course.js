@@ -12,15 +12,14 @@ async function readCourses(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset];
+    let queryParameters = null;
 
     let coursesQuery = /*sql*/ `
         SELECT 
             c.*,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp
         FROM 
             course AS c 
         LEFT JOIN
@@ -41,14 +40,18 @@ async function readCourses(req, res) {
             ${orderBy} ${sort}`;
 
     if (limit >= 0) {
-        coursesQuery += ' LIMIT ? OFFSET ?'
-        countQuery += ' LIMIT ? OFFSET ?'
+        coursesQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern];
     }
+
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern];
 
     try {
         const [courses, totalCount] = await Promise.all([
             mysqlQuery(coursesQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, queryParameters, mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({

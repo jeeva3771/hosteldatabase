@@ -24,7 +24,8 @@ async function readStudents(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, limit, offset];
+    // const queryParameters = [searchPattern, searchPattern, limit, offset];
+    let queryParameters = null;
 
     let studentsQuery = /*sql*/`
         SELECT 
@@ -37,8 +38,7 @@ async function readStudents(req, res) {
             w.lastName AS createdLastName,
             DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
             DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
-            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp
             FROM student AS s
             LEFT JOIN 
             block AS bk ON bk.blockId = s.blockId

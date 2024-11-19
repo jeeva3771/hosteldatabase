@@ -26,4 +26,20 @@
 <!-- Template Main JS File -->
 <script src="<%=appURL%>assets/js/main.js"></script>
 
+<script>
+  function getSelectedRadioValue(radioName) {
+    let selectedValue = null;
+    const radios = Array.from(document.querySelectorAll(`input[name="${radioName}"]`));
+    
+    radios.some(radio => {
+        if (radio.checked) {
+            selectedValue = parseInt(radio.value);
+            return true;
+        }
+        return false;
+    });
+    return selectedValue;
+  }
+</script>
+
 </html>

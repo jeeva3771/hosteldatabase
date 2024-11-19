@@ -60,23 +60,11 @@
 <script>
     var blockCodeDom = document.getElementById('blockCode');
     var floorNumberDom = document.getElementById('floorNumber');
-    var selectedStatusDom = document.querySelectorAll('input[name="status"]');
     var submitButtonDom = document.getElementById('submitButton');
     var blockFloorId = <%= blockFloorId || 'null' %>;
 
-    function getSelectedStatus() {
-        let selectedStatusValue = null;
-
-        selectedStatusDom.forEach(radio => {
-            if (radio.checked) {
-            selectedStatusValue = parseInt(radio.value);
-            }
-        });
-        return selectedStatusValue;
-    }
-
     function saveOrUpdateBlockFloor() {
-        const selectedStatusValue = getSelectedStatus();
+        const selectedStatusValue = getSelectedRadioValue('status');
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -107,7 +95,7 @@
             
 
     function toggleSubmitButton() {
-        const selectedStatusValue = getSelectedStatus();
+        const selectedStatusValue = getSelectedRadioValue('status');
         submitButtonDom.disabled = !(
         blockCodeDom.value !== 'Select a Block' &&
         floorNumberDom.value.length > 0 &&
@@ -123,7 +111,8 @@
 
         blockCodeDom.addEventListener('input', toggleSubmitButton);
         floorNumberDom.addEventListener('input', toggleSubmitButton);
-        document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change',
+        toggleSubmitButton));
     }
     initializeForm();
 

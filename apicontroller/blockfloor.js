@@ -14,7 +14,7 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
+    let queryParameters = null;
 
     let blockFloorsQuery = /*sql*/`
         SELECT 
@@ -22,8 +22,7 @@ async function readBlockFloors(req, res) {
             bk.blockCode,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
@@ -48,14 +47,18 @@ async function readBlockFloors(req, res) {
         ORDER BY ${orderBy} ${sort}`;
 
     if (limit >= 0) {
-        blockFloorsQuery += ' LIMIT ? OFFSET ?'
-        countQuery += ' LIMIT ? OFFSET ?'
+        blockFloorsQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
     }
+
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
 
     try {
         const [blockFloors, totalCount] = await Promise.all([
             mysqlQuery(blockFloorsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, queryParameters, mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({

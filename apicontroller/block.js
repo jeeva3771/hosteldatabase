@@ -6,7 +6,7 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readBlocks(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
@@ -22,8 +22,8 @@ async function readBlocks(req, res) {
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
             DATE_FORMAT(bk.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(bk.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp,
-            (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL) AS floorCount 
+            (SELECT COUNT(*) FROM blockfloor b WHERE b.blockId = bk.blockId AND b.deletedAt IS NULL)
+            AS floorCount 
             FROM block AS bk
         LEFT JOIN 
             warden AS w ON w.wardenId = bk.createdBy

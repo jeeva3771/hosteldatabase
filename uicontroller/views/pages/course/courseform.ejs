@@ -18,7 +18,6 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <input type="hidden" id="courseId" value="<%=courseId %>" />
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="button" onclick="saveOrUpdateCourse()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
@@ -35,7 +34,7 @@
 <script>
     var courseNameDom = document.getElementById('courseName');
     var submitButtonDom = document.getElementById('submitButton');
-    var courseId = document.getElementById('courseId').value;
+    var courseId = <%= courseId || 'null' %>;
 
     function saveOrUpdateCourse() {
         var myHeaders = new Headers();

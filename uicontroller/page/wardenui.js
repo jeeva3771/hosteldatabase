@@ -54,13 +54,15 @@ function resetPasswordUi(req, res) {
 }
 
 function wardenProfileUi(req, res) {
+    // const wardenId = req.params.wardenId;
     res.render('pages/warden/wardenprofile.ejs',{
         appURL: getAppUrl(),
+        wardenId: 105,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
             {name:'User', link:''},
-            {name:'Profile', link:''}
+            {name:'Profile', link:'/warden/profile'}
         ]
     })
 }

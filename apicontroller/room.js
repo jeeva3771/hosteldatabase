@@ -17,7 +17,7 @@ async function readRooms(req, res) {
     const sort = req.query.sort;
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
+    let queryParameters = null;
 
     let roomsQuery = /*sql*/`
         SELECT 
@@ -26,8 +26,7 @@ async function readRooms(req, res) {
             bk.blockCode,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            DATE_FORMAT(r.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(r.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(r.createdAt, "%y-%b-%D %r") AS createdTimeStamp
             FROM room AS r
             LEFT JOIN 
                blockfloor AS b ON b.blockFloorId = r.blockFloorId
@@ -58,14 +57,19 @@ async function readRooms(req, res) {
             ORDER BY ${orderBy} ${sort}`;
 
     if (limit >= 0) {
-        roomsQuery += ' LIMIT ? OFFSET ?'
-        countQuery += ' LIMIT ? OFFSET ?'
+        roomsQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern,searchPattern, searchPattern, searchPattern];
     }
+
+    const countQueryParameters = [searchPattern, searchPattern,searchPattern, searchPattern, searchPattern, searchPattern];
+
 
     try {
         const [rooms, totalCount] = await Promise.all([
             mysqlQuery(roomsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, queryParameters, mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({
@@ -249,7 +253,7 @@ async function deleteRoomById(req, res) {
 
         const checkRoomReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
         WHERE roomId = ?
-        AND deletedAt IS NULL`, [roomId], mysqlClient )
+        AND deletedAt IS NULL`, [roomId], mysqlClient)
 
 
         if (checkRoomReference[0].count > 0) {
@@ -271,7 +275,7 @@ async function deleteRoomById(req, res) {
         }
 
         const getDeletedBlock = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ? `,
-                                [roomId], mysqlClient)
+            [roomId], mysqlClient)
 
         res.status(200).send({
             status: 'deleted',
