@@ -11,6 +11,8 @@
                 <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
 
                   <img src="" alt="Profile" class="rounded-circle" id="profile">
+                  <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAvatar()">remove</button>
+
                   <h2>Kevin Anderson</h2>
                   <h3>Web Designer</h3>
                   <div class="social-links mt-2">
@@ -302,4 +304,20 @@
         </main>
         <%- include('../../partials/footer.ejs') %>
 
-        
+<script>
+
+  function deleteAvatar() {
+  var myHeaders = new Headers();
+
+var requestOptions = {
+   method: 'DELETE',
+   headers: myHeaders,
+   redirect: 'follow'
+};
+
+fetch(`http://localhost:1005/api/warden/${wardenId}/deleteavatar`, requestOptions)
+   .then(response => response.text())
+   .then(result => console.log(result))
+   .catch(error => console.log('error', error));
+}
+</script>

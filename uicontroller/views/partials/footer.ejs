@@ -27,7 +27,12 @@
 <script src="<%=appURL%>assets/js/main.js"></script>
 
 <script>
-  function getSelectedRadioValue(radioName) {
+
+var wardenId = <%= avatarWardenId || 'null' %>;
+const userProfileDom = document.getElementById('userProfile');
+const profileDom = document.getElementById('profile');
+
+function getSelectedRadioValue(radioName) {
     let selectedValue = null;
     const radios = Array.from(document.querySelectorAll(`input[name="${radioName}"]`));
 
@@ -41,12 +46,7 @@
     return selectedValue;
   }
 
-  var wardenId = <%= wardenId || 'null' %>;
-  const userProfileDom = document.getElementById('userProfile');
-  const profileDom = document.getElementById('profile');
-
-
-  function wardenDetails() {
+  function wardenProfile() {
     const myHeaders = new Headers();
 
     const requestOptions = {
@@ -69,7 +69,7 @@
           userProfileDom.src = imageUrl;
           profileDom.src = imageUrl
         } else if (userProfileDom) {
-          profileDom.src = imageUrl
+          userProfileDom.src = imageUrl
         } else {
           console.error('Profile DOM element not found!');
         }
@@ -80,7 +80,7 @@
   }
 
   window.addEventListener('load', () => {
-    wardenDetails()
+    wardenProfile()
   })
 
 </script>

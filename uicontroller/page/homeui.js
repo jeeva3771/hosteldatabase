@@ -20,8 +20,10 @@ module.exports = (app) => {
     })
 
     app.get(['/home','/'], (req, res) => {
+        const avatarWardenId = req.session.warden.wardenId;
         if (req.session.isLogged === true) {
             res.render('pages/home', {
+                avatarWardenId: avatarWardenId,
                 appURL: getAppUrl(),
                 user: getUserProfile(req.session),
                 breadCrumbs: [{ name: 'Home', link: '/home' }]

@@ -2,11 +2,13 @@ const { getUserProfile } = require('../../utilityclient/query')
 const { getAppUrl } = require('../../utilityclient/url');
 
 function wardenPageUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     if (!req.session || !req.session.warden || req.session.warden.superAdmin !== 1) {
         res.status(403).redirect('/warden/error')
     } else {
         res.render('pages/warden/wardenlist.ejs', {
             appURL: getAppUrl(),
+            avatarWardenId: avatarWardenId,
             user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:'/home'},
@@ -17,8 +19,10 @@ function wardenPageUi(req, res) {
 }
 
 function addWardenUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/warden/wardenform.ejs', {
         appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         wardenId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
@@ -30,10 +34,12 @@ function addWardenUi(req, res) {
 }
 
 function editWardenUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     const wardenId = req.params.wardenId;
     res.render('pages/warden/wardenform.ejs', {
         appURL: getAppUrl(),
         wardenId: wardenId,
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
@@ -54,10 +60,10 @@ function resetPasswordUi(req, res) {
 }
 
 function wardenProfileUi(req, res) {
-    // const wardenId = req.params.wardenId;
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/warden/wardenprofile.ejs',{
         appURL: getAppUrl(),
-        wardenId: 105,
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
