@@ -14,16 +14,15 @@ async function readBlockFloors(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset]
+    let queryParameters = null;
 
-    var blockFloorsQuery = /*sql*/`
+    let blockFloorsQuery = /*sql*/`
         SELECT 
             b.*,
             bk.blockCode,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(b.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(b.createdAt, "%y-%b-%D %r") AS createdTimeStamp
             FROM blockfloor AS b
             LEFT JOIN 
               block AS bk ON bk.blockId = b.blockId
@@ -32,19 +31,34 @@ async function readBlockFloors(req, res) {
             WHERE 
               b.deletedAt IS NULL
             AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
-            OR w.firstName LIKE ? OR w.lastName Like ?)
-            ORDER BY ${orderBy} ${sort}
-            LIMIT ? OFFSET ?`;
+              OR w.firstName LIKE ? OR w.lastName Like ?)
+            ORDER BY ${orderBy} ${sort}`;
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockFloorCount 
-        FROM blockfloor 
-        WHERE deletedAt IS NULL`;
+        FROM blockfloor AS b
+        LEFT JOIN 
+              block AS bk ON bk.blockId = b.blockId
+            LEFT JOIN 
+              warden AS w ON w.wardenId = b.createdBy
+        WHERE b.deletedAt IS NULL
+        AND (bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR b.isActive LIKE ?
+            OR w.firstName LIKE ? OR w.lastName Like ?)
+        ORDER BY ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        blockFloorsQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+    }
+
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
 
     try {
         const [blockFloors, totalCount] = await Promise.all([
             mysqlQuery(blockFloorsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({
@@ -99,6 +113,7 @@ async function readRoomBlockFloorCountOrFloorCount(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
     const includeBlockFloor = req.query.blockFloor === 'true';
+    console.log(includeBlockFloor)
     try {
         let sqlQuery = /*sql*/`SELECT 
             blockFloorId, 
@@ -115,7 +130,7 @@ async function readRoomBlockFloorCountOrFloorCount(req, res) {
             WHERE b.blockId = ? AND b.isActive = 1
             AND b.deletedAt IS NULL ORDER BY b.floorNumber ASC`;
 
-            const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
+        const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
 
         if (roomBlockFloorCount.length === 0) {
             return res.status(404).send('No BlockFloors found');
@@ -226,7 +241,18 @@ async function deleteBlockFloorById(req, res) {
             return res.status(404).send("blockFloorId is not defined")
         }
 
-        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
+        const checkBlockFloorReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM room 
+        WHERE blockFloorId = ?
+        AND deletedAt IS NULL`, [blockFloorId], mysqlClient)
+
+
+        if (checkBlockFloorReference[0].count > 0) {
+            return res.status(409).send('BlockFloor is referenced by a room and cannot be deleted')
+        }
+
+        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET 
+        floorNumber = CONCAT(IFNULL(floorNumber, ''), '-', NOW()),
+        deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
             [deletedBy, blockFloorId],
             mysqlClient
         )
@@ -244,6 +270,7 @@ async function deleteBlockFloorById(req, res) {
         });
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -283,11 +310,11 @@ async function validateInsertItems(body, isUpdate = false) {
 
 function getBlockFloorById(blockFloorId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`, [blockFloorId], (err, blockFloor) => {
+        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM blockfloor WHERE blockfloorId = ?`, [blockFloorId], (err, blockFloor) => {
             if (err) {
                 return reject(err)
             }
-            resolve(blockFloor.length ? blockFloor[0] : null)
+            resolve(blockFloor[0].count > 0 ? blockFloor[0] : null)
         })
     })
 }

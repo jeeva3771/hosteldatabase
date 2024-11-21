@@ -1,12 +1,11 @@
-const { getUserProfile, getAppUrl } = require('../../utilityclient/query')
+const { getUserProfile } = require('../../utilityclient/query');
+const { getAppUrl } = require('../../utilityclient/url');
+
 module.exports = (app) => {
+
     app.get('/login', (req, res) => {
         if (req.session.isLogged === true) {
-            res.render('pages/home', {
-                appURL: getAppUrl(),
-                user: getUserProfile(req.session),
-                breadsCrumb: [{ name: 'Home', link: '/home' }]
-            })
+            res.status(302).redirect(getAppUrl('home'))
         } else {
             res.render('pages/login', {
                 appURL: getAppUrl()
@@ -20,16 +19,18 @@ module.exports = (app) => {
         })
     })
 
-    app.get('/home', (req, res) => {
+    app.get(['/home','/'], (req, res) => {
+        const avatarWardenId = req.session.warden.wardenId;
         if (req.session.isLogged === true) {
             res.render('pages/home', {
+                avatarWardenId: avatarWardenId,
                 appURL: getAppUrl(),
                 user: getUserProfile(req.session),
-                breadsCrumb: [{ name: 'Home', link: '/home' }]
+                breadCrumbs: [{ name: 'Home', link: '/home' }]
             })
         }
         else {
-            res.redirect(`${getAppUrl()}/login`)
+            res.status(302).redirect(getAppUrl('login'))
         }
     })
 }

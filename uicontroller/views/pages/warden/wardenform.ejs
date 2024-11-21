@@ -1,97 +1,193 @@
-<%- include('../../partials/header.ejs',{ isMenuVisible : true, title: 'Warden' }) %>
-    <h2>Warden form</h2>
-    <div class="form-group">
-        <label for="firstName">First Name</label>
-        <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
-    </div>
-    <div class="form-group">
-        <label for="lastName">Last Name</label>
-        <input type="text" class="form-control" id="lastName" onkeyup="toggleSubmitButton()">
-    </div>
-    <div class="form-group">
-        <label for="dob">DOB</label>
-        <input type="date" class="form-control" id="dob" onkeyup="toggleSubmitButton()">
-    </div>
-    <div class="form-group">
-        <label for="emailId">Email Id</label>
-        <input type="email" class="form-control" id="emailId" onkeyup="toggleSubmitButton()" required>
-    </div>
-    <div class="form-group">
-        <label for="isAdmin">Admin</label><br>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="isAdmin" id="isAdmin" value="1"
-                onchange="toggleSubmitButton()">
-            <label class="form-check-label" for="isAir">Yes</label>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Warden form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Warden form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Horizontal Form -->
+                    <form class="mt-4">
+                        <div class="row mb-3">
+                            <label for="firstName" class="col-sm-2 col-form-label">First Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="lastName" class="col-sm-2 col-form-label">Last Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="lastName">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="dob" class="col-sm-2 col-form-label">DOB</label>
+                            <div class="col-sm-10">
+                              <input type="date" class="form-control" id="dob">
+                            </div>
+                        </div>
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Admin</legend>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAdmin"
+                                        id="isAdmin" value="1">
+                                    <label class="form-check-label" for="isAdmin">
+                                        Yes
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAdmin"
+                                        id="notAdmin" value="0">
+                                    <label class="form-check-label" for="notAdmin">
+                                        No
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="row mb-3">
+                            <label for="emailId" class="col-sm-2 col-form-label">Email</label>
+                            <div class="col-sm-10">
+                              <input type="email" class="form-control" id="emailId">
+                            </div>
+                          </div>
+                          <div class="row mb-3">
+                            <label for="password" class="col-sm-2 col-form-label">Password</label>
+                            <div class="col-sm-10">
+                              <input type="password" class="form-control" id="password">
+                            </div>
+                          </div>
+                          <div class="row mb-3">
+                            <label for="conform" class="col-sm-2 col-form-label">Confirm Password</label>
+                            <div class="col-sm-10">
+                              <input type="password" class="form-control" id="conform">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Profile Upload</label>
+                            <div class="col-sm-10">
+                              <input class="form-control" type="file" id="profileUpload" name="image">
+                            </div>
+                          </div>
+                        <div class="text-center">
+                            <input type="hidden" value="<%=wardenId%>" id="wardenId"/>
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="button" onclick="authentication()" class="btn btn-primary"
+                                id="submitButton" >Submit</button>
+                        </div>
+                    </form><!-- End Horizontal Form -->
+                </div>
+            </div>
         </div>
-        <div class="form-check form-check-inline">
-            <input class="form-check-input" type="radio" name="isAdmin" id="notAdmin" value="0"
-                onchange="toggleSubmitButton()">
-            <label class="form-check-label" for="notAir">No</label>
-        </div>
     </div>
-    <div class="form-group">
-        <label for="password">Password</label>
-        <input type="password" class="form-control" id="password" onkeyup="toggleSubmitButton()">
-    </div>
-    <div class="form-group">
-        <label for="password">Confirm Password</label>
-        <input type="password" class="form-control" id="conform" onkeyup="toggleSubmitButton()">
-    </div>
-    <div class="submission">
-        <input type="hidden" id="wardenId" value="<%=wardenId %>" />
-        <button onclick="authentication()" class="btn btn-success" id="submit" disabled>Submit</button>
-    </div>
-    <%- include('../../partials/footer.ejs') %>
-        <script>
-            const firstName = document.getElementById('firstName');
-            const lastName = document.getElementById('lastName');
-            const dob = document.getElementById('dob');
-            const emailId = document.getElementById('emailId');
-            const password = document.getElementById('password');
-            const conform = document.getElementById('conform');
-            var wardenId = document.getElementById('wardenId').value;
-            const submit = document.getElementById('submit');
+</section>
+</main>
 
-            function authentication() {
-                const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
-                const myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
+<%- include('../../partials/footer.ejs') %>
 
-                const raw = JSON.stringify({
-                    "firstName": firstName.value,
-                    "lastName": lastName.value,
-                    "dob": dob.value,
-                    "superAdmin": parseInt(isAdmin.value),
-                    "emailId": emailId.value,
-                    "password": password.value
-                });
+<script>
+    const firstNameDom = document.getElementById('firstName');
+    const lastNameDom = document.getElementById('lastName');
+    const dobDom = document.getElementById('dob');
+    var adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
+    const emailIdDom = document.getElementById('emailId');
+    const passwordDom = document.getElementById('password');
+    const conformDom = document.getElementById('conform');
+    const profileUploadDom = document.getElementById('profileUpload');
+    var wardenId = document.getElementById('wardenId').value;
+    const submitDom = document.getElementById('submitButton');
 
-                var requestOptions = {
-                    method: wardenId ? 'PUT' : 'POST',
-                    headers: myHeaders,
-                    body: raw
-                };
-
-                let url = "http://localhost:1005/api/warden";
-                if (wardenId) {
-                    url = url + '/' + wardenId
-                }
-
-                fetch(url, requestOptions)
-                    .then(async (response) => {
-                        if (response.status === 201 || 200) {
-                            window.location = '/warden'
-                        } else {
-                            const responseText = await response.json();
-                            if (Array.isArray(responseText)) {
-                                alert(responseText[0]);
-                            } else {
-                                alert(responseText);
-                            }
-                        }
-                    })
-                    .catch(error => console.error('error', error));
+    function getAdminStatus() {
+        let adminStatusValue = null;
+        adminStatusDom.forEach(radio => {
+            if (radio.checked) {
+                adminStatusValue = radio.value;
             }
+        });
+        return adminStatusValue;
+    }
+
+    function authentication() {
+        const selectedAdminStatus = getAdminStatus();
+
+        var myHeaders = new Headers();
+        var formData = new FormData();
+        formData.append("image", profileUploadDom.files[0]);
+        formData.append("firstName", firstNameDom.value);
+        formData.append("lastName", lastNameDom.value);
+        formData.append("dob", dobDom.value);
+        formData.append("emailId", emailIdDom.value);
+        formData.append("password", passwordDom.value);
+        formData.append("superAdmin", selectedAdminStatus);
+
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: formData,
+            redirect: 'follow'
+        };
+
+        fetch("http://localhost:1005/api/warden", requestOptions)
+            .then(async (response) => {
+                if (response.status === 201 || 200) {
+                    window.location = '/warden'
+                } else {
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
+                }
+            })
+            .catch(error => console.error('error', error));
+    }
+        
+
+
+            //     const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
+            //     const myHeaders = new Headers();
+            //     myHeaders.append("Content-Type", "application/json");
+
+            //     const raw = JSON.stringify({
+            //         "firstName": firstName.value,
+            //         "lastName": lastName.value,
+            //         "dob": dob.value,
+            //         "superAdmin": parseInt(isAdmin.value),
+            //         "emailId": emailId.value,
+            //         "password": password.value
+            //     });
+
+            //     var requestOptions = {
+            //         method: wardenId ? 'PUT' : 'POST',
+            //         headers: myHeaders,
+            //         body: raw
+            //     };
+
+            //     let url = "http://localhost:1005/api/warden";
+            //     if (wardenId) {
+            //         url = url + '/' + wardenId
+            //     }
+
+            //     fetch(url, requestOptions)
+            //         .then(async (response) => {
+            //             if (response.status === 201 || 200) {
+            //                 alert('ok')
+            //                 window.location = '/warden'
+            //             } else {
+            //                 const responseText = await response.json();
+            //                 if (Array.isArray(responseText)) {
+            //                     alert(responseText[0]);
+            //                 } else {
+            //                     alert(responseText);
+            //                 }
+            //             }
+            //         })
+            //         .catch(error => console.error('error', error));
+            // }
 
             if (wardenId) {
                 getWarden(wardenId)
@@ -124,7 +220,7 @@
 
             function toggleSubmitButton() {
                 const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
-                submit.disabled = !(
+                submitDom.disabled = !(
                     firstName.value.length > 0 &&
                     lastName.value.length > 0 &&
                     dob.value.length > 0 &&

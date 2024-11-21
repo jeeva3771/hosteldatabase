@@ -1,13 +1,14 @@
-          <nav>
-            <ol class="breadcrumb">
-              <% for(i = 0; i < breadsCrumb.length; i++) { %>
-                  <li class="breadcrumb-item">
-                    <a href="<%= breadsCrumb[i].link %>">
-                      <%= breadsCrumb[i].name %>
-                    </a>
-                  </li>
-               <% } %>
-            </ol>
-          </nav>
-      </div><!-- End Page Title -->
+<nav>
+  <ol class="breadcrumb">
+    <% for(i = 0; i < breadCrumbs.length; i++) { %>
+      <li class="breadcrumb-item">
+        <a href="<%= breadCrumbs[i].link %>">
+          <%= breadCrumbs[i].name %>
+        </a>
+      </li>
+    <% } %>
+  </ol>
+</nav>
+
+</div><!-- End Page Title -->
 

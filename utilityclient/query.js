@@ -20,14 +20,10 @@ function getUserProfile(session) {
     }
 }
 
-function getAppUrl() {
-    return process.env.APP_URL
-}
 
 module.exports = {
     mysqlQuery,
-    getUserProfile,
-    getAppUrl
+    getUserProfile
 }
 
 

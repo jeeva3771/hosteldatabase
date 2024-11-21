@@ -9,7 +9,8 @@ async function readAttendances(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
+    // const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
+    let queryParameters = null;
 
     var attendancesQuery = /*sql*/`
         SELECT 
@@ -21,11 +22,8 @@ async function readAttendances(req, res) {
             bk.blockCode,
             w.firstName AS reviewedWardenFirstName,
             w.LastName AS reviewedWardenLastName,
-            w2.firstName AS updatedWardenFirstName,
-            w2.LastName AS updatedWardenLastName,
         DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
-        DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-        DATE_FORMAT(a.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+        DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS createdTimeStamp
         FROM attendance AS a
         LEFT JOIN
             student AS s ON s.studentId = a.studentId
@@ -42,7 +40,8 @@ async function readAttendances(req, res) {
         LEFT JOIN 
             warden AS w2 ON w2.wardenId = a.updatedBy
         WHERE
-        (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ? OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
+        (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
+        OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
         ORDER BY 
          ${orderBy} ${sort}`;
 

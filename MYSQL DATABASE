@@ -19,7 +19,7 @@ update block set isActive = 0 where blockId = 1;
 create table blockfloor (
 	blockFloorId int auto_increment primary key,
 	blockId int, 
-	floorNumber int,
+	floorNumber varchar(255),
     isActive tinyint(1),
 	createdAt timestamp default current_timestamp,
 	createdBy int, 
@@ -37,7 +37,7 @@ create table room (
 	roomId int auto_increment primary key, 
 	blockFloorId int,
 	blockId int, 
-	roomNumber int, 
+	roomNumber varchar(255), 
 	roomCapacity int, 
 	isAc tinyint(1), 
 	createdAt timestamp default current_timestamp,
@@ -633,3 +633,6 @@ left join attendance a ON a.studentId = s.studentId AND a.checkInDate = '2024-11
 where r.deletedAt is null and r.isActive = 1 and r.blockFloorId = 41
 group by r.roomId
 order by r.roomNumber ASC
+
+ALTER TABLE warden
+ADD profilePath varchar(255) AFTER password;

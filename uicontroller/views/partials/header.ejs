@@ -33,7 +33,16 @@
   <!-- Template Main CSS File -->
   <link href="<%=appURL%>assets/css/style.css" rel="stylesheet">
   <script>
+    
     var appURL = '<%=appURL %>'
+    function getAppUrl(url = '') {
+      if (url) {
+        url += url.endsWith("/") ? "" : "/"
+        return `${appURL}${url}`
+      }
+      return appURL
+    }
+
   </script>
   <style>
     .focus:hover {
@@ -55,15 +64,15 @@
       color: #ccc;
     }
 
-    .sortIcon.dark {
+    .dark {
       color: #333;
+    }
+
+    .datatable-top,
+    .datatable-bottom {
+      padding: 8px 0px;
     }
   </style>
 </head>
 
 <body>
-
-
-     
-
-       

@@ -10,42 +10,50 @@ async function readCourses(req, res) {
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'c.courseName';
     const sort = req.query.sort || 'ASC';
-    const searchQuery = req.query.search || ''; 
+    const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    const queryParameters = [searchPattern, searchPattern, limit, offset];
+    let queryParameters = null;
 
-    var coursesQuery = /*sql*/ `
+    let coursesQuery = /*sql*/ `
         SELECT 
             c.*,
             w.firstName AS createdFirstName,
             w.lastName AS createdLastName,
-            w2.firstName AS updatedFirstName,
-            w2.lastName AS updatedLastName,
-            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
-            DATE_FORMAT(c.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
+            DATE_FORMAT(c.createdAt, "%y-%b-%D %r") AS createdTimeStamp
         FROM 
             course AS c 
         LEFT JOIN
             warden AS w ON w.wardenId = c.createdBy
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = c.updatedBy
         WHERE 
-            c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ?)
+            c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ? or w.lastName LIKE ?)
         ORDER BY 
-            ${orderBy} ${sort}
-        LIMIT ? OFFSET ?`;
+            ${orderBy} ${sort}`;
 
-    const countQuery = /*sql*/ `
+    let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalCourseCount 
-        FROM course 
-        WHERE deletedAt IS NULL`;
+        FROM course AS c
+        LEFT JOIN
+            warden AS w ON w.wardenId = c.createdBy
+        WHERE 
+            c.deletedAt IS NULL AND (c.courseName LIKE ? or w.firstName LIKE ? or w.lastName LIKE ?)
+        ORDER BY 
+            ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        coursesQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern];
+    }
+
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern];
 
     try {
         const [courses, totalCount] = await Promise.all([
             mysqlQuery(coursesQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
-        
+
         res.status(200).send({
             courses: courses,
             courseCount: totalCount[0].totalCourseCount
@@ -76,8 +84,8 @@ async function readCourseById(req, res) {
             warden AS w2 ON w2.wardenId = c.updatedBy
         WHERE 
             c.deletedAt IS NULL AND courseId = ?`,
-        [courseId],
-        mysqlClient)
+            [courseId],
+            mysqlClient)
 
         if (course.length === 0) {
             return res.status(404).send("courseId not valid")
@@ -180,14 +188,23 @@ async function deleteCourseById(req, res) {
             return res.status(404).send("Course not found or already deleted");
         }
 
-        const deleteCourse = await mysqlQuery(/*sql*/ `UPDATE course SET deletedAt = NOW(), deletedBy = ? 
-            WHERE courseId = ? AND deletedAt IS NULL`,
+        const checkCourseReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
+        WHERE courseId = ?
+        AND deletedAt IS NULL`, [courseId], mysqlClient)
+
+
+        if (checkCourseReference[0].count > 0) {
+            return res.status(409).send('Course is referenced by a student and cannot be deleted')
+        }
+
+        const deleteCourse = await mysqlQuery(/*sql*/`UPDATE course SET 
+            courseName = CONCAT(IFNULL(courseName, ''), '-', NOW()),
+            deletedAt = NOW(), deletedBy = ? WHERE courseId = ? AND deletedAt IS NULL`,
             [deletedBy, courseId],
             mysqlClient
-        );
-
+        )
         if (deleteCourse.affectedRows === 0) {
-            return res.status(404).send("course not found or already deleted")
+            return res.status(404).send("Course not found or already deleted")
         }
 
         const getDeletedCourse = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,

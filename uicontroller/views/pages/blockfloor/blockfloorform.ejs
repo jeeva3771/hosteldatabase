@@ -1,8 +1,7 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block floor form' }) %>
 <%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor form' }) %>
-<%- include('../../partials/breadcrumb.ejs', { breadsCrumb: breadsCrumb }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
 <%- include('../../partials/aside.ejs') %>
-
 
 <section class="section">
     <div class="row">
@@ -10,7 +9,6 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title"></h5>
-
                     <!-- Horizontal Form -->
                     <form>
                         <div class="row mb-3">
@@ -45,11 +43,9 @@
                                 </div>
                             </div>
                         </fieldset>
-
                         <div class="text-center">
-                            <input type="hidden" id="blockFloorId" value="<%=blockFloorId %>" />
                             <button type="reset" class="btn btn-secondary">Reset</button>
-                            <button type="submit" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
+                            <button type="button" onclick="saveOrUpdateBlockFloor()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
                     </form><!-- End Horizontal Form -->
@@ -58,134 +54,103 @@
             </div>
         </div>
     </section>
+</main>
+<%- include('../../partials/footer.ejs') %>
 
-    <%- include('../../partials/footer.ejs') %>
+<script>
+    var blockCodeDom = document.getElementById('blockCode');
+    var floorNumberDom = document.getElementById('floorNumber');
+    var submitButtonDom = document.getElementById('submitButton');
+    var blockFloorId = <%= blockFloorId || 'null' %>;
 
-        <script>
-            var blockCode = document.getElementById('blockCode');
-            var floorNumber = document.getElementById('floorNumber');
-            var selectedStatus = document.querySelectorAll('input[name="status"]');
-            var submitButton = document.getElementById('submitButton');
-            var blockFloorId = document.getElementById('blockFloorId').value;
+    function saveOrUpdateBlockFloor() {
+        const selectedStatusValue = getSelectedRadioValue('status');
+        var myHeaders = new Headers();
+        myHeaders.append("Content-Type", "application/json");
 
-            function getSelectedStatus() {
-                let selectedStatusValue = null;
-                selectedStatus.forEach(radio => {
-                    if (radio.checked) {
-                        selectedStatusValue = parseInt(radio.value);
-                    }
-                });
-                return selectedStatusValue;
-            }
+        var raw = JSON.stringify({
+            "blockId": blockCodeDom.value,
+            "floorNumber": parseInt(floorNumberDom.value),
+            "isActive": selectedStatusValue
+        });
 
-            function saveOrUpdateBlockFloor() {
-                const selectedStatusValue = getSelectedStatus();
-                var myHeaders = new Headers();
-                myHeaders.append("Content-Type", "application/json");
+        var requestOptions = {
+            method: blockFloorId ? 'PUT' : 'POST',
+            headers: myHeaders,
+            body: raw
+        };
 
-                var raw = JSON.stringify({
-                    "blockId": blockCode.value,
-                    "floorNumber": parseInt(floorNumber.value),
-                    "isActive": selectedStatusValue
-                });
-
-                var requestOptions = {
-                    method: blockFloorId ? 'PUT' : 'POST',
-                    headers: myHeaders,
-                    body: raw
-                };
-
-                let url = `${appURL}api/blockfloor`;
-                if (blockFloorId) {
-                    url = url + '/' + blockFloorId
+        let url = getAppUrl(`api/blockfloor${blockFloorId ? `/${blockFloorId}` : ''}`);
+                    
+        fetch(url, requestOptions)
+            .then(async (response) => {
+                if (response.status === 201 || 200) {
+                    window.location = getAppUrl('blockfloor');
+                } else {
+                    alert(await response.text())
                 }
-
-                fetch(url, requestOptions)
-                    .then(async (response) => {
-                        if (response.status === 201 || 200) {
-                            window.location = `${appURL}blockfloor`;
-                        } else {
-                            alert(await response.text())
-                        }
-                    })
-                    .catch(error => console.error('error', error));
-            }
+            })
+            .catch(error => console.error('error', error));
+    }
             
 
-            function toggleSubmitButton() {
-                const selectedStatusValue = getSelectedStatus();
-                submitButton.disabled = !(
-                    blockCode.value !== 'Select' &&
-                    floorNumber.value.length > 0 &&
-                    selectedStatusValue !== null
-                )
+    function toggleSubmitButton() {
+        const selectedStatusValue = getSelectedRadioValue('status');
+        submitButtonDom.disabled = !(
+        blockCodeDom.value !== 'Select a Block' &&
+        floorNumberDom.value.length > 0 &&
+        selectedStatusValue !== null)
+    }
+
+    async function initializeForm() {
+        await populateBlockCode();
+
+        if (blockFloorId) {
+            await getBlockFloorById(blockFloorId);
+        }
+
+        blockCodeDom.addEventListener('input', toggleSubmitButton);
+        floorNumberDom.addEventListener('input', toggleSubmitButton);
+        document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change',
+        toggleSubmitButton));
+    }
+    initializeForm();
+
+    async function populateBlockCode() {
+        try {
+            const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
+            const blocks = await response.json();
+
+            blockCodeDom.innerHTML = '<option selected>Select a Block</option>';
+
+            blocks.forEach(block => {
+                var option = document.createElement('option');
+                option.value = block.blockId;
+                option.textContent = block.blockCode;
+                blockCodeDom.appendChild(option);
+            });
+
+        } catch (error) {
+            console.log('Error fetching block codes:', error);
+        }
+    }
+
+    async function getBlockFloorById(blockFloorId) {
+        try {
+            const response = await fetch(getAppUrl(`api/blockfloor/${blockFloorId}`));
+            const blockFloor = await response.json();
+
+            blockCodeDom.value = blockFloor.blockId;
+            floorNumberDom.value = blockFloor.floorNumber;
+
+            if (blockFloor.isActive) {
+                document.getElementById('isActive').checked = true;
+            } else {
+                document.getElementById('inActive').checked = true;
             }
+        } catch (error) {
+                console.error('Error fetching block floor details:', error);
+        }
+    }
 
-            async function initializeForm() {
-                await populateBlockCode();
-
-                if (blockFloorId) {
-                    await getBlockFloorById(blockFloorId);
-                }
-
-                blockCode.addEventListener('input', toggleSubmitButton);
-                floorNumber.addEventListener('input', toggleSubmitButton);
-                document.querySelectorAll('input[name="status"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            }
-            initializeForm();
-
-            async function populateBlockCode() {
-                try {
-                    const response = await fetch(`${appURL}api/block/blockfloor/blockcodecount`);
-                    const blocks = await response.json();
-
-                    const activeOptions = [];
-                    const disabledOptions = [];
-
-                    blockCode.innerHTML = '<option selected>Select a Block</option>';
-
-                    blocks.forEach(block => {
-                        const option = document.createElement('option');
-                        option.value = block.blockId;
-                        option.textContent = `${block.blockCode} (Floors : ${block.floorCount})`;
-                        if (block.floorCount === 0) {
-                            option.disabled = true;
-                            disabledOptions.push(option);
-                        } else {
-                            activeOptions.push(option);
-                        }
-                    });
-
-                    activeOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
-
-                    disabledOptions.forEach(option => {
-                        blockCode.appendChild(option);
-                    });
-
-                } catch (error) {
-                    console.log('Error fetching block codes:', error);
-                }
-            }
-
-            async function getBlockFloorById(blockFloorId) {
-                try {
-                    const response = await fetch(`${appURL}api/blockfloor/${blockFloorId}`);
-                    const blockFloor = await response.json();
-
-                    blockCode.value = blockFloor.blockId;
-                    floorNumber.value = blockFloor.floorNumber;
-
-                    if (blockFloor.isActive) {
-                        document.getElementById('isActive').checked = true;
-                    } else {
-                        document.getElementById('inActive').checked = true;
-                    }
-                } catch (error) {
-                    console.error('Error fetching block floor details:', error);
-                }
-            }
-
-
-        </script>
+</script>

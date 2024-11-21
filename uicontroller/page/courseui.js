@@ -1,9 +1,11 @@
 const { getUserProfile } = require('../../utilityclient/query')
+const { getAppUrl } = require('../../utilityclient/url')
 
 function coursePageUi(req, res) {
     res.status(200).render('pages/course/courselist.ejs', {
+        appURL: getAppUrl(),
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
         ]
@@ -12,9 +14,10 @@ function coursePageUi(req, res) {
 
 function addCourseUi(req, res) {
     res.render('pages/course/courseform.ejs', {
+        appURL: getAppUrl(),
         courseId: '',
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
             {name:'Add', link:'/course/add'}
@@ -25,9 +28,10 @@ function addCourseUi(req, res) {
 function editCourseUi(req, res) {
     const courseId = req.params.courseId;
     res.render('pages/course/courseform.ejs', {
+        appURL: getAppUrl(),
         courseId: courseId,
         user: getUserProfile(req.session),
-        breadcrumb: [
+        breadCrumbs: [
             {name:'Home', link:'/home'},
             {name:'Course', link:'/course'},
             {name:'Edit', link:'/course/add'}
