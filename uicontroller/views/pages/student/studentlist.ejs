@@ -40,6 +40,7 @@
                     <thead>
                         <tr>
                             <th scope="col">Sno</th>
+                            <th scope="col">Profile</th>
                             <th scope="col">Name
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                     fill="currentColor" class="bi bi-arrow-down-short sortIcon"
@@ -180,7 +181,10 @@
                             var student = students[i]
                             trHtml += `
                             <tr>
-                            <td>${(currentPage - 1) * limit + (i + 1)}</td>
+                            <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
+                            <td>
+                                <img src="" alt="Profile" class="rounded-circle profileImage" id="studentProfile-${student.studentId}" name="image">
+                            </td>
                             <td>${student.name}</td>
                             <td>${student.registerNumber}</td>
                             <td>${student.joinDate}</td>
@@ -202,10 +206,14 @@
                         </tr>`
                         }
                         tableDataDom.innerHTML = trHtml
+                        students.forEach((student) => {
+                            const studentProfileDom = document.getElementById(`studentProfile-${student.studentId}`);
+                            studentProfile(student.studentId, studentProfileDom);
+                        });
                         var totalPages = Math.ceil(studentCount / limitDom.value)
                         var paginationHtml = ''
 
-                        if (totalPages > 1) {
+            if (totalPages > 1) {
                 paginationHtml += `
                     <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
                     <a class="page-link" onclick="studentPage(${pageNo - 1})">Previous</a>
@@ -229,9 +237,36 @@
                     .catch((error) => console.error(error));
             }
 
-            function editStudentById(studentId) {
-                window.location.href = `/student/${studentId}`;
-            }
+        function studentProfile (studentId, studentProfileDom) {
+            var myHeaders = new Headers();
+
+            var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+            };
+
+            fetch(`http://localhost:1005/api/student/${studentId}/profile`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                throw new Error(`Error fetching avatar: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then((blob) => {
+                const imageUrl = URL.createObjectURL(blob);
+                console.log(imageUrl)
+                if (studentProfileDom) {
+                    studentProfileDom.src = imageUrl
+                } else {
+                console.error('Profile DOM element not found!');
+                }
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+
 
             function readStudentById(studentId) {
                 console.log(studentId)

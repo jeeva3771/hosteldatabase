@@ -1,7 +1,11 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile } = require('../../utilityclient/query');
+const { getAppUrl } = require('../../utilityclient/url');
 
 function studentPageUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/student/studentlist.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
