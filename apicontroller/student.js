@@ -1,4 +1,40 @@
 const { mysqlQuery } = require('../utilityclient/query')
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '..', 'studentuploads'))
+    },
+    filename: function (req, file, cb) {
+        const operation = req.query.operation;
+        const studentId = req.params.studentId;
+        console.log(studentId, operation)
+        if (operation === 'update' && studentId) {
+            console.log('studentId, operation')
+
+            cb(null, `${studentId}.jpg`);
+        } else {
+            console.log('dkfojof')
+            cb(null, file.fieldname + '-' + uniqueSuffix)
+        }
+    }
+})
+
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg') {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG are allowed'), false);
+    }
+};
+
+const upload = multer({ storage, fileFilter })
+const multerMiddleware = upload.single('studentImage');
+
 const ALLOWED_UPDATE_KEYS = [
     "roomId",
     "blockFloorId",
@@ -20,11 +56,10 @@ async function readStudents(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 's.name';
-    const sort = req.query.sort || 'ASC';
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    // const queryParameters = [searchPattern, searchPattern, limit, offset];
     let queryParameters = null;
 
     let studentsQuery = /*sql*/`
@@ -52,10 +87,10 @@ async function readStudents(req, res) {
             warden AS w ON w.wardenId = s.createdBy
             WHERE 
             s.deletedAt IS NULL 
-            AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
+            AND (s.name LIKE ? OR s.registerNumber LIKE ? OR
+                w.firstName LIKE ? OR w.lastName Like ?) 
             ORDER BY 
-            ${orderBy} ${sort}
-            LIMIT ? OFFSET ?`;
+            ${orderBy} ${sort}`;
 
     let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 
@@ -72,19 +107,24 @@ async function readStudents(req, res) {
             warden AS w ON w.wardenId = s.createdBy
         WHERE 
             s.deletedAt IS NULL 
-        AND (s.name LIKE ? OR s.registerNumber LIKE ?) 
+        AND (s.name LIKE ? OR s.registerNumber LIKE ? OR
+            w.firstName LIKE ? OR w.lastName Like ?)  
         ORDER BY 
         ${orderBy} ${sort}`;
 
     if (limit >= 0) {
-        studentsQuery += ' LIMIT ? OFFSET ?'
-        countQuery += ' LIMIT ? OFFSET ?'
+        studentsQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern];
     }
+
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern];
 
     try {
         const [students, totalCount] = await Promise.all([
             mysqlQuery(studentsQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, queryParameters, mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
         res.status(200).send({
             students: students,
@@ -92,6 +132,7 @@ async function readStudents(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }
@@ -139,6 +180,25 @@ async function readStudentById(req, res) {
     }
 }
 
+function readStudentProfileById(req, res) {
+    const studentId = req.params.studentId;
+    try {
+        var fileName = `${studentId}.jpg`;
+
+        const baseDir = path.join(__dirname, '..', 'studentuploads');
+        const imagePath = path.join(baseDir, fileName);
+        const defaultImagePath = path.join(baseDir, 'studentdefault.jpg');
+
+        const imageToServe = fs.existsSync(imagePath) ? imagePath : defaultImagePath;
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        fs.createReadStream(imageToServe).pipe(res);
+
+    } catch (error) {
+        res.status(500).send(error.message)
+    }
+}
+
 async function readStudentsByRoomId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
@@ -177,6 +237,7 @@ async function getStudentsForAttendanceReport(req, res) {
 }
 
 async function createStudent(req, res) {
+    const existErrors = []
     const {
         roomId,
         blockFloorId,
@@ -199,9 +260,7 @@ async function createStudent(req, res) {
         { name: 'emailId', value: emailId },
         { name: 'registerNumber', value: registerNumber }
     ]
-    const existErrors = []
     const mysqlClient = req.app.mysqlClient;
-
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert);
@@ -210,12 +269,12 @@ async function createStudent(req, res) {
     try {
         await Promise.all(validateExistingItems.map(async (item) => {
             const checkExisting = await mysqlQuery(
-            /*sql*/`SELECT * FROM student WHERE phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
+            /*sql*/`SELECT COUNT(*) AS count FROM student WHERE phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
                 [item.value, item.value, item.value, item.value],
                 mysqlClient
             );
 
-            if (checkExisting.length > 0) {
+            if (checkExisting[0].count > 0) {
                 existErrors.push(`${item.name} already exists`);
             }
         }));
@@ -230,12 +289,41 @@ async function createStudent(req, res) {
             mysqlClient)
 
         if (newStudent.affectedRows === 0) {
-            res.status(400).send("no insert was made")
-        } else {
-            res.status(201).send('insert successfully')
+            res.status(400).send("No insert was made")
         }
+        res.status(201).send('Insert successfully')
     } catch (error) {
         res.status(500).send(error.message)
+    }
+}
+
+function updateStudentProfile(req, res) {
+    let uploadedFilePath;
+    const wardenId = req.session.warden.wardenId;
+
+    if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
+        return res.status(409).send('Warden is not valid to edit')
+    }
+
+    if (!req.file) {
+        uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');
+    } else {
+        uploadedFilePath = req.file.path;
+    }
+
+    try {
+        sharp(fs.readFileSync(uploadedFilePath))
+            .resize({
+                width: parseInt(process.env.IMAGE_WIDTH),
+                height: parseInt(process.env.IMAGE_HEIGHT),
+                fit: sharp.fit.cover,
+                position: sharp.strategy.center,
+            })
+            .toFile(uploadedFilePath);
+        return res.status(200).json('Student profile updated successfully');
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json('Internal server error');
     }
 }
 
@@ -283,6 +371,29 @@ async function updateStudentById(req, res) {
     }
     catch (error) {
         res.status(500).send(error.message)
+    }
+}
+
+function deleteStudentProfile(req, res) {
+    const studentId = req.params.studentId;
+    // const wardenId = req.session.warden.wardenId;
+    // if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
+    //     return res.status(409).send('Warden is not valid to delete')
+    // }
+
+    try {
+        const rootDir = path.resolve(__dirname, '../');
+        const profilePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+
+        fs.unlink(profilePath, (err) => {
+            if (err) {
+                return res.status(500).send('Profile reference removed but file deletion failed');
+            }
+            res.status(200).send('Profile removed successfully');
+        });
+    } catch (error) {
+        console.log(error)
+        res.status(500).send('Internal Server Error');
     }
 }
 
@@ -477,11 +588,14 @@ function validateInsertItems(body, isUpdate = false) {
 }
 
 module.exports = (app) => {
+    app.get('/api/student/:studentId/profile', readStudentProfileById)
+    app.put('/api/student/:studentId/editprofile', multerMiddleware, updateStudentProfile)
+    app.delete('/api/student/:studentId/deleteprofile', deleteStudentProfile)
     app.get('/api/student', readStudents)
     app.get('/api/student/getstudent', getStudentsForAttendanceReport)
     app.get('/api/student/:studentId', readStudentById)
     app.get('/api/student/room/:roomId', readStudentsByRoomId)
-    app.post('/api/student', createStudent)
+    app.post('/api/student', multerMiddleware, createStudent)
     app.put('/api/student/:studentId', updateStudentById)
     app.delete('/api/student/:studentId', deleteStudentById)
 }

@@ -47,25 +47,25 @@ app.use(session({
     }
 }));
 
-const pageSessionExclude = [
-    '/login', 
-    '/api/login', 
-    '/warden/resetpassword', 
-    '/api/warden/generateotp',
-    '/api/warden/resetpassword'
-]
-app.use((req, res, next) => {
-    if (pageSessionExclude.includes(req.originalUrl)) {
-        return next()
-    }
+// const pageSessionExclude = [
+//     '/login', 
+//     '/api/login', 
+//     '/warden/resetpassword', 
+//     '/api/warden/generateotp',
+//     '/api/warden/resetpassword'
+// ]
+// app.use((req, res, next) => {
+//     if (pageSessionExclude.includes(req.originalUrl)) {
+//         return next()
+//     }
 
-    if (req.originalUrl !== '/login') {
-        if (req.session.isLogged !== true) {
-            return res.status(401).redirect(getAppUrl('login'))
-        }
-    }
-    return next()
-})
+//     if (req.originalUrl !== '/login') {
+//         if (req.session.isLogged !== true) {
+//             return res.status(401).redirect(getAppUrl('login'))
+//         }
+//     }
+//     return next()
+// })
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));

@@ -2,7 +2,9 @@ const { getUserProfile } = require('../../utilityclient/query')
 const { getAppUrl } = require('../../utilityclient/url');
 
 function blockPageUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/block/blocklist.ejs', {
+        avatarWardenId: avatarWardenId,
         appURL: getAppUrl(),
         user: getUserProfile(req.session),
         breadCrumbs: [
