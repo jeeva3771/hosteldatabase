@@ -119,70 +119,72 @@
 
 <%- include('../../partials/footer.ejs') %>
 
-     <script>
-            var tableDataDom = document.getElementById("studentsData");
-            var limitDom = document.getElementById("limit");
-            var paginationDom = document.getElementById("pagination");
-            var orderIconDom = document.querySelectorAll('.sortIcon');
-            var searchDom = document.getElementById("searchInput");
-            var columnSortOrders = {
+<script>
+    const tableDataDom = document.getElementById("studentsData");
+    const limitDom = document.getElementById("limit");
+    const paginationDom = document.getElementById("pagination");
+    const orderIconDom = document.querySelectorAll('.sortIcon');
+    const searchDom = document.getElementById("searchInput");
+    const columnSortOrders = {
                 name: 'ASC',
                 registerNumber: 'ASC',
                 joinedDate: 'ASC',
                 createdBy: 'ASC'
             };
 
-            var currentColumn = 'createdAt';
-            var url = `&orderby=s.${currentColumn}&sort=DESC`;
+    var currentColumn = 'createdAt';
+    var url = `&orderby=s.${currentColumn}&sort=DESC`;
+    
+    orderIconDom.forEach((icon) => {
+        icon.classList.add('light');
+    })
+
+    function changeLimit() {
+        studentPage()
+    }
+
+    function handleSearch() {
+        studentPage();
+    }
+            
+    function sortByColumn(column, sortOrder) {
+        columnSortOrders[column] = sortOrder;
+        currentColumn = column;
+        url = `&orderby=s.${currentColumn}&sort=${sortOrder}`;
+        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+
+        activeIcons.forEach(icon => {
+            icon.classList.remove('light');
+            icon.classList.add('dark');
+        });
+        studentPage();
+    }
+
            
-            orderIconDom.forEach((icon) => {
-                icon.classList.add('light');
-            })
+    function studentPage(pageNo = 1) {
+        var fetchUrl = `${getAppUrl('api/student')}?limit=${limitDom.value}&page=${pageNo}${url}`;
 
-            function changeLimit() {
-                studentPage()
-            }
+        if (searchDom.value.length > 0) {
+            var searchText = searchDom.value.trim();
+            fetchUrl += `&search=${searchText}`;
+        }
+        
+        var requestOptions = {
+            method: 'GET'
+        };
 
-            function handleSearch() {
-                studentPage();
-            }
-
-            function sortByColumn(column, sortOrder) {
-                columnSortOrders[column] = sortOrder;
-                currentColumn = column;
-                url = `&orderby=s.${currentColumn}&sort=${sortOrder}`;
-                const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-                activeIcons.forEach(icon => {
-                    icon.classList.remove('light');
-                    icon.classList.add('dark');
-                });
-                roomPage();
-            }
-
-            function studentPage(pageNo = 1) {
-                var fetchUrl = `${getAppUrl('api/student')}?limit=${limitDom.value}&page=${pageNo}${url}`;
-
-                if (searchDom.value.length > 0) {
-                    var searchText = searchDom.value.trim();
-                    fetchUrl += `&search=${searchText}`;
-                }
-                var requestOptions = {
-                    method: 'GET'
-                };
-
-                fetch(fetchUrl, requestOptions)
-                    .then(async (response) => {
-                        var responseData = await response.json();
-
-                        const { students, studentCount } = responseData;
-
-                        var trHtml = ''
-                        for (var i = 0; i < students.length; i++) {
-                            var student = students[i]
-                            trHtml += `
-                            <tr>
-                            <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
-                            <td>
+        fetch(fetchUrl, requestOptions)
+            .then(async (response) => {
+                var responseData = await response.json();
+                const { students, studentCount } = responseData;
+                var trHtml = ''
+                        
+                for (var i = 0; i < students.length; i++) {
+                    var student = students[i]
+                    trHtml += `
+                    <tr>
+                        <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
+                        <td class="text-center">
                                 <img src="" alt="Profile" class="rounded-circle profileImage" id="studentProfile-${student.studentId}" name="image">
                             </td>
                             <td>${student.name}</td>
@@ -246,7 +248,7 @@
             redirect: 'follow'
             };
 
-            fetch(`http://localhost:1005/api/student/${studentId}/profile`, requestOptions)
+            fetch(`${getAppUrl('api/student')}${studentId}/image`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                 throw new Error(`Error fetching avatar: ${response.status}`);
@@ -255,7 +257,7 @@
             })
             .then((blob) => {
                 const imageUrl = URL.createObjectURL(blob);
-                console.log(imageUrl)
+
                 if (studentProfileDom) {
                     studentProfileDom.src = imageUrl
                 } else {

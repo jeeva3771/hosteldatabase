@@ -1,10 +1,8 @@
-const { mysqlQuery } = require('../utilityclient/query')
+const { mysqlQuery, handleFileUpload, deleteFile } = require('../utilityclient/query')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
-
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, '..', 'studentuploads'))
@@ -12,23 +10,18 @@ const storage = multer.diskStorage({
     filename: function (req, file, cb) {
         const operation = req.query.operation;
         const studentId = req.params.studentId;
-        console.log(studentId, operation)
         if (operation === 'update' && studentId) {
-            console.log('studentId, operation')
-
             cb(null, `${studentId}.jpg`);
-        } else {
-            console.log('dkfojof')
-            cb(null, file.fieldname + '-' + uniqueSuffix)
         }
     }
 })
 
 const fileFilter = (req, file, cb) => {
     if (file.mimetype === 'image/jpeg') {
-        cb(null, true);
+      cb(null, true);
     } else {
-        cb(new Error('Invalid file type. Only JPEG are allowed'), false);
+      req.fileValidationError = 'Invalid file type. Only JPEG files are allowed.';
+      cb(null, false);
     }
 };
 
@@ -180,7 +173,7 @@ async function readStudentById(req, res) {
     }
 }
 
-function readStudentProfileById(req, res) {
+function readStudentImageById(req, res) {
     const studentId = req.params.studentId;
     try {
         var fileName = `${studentId}.jpg`;
@@ -253,7 +246,7 @@ async function createStudent(req, res) {
         fatherNumber,
         address
     } = req.body;
-    const createdBy = req.session.warden.wardenId
+    const createdBy = req.session.warden.wardenId;
     const validateExistingItems = [
         { name: 'phoneNumber', value: phoneNumber },
         { name: 'fatherNumber', value: fatherNumber },
@@ -261,6 +254,7 @@ async function createStudent(req, res) {
         { name: 'registerNumber', value: registerNumber }
     ]
     const mysqlClient = req.app.mysqlClient;
+    
     const isValidInsert = validateInsertItems(req.body);
     if (isValidInsert.length > 0) {
         return res.status(400).send(isValidInsert);
@@ -297,7 +291,7 @@ async function createStudent(req, res) {
     }
 }
 
-function updateStudentProfile(req, res) {
+async function updateStudentImage(req, res) {
     let uploadedFilePath;
     const wardenId = req.session.warden.wardenId;
 
@@ -305,13 +299,15 @@ function updateStudentProfile(req, res) {
         return res.status(409).send('Warden is not valid to edit')
     }
 
-    if (!req.file) {
-        uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');
-    } else {
-        uploadedFilePath = req.file.path;
-    }
-
     try {
+        await handleFileUpload(req, res, multerMiddleware, multer);
+
+        if (!req.file) {
+            uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');
+        } else {
+            uploadedFilePath = req.file.path;
+        }
+
         sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),
@@ -320,7 +316,7 @@ function updateStudentProfile(req, res) {
                 position: sharp.strategy.center,
             })
             .toFile(uploadedFilePath);
-        return res.status(200).json('Student profile updated successfully');
+        return res.status(200).json('Student image updated successfully');
     } catch (error) {
         console.error(error);
         return res.status(500).json('Internal server error');
@@ -374,23 +370,15 @@ async function updateStudentById(req, res) {
     }
 }
 
-function deleteStudentProfile(req, res) {
+async function deleteStudentImage(req, res) {
     const studentId = req.params.studentId;
-    // const wardenId = req.session.warden.wardenId;
-    // if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
-    //     return res.status(409).send('Warden is not valid to delete')
-    // }
-
+   
     try {
         const rootDir = path.resolve(__dirname, '../');
-        const profilePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+        const imagePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+        await deleteFile(imagePath, fs);
+        res.status(200).send('Student Image updated successfully');
 
-        fs.unlink(profilePath, (err) => {
-            if (err) {
-                return res.status(500).send('Profile reference removed but file deletion failed');
-            }
-            res.status(200).send('Profile removed successfully');
-        });
     } catch (error) {
         console.log(error)
         res.status(500).send('Internal Server Error');
@@ -413,8 +401,13 @@ async function deleteStudentById(req, res) {
             mysqlClient
         )
         if (deletedStudent.affectedRows === 0) {
-            return res.status(404).send("Room not found or already deleted")
+            return res.status(404).send("Student not found or already deleted")
         }
+
+        const rootDir = path.resolve(__dirname, '../');
+        const imagePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+
+        await deleteFile(imagePath, fs);
 
         const getDeletedStudent = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
             [studentId],
@@ -432,11 +425,13 @@ async function deleteStudentById(req, res) {
 
 function getStudentById(studentId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`select * from student where studentId = ?`, [studentId], (err, student) => {
-            if (err) {
-                return reject(err)
-            }
-            resolve(student.length ? student[0] : null)
+        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM student WHERE studentId = ? AND
+        deletedAt IS NULL`, [studentId],
+            (err, student) => {
+                if (err) {
+                    return reject(err)
+                }
+            resolve(student[0].count  > 0 ? student[0] : null)
         })
     })
 }
@@ -588,9 +583,9 @@ function validateInsertItems(body, isUpdate = false) {
 }
 
 module.exports = (app) => {
-    app.get('/api/student/:studentId/profile', readStudentProfileById)
-    app.put('/api/student/:studentId/editprofile', multerMiddleware, updateStudentProfile)
-    app.delete('/api/student/:studentId/deleteprofile', deleteStudentProfile)
+    app.get('/api/student/:studentId/image', readStudentImageById)
+    app.put('/api/student/:studentId/editimage', multerMiddleware, updateStudentImage)
+    app.delete('/api/student/:studentId/deleteimage', deleteStudentImage)
     app.get('/api/student', readStudents)
     app.get('/api/student/getstudent', getStudentsForAttendanceReport)
     app.get('/api/student/:studentId', readStudentById)
