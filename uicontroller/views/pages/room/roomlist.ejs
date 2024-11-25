@@ -122,6 +122,7 @@
                 <ul class="pagination justify-content-center" id="pagination"></ul>
             </nav>
         </div>
+        </div>
     </div>
 </div>
 </div>
@@ -228,6 +229,10 @@
             tableDataDom.innerHTML = trHtml
             var totalPages = Math.ceil(responseData.roomCount / limitDom.value)
             var paginationHtml = ''
+
+            if (totalPages === 0) {
+                paginationHtml = '<h6>No results found.</h6>'
+            } 
 
             if (totalPages > 1) {
                 paginationHtml += `
@@ -371,7 +376,7 @@
     }
 
     function deleteRoomById(roomId) {
-        var validateDelete = confirm('are you sure you want to delete?')
+        var validateDelete = confirm('Are you sure you want to delete?')
 
         if (!validateDelete)
             return

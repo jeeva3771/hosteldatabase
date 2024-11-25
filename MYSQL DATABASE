@@ -634,5 +634,12 @@ where r.deletedAt is null and r.isActive = 1 and r.blockFloorId = 41
 group by r.roomId
 order by r.roomNumber ASC
 
-ALTER TABLE warden
-ADD profilePath varchar(255) AFTER password;
+
+ALTER TABLE student 
+ADD oneTimePassword varchar(255) AFTER address;
+
+ALTER TABLE student 
+ADD passwordAttempt int AFTER oneTimePassword;
+
+ALTER TABLE student 
+ADD passwordTiming timestamp AFTER passwordAttempt;

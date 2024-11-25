@@ -5,8 +5,8 @@ const ALLOWED_UPDATE_KEY = [
 
 async function readCourses(req, res) {
     const mysqlClient = req.app.mysqlClient;
-    const limit = req.query.limit ? parseInt(req.query.limit) : null;
-    const page = req.query.page ? parseInt(req.query.page) : null;
+    const limit = req.query.limit ? parseInt(req.query.limit) : -1;
+    const page = req.query.page ? parseInt(req.query.page) : 1;
     const offset = limit && page ? (page - 1) * limit : null;
     const orderBy = req.query.orderby || 'c.courseName';
     const sort = req.query.sort || 'ASC';
@@ -60,6 +60,7 @@ async function readCourses(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message);
     }
 }

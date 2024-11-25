@@ -1,8 +1,8 @@
 const dotenv = require('dotenv');
 const express = require('express');
 const mysql = require('mysql');
-const logger = require('pino')();
-const pinoReqLogger = require('pino-http')();
+const pino = require('pino');
+const pinoHttp = require('pino-http');
 const path = require('path');
 var cookieParser = require('cookie-parser');
 var session = require('express-session');
@@ -19,6 +19,10 @@ const blockFloor = require('./apicontroller/blockfloor.js');
 const room = require('./apicontroller/room.js');
 const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
+const studentUse = require('./apicontroller/studentuse.js');
+const logger = pino({ level: 'info' });
+// const logger = pino({ level: 'debug' });
+
 
 //uicontroller
 const homeUi = require('./uicontroller/page/homeui.js');
@@ -35,7 +39,7 @@ const { getAppUrl } = require('./utilityclient/url.js');
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
-app.use(pinoReqLogger)
+app.use(pinoHttp({ logger }));
 app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
@@ -47,25 +51,55 @@ app.use(session({
     }
 }));
 
-// const pageSessionExclude = [
-//     '/login', 
-//     '/api/login', 
-//     '/warden/resetpassword', 
-//     '/api/warden/generateotp',
-//     '/api/warden/resetpassword'
-// ]
-// app.use((req, res, next) => {
-//     if (pageSessionExclude.includes(req.originalUrl)) {
-//         return next()
-//     }
+const pageSessionExclude = [
+    '/login',
+    '/login/',
+    '/api/login/',
+    '/warden/resetpassword',
+    '/api/warden/generateotp',
+    '/api/warden/resetpassword'
+]
+app.use((req, res, next) => {
+    if (pageSessionExclude.includes(req.originalUrl)) {
+        return next()
+    }
 
-//     if (req.originalUrl !== '/login') {
-//         if (req.session.isLogged !== true) {
-//             return res.status(401).redirect(getAppUrl('login'))
-//         }
-//     }
-//     return next()
-// })
+    if (req.originalUrl !== '/login') {
+        if (req.session.isLogged !== true) {
+            return res.status(401).redirect(getAppUrl('login'))
+        }
+    }
+    return next()
+})
+
+app.use((req, res, next) => {
+    req.startTime = Date.now(); // Set request start time
+    next();
+});
+
+app.use(
+    pinoHttp({
+        logger,
+        customLogLevel: (res, err) => (res.statusCode >= 500 ? 'error' : 'info'),
+        customSuccessMessage: (req, res) => `Request to ${req.url} processed`,
+        genReqId: (req) => {
+            req.startTime = Date.now();
+            return req.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        },
+        customAttributeKeys: {
+            reqId: 'requestId',
+        },
+    })
+);
+
+// Middleware to log the total process time
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        const processTime = Date.now() - req.startTime;
+        req.log.info({ processTime }, `Request processed in ${processTime}ms`);
+    });
+    next();
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
@@ -89,7 +123,8 @@ app.mysqlClient.connect(function (err) {
         blockFloor(app)
         room(app)
         student(app)
-        attendance(app)    
+        attendance(app)
+        studentUse(app)
 
         homeUi(app)
         courseUi(app)
@@ -99,7 +134,6 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
-        
 
         app.listen(process.env.APP_PORT, () => {
             logger.info(`listen ${process.env.APP_PORT} port`)

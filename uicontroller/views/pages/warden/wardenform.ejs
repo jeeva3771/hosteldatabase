@@ -53,14 +53,14 @@
                             <div class="col-sm-10">
                               <input type="email" class="form-control" id="emailId">
                             </div>
-                          </div>
-                          <div class="row mb-3">
+                        </div>
+                        <div class="row mb-3">
                             <label for="password" class="col-sm-2 col-form-label">Password</label>
                             <div class="col-sm-10">
                               <input type="password" class="form-control" id="password">
                             </div>
-                          </div>
-                          <div class="row mb-3">
+                        </div>
+                        <div class="row mb-3">
                             <label for="conform" class="col-sm-2 col-form-label">Confirm Password</label>
                             <div class="col-sm-10">
                               <input type="password" class="form-control" id="conform">
@@ -73,7 +73,6 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <input type="hidden" value="<%=wardenId%>" id="wardenId"/>
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="button" onclick="authentication()" class="btn btn-primary"
                                 id="submitButton" >Submit</button>
@@ -97,7 +96,7 @@
     const passwordDom = document.getElementById('password');
     const conformDom = document.getElementById('conform');
     const profileUploadDom = document.getElementById('profileUpload');
-    var wardenId = document.getElementById('wardenId').value;
+    var wardenId = <%= wardenId || 'null' %>;
     const submitDom = document.getElementById('submitButton');
 
     function getAdminStatus() {

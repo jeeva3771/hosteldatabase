@@ -3,7 +3,6 @@
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
 <%- include('../../partials/aside.ejs') %>
 
-
 <section class="section">
     <div class="row">
         <div class="col-lg-12">
@@ -182,9 +181,9 @@
                 for (var i = 0; i < students.length; i++) {
                     var student = students[i]
                     trHtml += `
-                    <tr>
-                        <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
-                        <td class="text-center">
+                        <tr>
+                            <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
+                            <td class="text-center">
                                 <img src="" alt="Profile" class="rounded-circle profileImage" id="studentProfile-${student.studentId}" name="image">
                             </td>
                             <td>${student.name}</td>
@@ -200,55 +199,59 @@
                                     <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                                     <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
                                 </svg></a>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus" onClick="deleteBlockById(${student.studentId})" viewBox="0 0 16 16">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus" onClick="deleteStudentById(${student.studentId})" viewBox="0 0 16 16">
                                   <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
                                     <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
                                 </svg>
                             </td>
                         </tr>`
-                        }
-                        tableDataDom.innerHTML = trHtml
-                        students.forEach((student) => {
-                            const studentProfileDom = document.getElementById(`studentProfile-${student.studentId}`);
-                            studentProfile(student.studentId, studentProfileDom);
-                        });
-                        var totalPages = Math.ceil(studentCount / limitDom.value)
-                        var paginationHtml = ''
-
-            if (totalPages > 1) {
-                paginationHtml += `
-                    <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                    <a class="page-link" onclick="studentPage(${pageNo - 1})">Previous</a>
-                    </li>`;
-
-                for (let i = 1; i <= totalPages; i++) {
-                    paginationHtml += `
-                    <li class="page-item${i === pageNo ? ' active' : ''}">
-                    <a class="page-link" onclick="studentPage(${i})">${i}</a>
-                    </li>`;
                 }
+                tableDataDom.innerHTML = trHtml
+                students.forEach((student) => {
+                const studentProfileDom = document.getElementById(`studentProfile-${student.studentId}`);
+                    studentProfile(student.studentId, studentProfileDom);
+                });
+                var totalPages = Math.ceil(studentCount / limitDom.value)
+                var paginationHtml = ''
 
-                paginationHtml += `
-                    <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                    <a class="page-link" onclick="studentPage(${pageNo + 1})">Next</a>
-                    </li>`;
-            }
+                if (totalPages === 0) {
+                    paginationHtml = '<h6>No results found.</h6>'
+                } 
+
+                if (totalPages > 1) {
+                    paginationHtml += `
+                        <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                        <a class="page-link" onclick="studentPage(${pageNo - 1})">Previous</a>
+                        </li>`;
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationHtml += `
+                        <li class="page-item${i === pageNo ? ' active' : ''}">
+                        <a class="page-link" onclick="studentPage(${i})">${i}</a>
+                        </li>`;
+                    }
+
+                    paginationHtml += `
+                        <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                        <a class="page-link" onclick="studentPage(${pageNo + 1})">Next</a>
+                        </li>`;
+                }
             
-            paginationDom.innerHTML = paginationHtml;
-        })
-                    .catch((error) => console.error(error));
+                paginationDom.innerHTML = paginationHtml;
+            })
+                .catch((error) => alert('Something went wrong.Please try later!'));
             }
 
-        function studentProfile (studentId, studentProfileDom) {
-            var myHeaders = new Headers();
+    function studentProfile (studentId, studentProfileDom) {
+        var myHeaders = new Headers();
 
-            var requestOptions = {
+        var requestOptions = {
             method: 'GET',
             headers: myHeaders,
             redirect: 'follow'
-            };
+        };
 
-            fetch(`${getAppUrl('api/student')}${studentId}/image`, requestOptions)
+        fetch(`${getAppUrl('api/student')}${studentId}/image`, requestOptions)
             .then((response) => {
                 if (!response.ok) {
                 throw new Error(`Error fetching avatar: ${response.status}`);
@@ -264,196 +267,205 @@
                 console.error('Profile DOM element not found!');
                 }
             })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
+            .catch((error) => alert('Student image something went wrong.Please try later!'));
+    }
 
+    function readStudentById(studentId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };
 
-            function readStudentById(studentId) {
-                console.log(studentId)
-                var myHeaders = new Headers();
-                var requestOptions = {
-                    method: 'GET',
-                    headers: myHeaders
-                };
+        fetch(getAppUrl(`api/student/${studentId}`), requestOptions)
+            .then(async (response) => {
+                const student = await response.json()
 
-                fetch("http://localhost:1005/api/student/" + studentId, requestOptions)
-                    .then(response => response.json())
-                    .then(student => {
-                        const existingModal = document.getElementById('studentModal');
-                        if (existingModal) {
-                            existingModal.remove();
-                        }
-                        const modalHtml = `
-                        <div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                const existingModal = document.getElementById('studentModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                const modalHtml = `
+                <div class="modal fade" id="studentModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Name</strong>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.name}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Room Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.roomNumber}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Floor Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.floorNumber}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Block Code</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.blockCode}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>DOB</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.birth}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Course Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.courseName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Joined Date</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.joinDate}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Phone Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.phoneNumber}
-                                            </div>
-                                        </div>
-                                         <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Email Id</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.emailId}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Father Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.fatherName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Father Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.fatherNumber}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Address</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.address}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.createdTimeStamp}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.createdFirstName} ${student.createdLastName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.updatedTimeStamp}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${student.updatedFirstName !== null ? student.updatedFirstName : '---'} ${student.updatedLastName !== null ? student.updatedLastName : ''}
-                                            </div>
-                                        </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.name}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>RegNo</strong>
+                                    </div>
+                                    
+                                     <div class="col-sm-8">
+                                        <strong> : </strong>${student.registerNumber}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Room Number</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.roomNumber}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Floor Number</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.floorNumber}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Block Code</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.blockCode}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>DOB</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.birth}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Course Name</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.courseName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Joined Date</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.joinDate}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Phone Number</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.phoneNumber}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Email Id</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.emailId}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Father Name</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.fatherName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Father Number</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.fatherNumber}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Address</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.address}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Created At</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.createdTimeStamp}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Created By</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.createdFirstName} ${student.createdLastName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Updated At</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.updatedTimeStamp}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Updated By</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${student.updatedFirstName !== null ? student.updatedFirstName : '---'} ${student.updatedLastName !== null ? student.updatedLastName : ''}
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(document.getElementById('studentModal'));
-                        modal.show();
-                    })
-                    .catch(error => console.log('error', error));
-            }
-
-            function deleteStudentById(studentId) {
-                var validateDelete = confirm('are you sure you want to delete?')
-
-                if (!validateDelete)
-                    return
-
-                var requestOptions = {
-                    method: 'DELETE',
-                };
-
-                fetch("http://localhost:1005/api/student/" + studentId, requestOptions)
-                    .then(response => response.text())
-                    .then(deleted =>
-                        window.location = '/student'
-                    )
-                    .catch(error => console.log('error', error));
-            }
-
-            window.addEventListener('load', () => {
-                studentPage()
+                        </div>
+                    </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                var modal = new bootstrap.Modal(document.getElementById('studentModal'));
+                modal.show();
             })
+            .catch(error => console.log('error', error));
+    }
 
-        </script>
+    function deleteStudentById(studentId) {
+        var validateDelete = confirm('are you sure you want to delete?')
+
+        if (!validateDelete)
+            return
+
+        var requestOptions = {
+            method: 'DELETE'
+        };
+
+        fetch(getAppUrl(`api/student/${studentId}`), requestOptions)
+            .then(async (response) => {
+                if (response.status === 200) {
+                    return window.location = getAppUrl('student')
+                }
+                return alert(await response.text())
+            })
+            .catch(error => console.log('error', error));
+    }
+
+    window.addEventListener('load', () => {
+        studentPage()
+    })
+
+</script>
 

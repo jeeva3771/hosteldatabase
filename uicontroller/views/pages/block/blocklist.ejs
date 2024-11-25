@@ -204,6 +204,10 @@
             var totalPages = Math.ceil(responseData.blockCount / limitDom.value)
             var paginationHtml = ''
 
+            if (totalPages === 0) {
+                paginationHtml = '<h6>No results found.</h6>'
+            } 
+
             if (totalPages > 1) {
                 paginationHtml += `
                 <li class="page-item${pageNo === 1 ? ' disabled' : ''}">

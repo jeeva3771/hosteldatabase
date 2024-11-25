@@ -15,7 +15,10 @@ function studentPageUi(req, res) {
 }
 
 function addStudentUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/student/studentform.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         studentId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
@@ -27,8 +30,11 @@ function addStudentUi(req, res) {
 }
 
 function editStudentUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     const studentId = req.params.studentId;
     res.render('pages/student/studentform.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         studentId: studentId,
         user: getUserProfile(req.session),
         breadCrumbs: [

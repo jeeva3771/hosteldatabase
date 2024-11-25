@@ -215,9 +215,13 @@ async function getStudentsForAttendanceReport(req, res) {
     const mysqlClient = req.app.mysqlClient
     try {
         var studentsForAttendanceReport = await mysqlQuery(/*sql*/`
-        SELECT name, registerNumber FROM student WHERE deletedAt IS NULL ORDER BY name ASC`,
-            [], mysqlClient
-        )
+            SELECT 
+                name, 
+                registerNumber 
+            FROM student 
+            WHERE deletedAt IS NULL 
+            ORDER BY name ASC`,
+        [], mysqlClient)
 
         if (studentsForAttendanceReport.length === 0) {
             return res.status(404).send('No content found')
@@ -225,7 +229,8 @@ async function getStudentsForAttendanceReport(req, res) {
 
         return res.status(200).send(studentsForAttendanceReport)
     } catch (error) {
-        res.status(200).send(error.message)
+        req.log.error(error.message)
+        res.status(500).send(error.message)
     }
 }
 

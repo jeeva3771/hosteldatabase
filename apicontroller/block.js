@@ -6,6 +6,8 @@ const ALLOWED_UPDATE_KEYS = [
 ]
 
 async function readBlocks(req, res) {
+    // req.log.info('Handling root route'); 
+
     const mysqlClient = req.app.mysqlClient;
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
@@ -38,7 +40,7 @@ async function readBlocks(req, res) {
 
     let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalBlockCount 
-        FROM block AS bk
+        FROM block AS 
         LEFT JOIN warden AS w ON w.wardenId = bk.createdBy
         WHERE bk.deletedAt IS NULL AND
         (bk.blockCode LIKE ? OR 
@@ -69,7 +71,9 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
-        res.status(500).send(error.message)
+    req.log.error(error); 
+    // console.log(req.log)
+    res.status(500).send(error.message)
     }
 }
 

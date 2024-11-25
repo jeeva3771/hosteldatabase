@@ -180,22 +180,17 @@ async function createWarden(req, res) {
         password,
         superAdmin
     } = req.body
-    // const createdBy = req.session.warden.wardenId;
-    const createdBy = 8
+    const createdBy = req.session.warden.wardenId;
 
     const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
-        if (req.file.path) {
-            try {
-                await deleteFile(req.file.path, fs);
-            } catch (error) {
-                console.error(`Failed to delete uploaded file: ${error.message}`);
-            }
-        }
-        return res.status(400).send(isValidInsert);
-    }
 
     try {
+        if (isValidInsert.length > 0) {
+            if (req.file.path) {
+                await deleteFile(req.file.path, fs);
+            }
+            return res.status(400).send(isValidInsert);
+        }
         await handleFileUpload(req, res, multerMiddleware, multer);
 
         if (!req.file) {

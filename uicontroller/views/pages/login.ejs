@@ -90,10 +90,10 @@
         redirect: "follow"
       };
 
-      const request = fetch(`${appURL}api/login`, requestOptions)
+      const request = fetch(getAppUrl('api/login'), requestOptions)
       request.then(async (response) => {
         if (response.status === 200) {
-          window.location = `${appURL}home`
+          window.location = getAppUrl('home')
         } else {
           alert(await response.text())
         }

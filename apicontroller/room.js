@@ -60,10 +60,10 @@ async function readRooms(req, res) {
         roomsQuery += ' LIMIT ? OFFSET ?';
         queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
     } else {
-        queryParameters = [searchPattern, searchPattern, searchPattern,searchPattern, searchPattern, searchPattern];
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
     }
 
-    const countQueryParameters = [searchPattern, searchPattern,searchPattern, searchPattern, searchPattern, searchPattern];
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
 
 
     try {
@@ -121,39 +121,39 @@ async function readRoomById(req, res) {
     }
 }
 
-async function readStudentOrRoomNumberCountByRoomId(req, res) {
+async function readRoomNumberByBlockFloorId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockFloorId = req.query.blockFloorId;
-    const includeStudent = req.query.student === 'true';
 
     try {
-        let sqlQuery = /*sql*/`SELECT 
-            roomId, 
-            roomNumber`;
+        const roomNumberByBlockFloorId = await mysqlQuery(/*sql*/`
+            SELECT 
+                roomId, roomNumber, roomCapacity,
+                (SELECT COUNT(*)
+                 FROM student AS s
+                 WHERE s.roomId = r.roomId
+                 AND s.deletedAt IS NULL) AS studentCount
+            FROM room AS r
+            WHERE r.blockFloorId = ?
+                AND r.isActive = 1
+                AND r.deletedAt IS NULL 
+            ORDER BY r.roomNumber ASC`, [blockFloorId], mysqlClient);
 
-        if (includeStudent) {
-            sqlQuery += `, (SELECT COUNT(*)
-                          FROM student AS s
-                          WHERE s.roomId = r.roomId
-                          AND s.deletedAt IS NULL) AS studentCount`;
-        }
-
-        sqlQuery += ` FROM room AS r
-                      WHERE r.blockFloorId = ?
-                      AND r.isActive = 1
-                      AND r.deletedAt IS NULL ORDER BY r.roomNumber ASC`;
-
-        const studentCountByRoomId = await mysqlQuery(sqlQuery, [blockFloorId], mysqlClient);
-
-        if (studentCountByRoomId.length === 0) {
+        if (roomNumberByBlockFloorId.length === 0) {
             return res.status(404).send('No rooms found');
         }
-        res.status(200).send(studentCountByRoomId)
+
+        const enrichedRooms = roomNumberByBlockFloorId.map(room => ({
+            room,
+            isFull: room.studentCount >= room.roomCapacity
+        }));
+        console.log(enrichedRooms)
+        res.status(200).send(enrichedRooms)
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
-
 
 async function createRoom(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -393,8 +393,8 @@ async function validateUpdateRoom(roomId, mysqlClient, body) {
 
 module.exports = (app) => {
     app.get('/api/room', readRooms)
+    app.get('/api/room/roomnumber', readRoomNumberByBlockFloorId)
     app.get('/api/room/:roomId', readRoomById)
-    app.get('/api/room/student/count', readStudentOrRoomNumberCountByRoomId)
     app.post('/api/room', createRoom)
     app.put('/api/room/:roomId', updateRoomById)
     app.delete('/api/room/:roomId', deleteRoomById)
