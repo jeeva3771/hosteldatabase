@@ -160,13 +160,18 @@
 
         fetch(url, requestOptions)
             .then(async (response) => {
-                if (response.status === 201 || 200) {
+                if ([200, 201].includes(response.status)) {
                     window.location = getAppUrl('student');
                 } else {
-                    alert(await response.text())
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
                 }
             })
-            .catch(error => console.error('error', error));
+            .catch(error => alert('Something went wrong.Please try later.'));
     }
 
     function toggleSubmitButton() {
@@ -223,7 +228,7 @@
             })
             course.innerHTML = optionsList
         } catch (error) {
-            console.log('Error fetching course:', error);
+            alert('Something went wrong.Please try later.')
         }
     }
 
@@ -256,7 +261,7 @@
                 blockCode.appendChild(option);
             });
         } catch (error) {
-           alert('Internal server error');
+            alert('Something went wrong.Please try later.')
         }
     }
 
@@ -297,7 +302,7 @@
             });
 
         } catch (error) {
-            alert('Internal server error');
+            alert('Something went wrong.Please try later.')
         }
     }
 
@@ -343,13 +348,13 @@
         activeOptions.forEach(option => roomNumber.appendChild(option));
         disabledOptions.forEach(option => roomNumber.appendChild(option));
         } catch (error) {
-            alert('Internal server error');
+            alert('Something went wrong.Please try later.')
         }
     }
 
     async function getStudentById(studentId) {
         try {
-            const response = await fetch(getAppUrl(`api/student/${studenId}`));
+            const response = await fetch(getAppUrl(`api/student/${studentId}`));
             const student = await response.json();
             studentNameDom.value = student.name
             registerNumDom.value = student.registerNumber
@@ -367,7 +372,7 @@
             roomNumberDom.value = student.roomId;
             joinedDateDom.value = student.joinedDate.split('T')[0]
         } catch (error) {
-            alert('Internal server error');
+            alert('Something went wrong.Please try later.')
         }
     }
 </script>

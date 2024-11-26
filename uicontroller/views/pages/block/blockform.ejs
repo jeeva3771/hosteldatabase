@@ -11,8 +11,6 @@
                     <h5 class="card-title"></h5>
                             <!-- Horizontal Form -->
                     <form>
-                        <div id="alertContainer">
-                        </div>
                         <div class="row mb-3">
                             <label for="blockCode" class="col-sm-2 col-form-label">Block Code</label>
                             <div class="col-sm-10">
@@ -82,23 +80,18 @@
         
         fetch(url, requestOptions)
             .then(async (response) => {
-                // if (response.status === 201 || 200) {
-                        //     window.location = getAppUrl('block');
-                        // } else {
-                        //     alert(await response.text())
-                        // }        
-                const alertContainer = document.getElementById("alertContainer");
-                alertContainer.innerHTML = `
-                <div class="alert alert-success alert-dismissible fade show w-25 mx-auto fs-6" role="alert">
-                    success
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>`;
-
-                setTimeout(() => {
+                if ([200, 201].includes(response.status)) {
                     window.location = getAppUrl('block');
-                }, 1000);
+                } else {
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
+                }        
             })
-                .catch(error => console.error('error', error));
+            .catch(error => alert('Internal Server Error'));
     }
 
     if (blockId) {

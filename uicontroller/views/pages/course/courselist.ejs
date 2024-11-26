@@ -89,6 +89,7 @@
 
 </main><!-- End #main -->
 <%- include('../../partials/footer.ejs') %>
+
 <script>
     var tableDataDom = document.getElementById("coursesData");
     var limitDom = document.getElementById("limit");
@@ -127,26 +128,28 @@
         coursePage();
     }
 
-            function coursePage(pageNo = 1) {
-                var fetchUrl = `${getAppUrl('api/course')}?limit=${limitDom.value}&page=${pageNo}${url}`;
+    function coursePage(pageNo = 1) {
+        var fetchUrl = `${getAppUrl('api/course')}?limit=${limitDom.value}&page=${pageNo}${url}`;
 
-                if (searchDom.value.length > 0) {
-                    var searchText = searchDom.value.trim();
-                    fetchUrl += `&search=${searchText}`;
-                }
-                var requestOptions = {
-                    method: 'GET'
-                };
+        if (searchDom.value.length > 0) {
+            var searchText = searchDom.value.trim();
+            fetchUrl += `&search=${searchText}`;
+        }
 
-                fetch(fetchUrl, requestOptions)
-                    .then(async (response) => {
-                        const responseData = await response.json();
-                        const { courses, courseCount } = responseData;
-                        let trHtml = '';
+        var requestOptions = {
+            method: 'GET'
+        };
 
-                        for (let i = 0; i < courses.length; i++) {
-                            const course = courses[i];
-                            trHtml += `<tr>
+        fetch(fetchUrl, requestOptions)
+            .then(async (response) => {
+                const responseData = await response.json();
+                const { courses, courseCount } = responseData;
+                let trHtml = '';
+
+                for (let i = 0; i < courses.length; i++) {
+                    const course = courses[i];
+                    trHtml += `
+                        <tr>
                             <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
                             <td>${course.courseName}</td>
                             <td>${course.createdFirstName} ${course.createdLastName}</td>
@@ -165,137 +168,136 @@
                                 </svg>
                             </td>
                         </tr>`;
-                        }
-                        tableDataDom.innerHTML = trHtml;
-                        var totalPages = Math.ceil(responseData.courseCount / limitDom.value)
-                        var paginationHtml = ''
-
-                        if (totalPages === 0) {
-                            paginationHtml = '<h6>No results found.</h6>'
-                        } 
-
-                       if (totalPages > 1) {
-                            paginationHtml += `
-                                <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                                    <a class="page-link" onclick="coursePage(${pageNo - 1})">Previous</a>
-                                </li>`;
-
-                            for (let i = 1; i <= totalPages; i++) {
-                                paginationHtml += `
-                                    <li class="page-item${i === pageNo ? ' active' : ''}">
-                                        <a class="page-link" onclick="coursePage(${i})">${i}</a>
-                                    </li>`;
-                            }
-
-                            paginationHtml += `
-                                <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                                        <a class="page-link" onclick="coursePage(${pageNo + 1})">Next</a>
-                                </li>`;
-                        }
-                            paginationDom.innerHTML = paginationHtml;
-                    })
-                    .catch((error) => console.error(error));
                 }
+                tableDataDom.innerHTML = trHtml;
+                var totalPages = Math.ceil(responseData.courseCount / limitDom.value)
+                var paginationHtml = ''
+
+                if (totalPages === 0) {
+                    paginationHtml = '<h6>No results found.</h6>'
+                } 
+
+                if (totalPages > 1) {
+                    paginationHtml += `
+                         <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                            <a class="page-link" onclick="coursePage(${pageNo - 1})">Previous</a>
+                        </li>`;
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationHtml += `
+                            <li class="page-item${i === pageNo ? ' active' : ''}">
+                                <a class="page-link" onclick="coursePage(${i})">${i}</a>
+                            </li>`;
+                    }
+
+                    paginationHtml += `
+                        <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                            <a class="page-link" onclick="coursePage(${pageNo + 1})">Next</a>
+                        </li>`;
+                    }
+                    paginationDom.innerHTML = paginationHtml;
+        })
+            .catch((error) => console.error(error));
+    }
             
+    function readCourseById(courseId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };
 
-            function readCourseById(courseId) {
-                var myHeaders = new Headers();
-                var requestOptions = {
-                    method: 'GET',
-                    headers: myHeaders
-                };
+        fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
+            .then(async (response) => {
+                const course = await response.json();
 
-                fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
-                    .then(async (response) => {
-                        const course = await response.json();
+                var existingModal = document.getElementById('courseModal');
+                if (existingModal) {
+                    existingModal.remove();
+                }
 
-                        var existingModal = document.getElementById('courseModal');
-                        if (existingModal) {
-                            existingModal.remove();
-                        }
-
-                        const modalHtml = `
-                        <div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                const modalHtml = `
+                    <div class="modal fade" id="courseModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Course Name</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${course.courseName}
+                                        </div>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Course Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${course.courseName}
-                                            </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created At</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${course.createdTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${course.createdTimeStamp}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${course.createdFirstName} ${course.createdLastName}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created By</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${course.updatedTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${course.createdFirstName} ${course.createdLastName}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${course.updatedFirstName !== null ? course.updatedFirstName : '---'} ${course.updatedLastName !== null ? course.updatedLastName : ''}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>updated At</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${course.updatedTimeStamp}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>updated By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${course.updatedFirstName !== null ? course.updatedFirstName : '---'} ${course.updatedLastName !== null ? course.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                            var modal = new bootstrap.Modal(document.getElementById('courseModal'));
-                            modal.show();
-                    })
-                    .catch(error => console.log('error', error));
-            }
+                        </div>
+                    </div>`;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml);
+                    var modal = new bootstrap.Modal(document.getElementById('courseModal'));
+                    modal.show();
+                })
+            .catch(error => console.log('error', error));
+    }
 
-            function deleteCourseById(courseId) {
-                var validateDelete = confirm('are you sure you want to delete?')
+    function deleteCourseById(courseId) {
+        var validateDelete = confirm('are you sure you want to delete?')
 
-                if (!validateDelete)
-                    return
+        if (!validateDelete)
+            return
 
-                var requestOptions = {
-                    method: 'DELETE',
-                };
+        var requestOptions = {
+            method: 'DELETE'
+        };
 
-                fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
-                .then(async (response) => {
-                    if (response.status === 200) {
-                        return window.location = getAppUrl('course')
-                    }
+        fetch(getAppUrl(`api/course/${courseId}`), requestOptions)
+            .then(async (response) => {
+                if (response.status === 200) {
+                    return window.location = getAppUrl('course')
+                }
                     return alert(await response.text())
                 })
-                .catch(error => console.log('error', error));
-            }
+            .catch(error => console.log('error', error));
+    }
 
-            window.addEventListener('load', () => {
-                coursePage()
-            })
+    window.addEventListener('load', () => {
+        coursePage()
+    })
 
-        </script>
+</script>

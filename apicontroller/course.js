@@ -103,18 +103,14 @@ async function createCourse(req, res) {
     const { courseName } = req.body
     const createdBy = req.session.warden.wardenId
 
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert) {
-        return res.status(400).send(isValidInsert);
-    }
-
     try {
-        const existingCourseName = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseName = ?`, [courseName], mysqlClient);
-        if (existingCourseName.length > 0) {
-            return res.status(409).send("courseName already exists");
+        const validateInsert = await validateInsertItems(req.body, false, courseId = null, mysqlClient);
+        if (validateInsert) {
+            return res.status(400).send([validateInsert]);
         }
 
-        const newCourse = await mysqlQuery(/*sql*/`INSERT INTO course(courseName, createdBy) VALUES(?,?)`, [courseName, createdBy], mysqlClient)
+        const newCourse = await mysqlQuery(/*sql*/`INSERT INTO course(courseName, createdBy) VALUES(?,?)`,
+            [courseName, createdBy], mysqlClient)
         if (newCourse.affectedRows === 0) {
             res.status(400).send("no insert was made")
         } else {
@@ -149,14 +145,9 @@ async function updateCourseById(req, res) {
             return res.status(404).send("course not found or already deleted");
         }
 
-        const existingCourseName = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseName = ?`, values, mysqlClient);
-        if (existingCourseName.length > 0) {
-            return res.status(409).send("courseName already exists");
-        }
-
-        const isValidInsert = validateInsertItems(req.body, true);
-        if (isValidInsert) {
-            return res.status(400).send(isValidInsert);
+        const validateInsert = await validateInsertItems(req.body, true, courseId, mysqlClient);
+        if (validateInsert) {
+            return res.status(400).send([validateInsert]);
         }
 
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE course SET ${updates.join(', ')} WHERE courseId = ? AND deletedAt IS NULL`,
@@ -218,41 +209,68 @@ async function deleteCourseById(req, res) {
         });
 
     } catch (error) {
-        res.status(500).send(error.message)
+        res.status(500).send(error.message);
     }
 }
 
 function getCourseById(courseId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT * FROM course WHERE courseId = ? AND deletedAt IS NULL`, [courseId], (err, course) => {
+        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM course WHERE courseId = ?
+        AND deletedAt IS NULL`, [courseId], (err, course) => {
             if (err) {
-                return reject(err)
+                return reject(err);
             }
-            resolve(course.length ? course[0] : null)
+            resolve(course[0].count > 0 ? course[0] : null);
         })
     })
 }
 
 async function validateCourseById(courseId, mysqlClient) {
-    var course = await getCourseById(courseId, mysqlClient)
+    var course = await getCourseById(courseId, mysqlClient);
     if (course !== null) {
-        return true
+        return true;
     }
-    return false
+    return false;
 }
 
-function validateInsertItems(body, isUpdate = false) {
-    const { courseName } = body
+async function validateInsertItems(body, isUpdate = false, courseId = null, mysqlClient) {
+    const { courseName } = body;
 
     if (courseName !== undefined) {
         if (courseName.length <= 1) {
-            return "courseName is invalid"
+            return "course Name is invalid";
+        } else {
+            let query;
+            let params;
+
+            if (isUpdate === true) {
+                query = /*sql*/`SELECT 
+                            COUNT(*) AS count 
+                        FROM course 
+                        WHERE courseName = ?
+                            AND courseId != ? 
+                            AND deletedAt IS NULL`;
+                params = [courseName, courseId];
+            } else {
+                query = /*sql*/`SELECT 
+                            COUNT(*) AS count
+                        FROM course 
+                        WHERE courseName = ? 
+                            AND deletedAt IS NULL`;
+                params = [courseName];
+            }
+
+            const validCourseName = await mysqlQuery(query, params, mysqlClient);
+            if (validCourseName[0].count > 0) {
+                return "Course Name already exists";
+            }
         }
-    } else if (!isUpdate) {
-        return "courseName is missing"
+
+    } else {
+       return "Course Name missing";
     }
-    return
 }
+
 
 module.exports = (app) => {
     app.get('/api/course', readCourses)

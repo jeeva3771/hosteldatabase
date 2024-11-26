@@ -239,7 +239,7 @@
             
                 paginationDom.innerHTML = paginationHtml;
             })
-                .catch((error) => alert('Something went wrong.Please try later!'));
+                .catch((error) => alert('Something went wrong.Please try later.'));
             }
 
     function studentProfile (studentId, studentProfileDom) {
@@ -267,7 +267,7 @@
                 console.error('Profile DOM element not found!');
                 }
             })
-            .catch((error) => alert('Student image something went wrong.Please try later!'));
+            .catch((error) => alert('Student image something went wrong.Please try later'));
     }
 
     function readStudentById(studentId) {
@@ -440,7 +440,7 @@
                 var modal = new bootstrap.Modal(document.getElementById('studentModal'));
                 modal.show();
             })
-            .catch(error => console.log('error', error));
+            .catch(error => alert('Something went wrong.Please try later.'));
     }
 
     function deleteStudentById(studentId) {
@@ -460,7 +460,7 @@
                 }
                 return alert(await response.text())
             })
-            .catch(error => console.log('error', error));
+            .catch(error => alert('Something went wrong.Please try later.'));
     }
 
     window.addEventListener('load', () => {

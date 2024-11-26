@@ -116,6 +116,7 @@ async function readWardens(req, res) {
 }
 
 async function readWardenById(req, res) {
+    req.log.info('test test')
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {

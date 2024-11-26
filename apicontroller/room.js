@@ -58,13 +58,15 @@ async function readRooms(req, res) {
 
     if (limit >= 0) {
         roomsQuery += ' LIMIT ? OFFSET ?';
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+            searchPattern, searchPattern, limit, offset];
     } else {
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+            searchPattern, searchPattern];
     }
 
-    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
-
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern,
+        searchPattern, searchPattern, searchPattern];
 
     try {
         const [rooms, totalCount] = await Promise.all([
@@ -147,10 +149,9 @@ async function readRoomNumberByBlockFloorId(req, res) {
             room,
             isFull: room.studentCount >= room.roomCapacity
         }));
-        console.log(enrichedRooms)
+
         res.status(200).send(enrichedRooms)
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -167,12 +168,12 @@ async function createRoom(req, res) {
     } = req.body;
     const createdBy = req.session.warden.wardenId;
 
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert);
-    }
-
     try {
+        const validateInsert = await validateInsertItems(req.body, false, roomId = null, mysqlClient);
+        if (validateInsert.length > 0) {
+            return res.status(400).send(validateInsert);
+        }
+
         const newRoom = await mysqlQuery(/*sql*/`INSERT INTO 
             room(blockFloorId,blockId,roomNumber,roomCapacity,isActive,isAirConditioner,createdBy) 
             VALUES(?,?,?,?,?,?,?)`,
@@ -180,9 +181,9 @@ async function createRoom(req, res) {
             mysqlClient
         )
         if (newRoom.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+            res.status(400).send("No insert was made")
         } else {
-            res.status(201).send("insert successfull")
+            res.status(201).send("Insert Successfully")
         }
     } catch (error) {
         res.status(500).send(error.message)
@@ -219,9 +220,9 @@ async function updateRoomById(req, res) {
             return res.status(409).send("students in room shift to another room than try");
         }
 
-        const isValidInsert = validateInsertItems(req.body, true);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
+        const validateInsert = await validateInsertItems(req.body, true, roomId, mysqlClient);
+        if (validateInsert.length > 0) {
+            return res.status(400).send(validateInsert)
         }
 
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? AND deletedAt IS NULL`,
@@ -306,7 +307,7 @@ async function validateRoomById(roomId, mysqlClient) {
     return false
 }
 
-function validateInsertItems(body, isUpdate = false) {
+async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlClient) {
     const {
         blockFloorId,
         blockId,
@@ -320,41 +321,81 @@ function validateInsertItems(body, isUpdate = false) {
 
     if (blockFloorId !== undefined) {
         if (isNaN(blockFloorId) || blockFloorId <= 0) {
-            errors.push('blockFloorId is invalid')
+            errors.push('BlockFloorId is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('blockFloorId is missing')
+    } else {
+        errors.push('BlockFloorId is missing')
     }
 
     if (blockId !== undefined) {
         if (isNaN(blockId) || blockId <= 0) {
-            errors.push('blockId is invalid')
+            errors.push('BlockId is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('blockId is missing')
+    } else {
+        errors.push('BlockId is missing')
     }
 
     if (roomCapacity !== undefined) {
-        if (isNaN(roomCapacity) || roomCapacity <= 0) {
-            errors.push('roomCapacity is invalid')
+        if (isNaN(roomCapacity) || roomCapacity < 0) {
+            errors.push('Room Capacity is invalid')
+        } else if (isUpdate = true) {
+            const validateRoomCapacity = await mysqlQuery(/*sql*/`
+                SELECT 
+                    COUNT(*) AS studentCount
+                FROM student 
+                WHERE roomId = ?`, [roomId], mysqlClient)
+            if (validateRoomCapacity[0].studentCount > roomCapacity) {
+                errors.push('Transfer a student to another room and attempt to reduce the capacity of this room.')
+            }
         }
-    } else if (!isUpdate) {
-        errors.push('roomCapacity is missing')
+    } else {
+        errors.push('Room Capacity is missing')
     }
 
     if (roomNumber !== undefined) {
         if (isNaN(roomNumber) || roomNumber <= 0) {
-            errors.push('roomNumber is invalid')
+            errors.push('Room Number is invalid')
+        } else {
+            let query;
+            let params;
+
+            if (isUpdate === true) {
+                query = /*sql*/`
+                            SELECT 
+                                COUNT(*) AS count 
+                            FROM room 
+                            WHERE blockId = ? 
+                                AND blockFloorId = ?
+                                AND roomNumber = ?
+                                AND roomId != ? 
+                                AND deletedAt IS NULL`;
+                params = [blockId, blockFloorId, roomNumber, roomId];
+            } else {
+                query = /*sql*/`
+                            SELECT 
+                                COUNT(*) AS count
+                            FROM room 
+                            WHERE blockId = ? 
+                                AND blockFloorId = ?
+                                AND roomNumber = ?
+                                AND deletedAt IS NULL`;
+                params = [blockId, blockFloorId, roomNumber];
+            }
+
+            const validRoomNumber = await mysqlQuery(query, params, mysqlClient);
+            if (validRoomNumber[0].count > 0) {
+                errors.push("Room Number already exists");
+            }
         }
-    } else if (!isUpdate) {
-        errors.push('roomNumber is missing')
+    } else {
+        errors.push('Room Number is missing')
     }
 
     if (isActive !== undefined) {
         if (![0, 1].includes(isActive)) {
             errors.push('isActive is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('isActive is missing')
     }
 
@@ -362,7 +403,7 @@ function validateInsertItems(body, isUpdate = false) {
         if (![0, 1].includes(isAirConditioner)) {
             errors.push('isAirConditioner is invalid')
         }
-    } else if (!isUpdate) {
+    } else {
         errors.push('isAirConditioner is missing')
     }
     return errors
@@ -370,7 +411,8 @@ function validateInsertItems(body, isUpdate = false) {
 
 function getStudentCountByRoomId(roomId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM student WHERE roomId = ? AND deletedAt IS NULL`,
+        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM student WHERE roomId = ?
+        AND deletedAt IS NULL`,
             [roomId],
             (err, roomIdCount) => {
                 if (err) {

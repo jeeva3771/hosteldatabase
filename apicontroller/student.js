@@ -196,7 +196,11 @@ async function readStudentsByRoomId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const roomId = req.params.roomId;
     try {
-        const students = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE roomId = ? AND deletedAt IS NULL`,
+        const students = await mysqlQuery(/*sql*/`
+            SELECT 
+                * FROM student 
+            WHERE roomId = ? 
+                AND deletedAt IS NULL`,
             [roomId],
             mysqlClient
         )
@@ -253,22 +257,28 @@ async function createStudent(req, res) {
     } = req.body;
     const createdBy = req.session.warden.wardenId;
     const validateExistingItems = [
-        { name: 'phoneNumber', value: phoneNumber },
-        { name: 'fatherNumber', value: fatherNumber },
-        { name: 'emailId', value: emailId },
-        { name: 'registerNumber', value: registerNumber }
+        { name: 'Phone Number', value: phoneNumber },
+        { name: 'Father Number', value: fatherNumber },
+        { name: 'EmailId', value: emailId },
+        { name: 'Register Number', value: registerNumber }
     ]
     const mysqlClient = req.app.mysqlClient;
-    
-    const isValidInsert = validateInsertItems(req.body);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert);
-    }
 
     try {
+        const validateInsert = await validateInsertItems(req.body, false, studentId = null, mysqlClient);
+        if (validateInsert.length > 0) {
+            return res.status(400).send(validateInsert);
+        }
+
         await Promise.all(validateExistingItems.map(async (item) => {
-            const checkExisting = await mysqlQuery(
-            /*sql*/`SELECT COUNT(*) AS count FROM student WHERE phoneNumber = ? OR fatherNumber = ? OR emailId = ? OR registerNumber = ?`,
+            const checkExisting = await mysqlQuery(/*sql*/`
+                SELECT 
+                    COUNT(*) AS count
+                FROM student
+                WHERE phoneNumber = ? 
+                    OR fatherNumber = ? 
+                    OR emailId = ?
+                    OR registerNumber = ?`,
                 [item.value, item.value, item.value, item.value],
                 mysqlClient
             );
@@ -282,9 +292,14 @@ async function createStudent(req, res) {
             return res.status(409).send(existErrors);
         }
 
-        const newStudent = await mysqlQuery(/*sql*/`INSERT INTO student (roomId,blockFloorId,blockId,name,registerNumber,dob,courseId,joinedDate,phoneNumber,emailId,fatherName,fatherNumber,address,createdBy)
+        const newStudent = await mysqlQuery(/*sql*/`
+            INSERT 
+                INTO student 
+            (roomId,blockFloorId,blockId,name,registerNumber,dob,courseId,joinedDate,
+            phoneNumber,emailId,fatherName,fatherNumber,address,createdBy)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-            [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber, emailId, fatherName, fatherNumber, address, createdBy],
+            [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber,
+            emailId, fatherName, fatherNumber, address, createdBy],
             mysqlClient)
 
         if (newStudent.affectedRows === 0) {
@@ -324,7 +339,7 @@ async function updateStudentImage(req, res) {
         return res.status(200).json('Student image updated successfully');
     } catch (error) {
         console.error(error);
-        return res.status(500).json('Internal server error');
+        return res.status(500).json(error);
     }
 }
 
@@ -351,19 +366,27 @@ async function updateStudentById(req, res) {
         if (!student) {
             return res.status(404).send("Student not found or already deleted");
         }
-
-        const isValidInsert = validateInsertItems(req.body, true);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
+        console.log('ooooooooooooooooooooo')
+        const validateInsert = await validateInsertItems(req.body, true, studentId, mysqlClient);
+        if (validateInsert.length > 0) {
+            return res.status(400).send(validateInsert)
         }
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE student SET  ${updates.join(', ')} WHERE studentId = ? AND deletedAt IS NULL`,
+        console.log('jjjjjjjjjjjjj')
+        const updateStudent = await mysqlQuery(/*sql*/`
+            UPDATE 
+                student SET 
+                ${updates.join(', ')} 
+            WHERE studentId = ? 
+                AND deletedAt IS NULL`,
             values, mysqlClient)
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("student not found or no changes made")
+        if (updateStudent.affectedRows === 0) {
+            res.status(204).send("Student not found or no changes made")
         }
 
-        const getUpdatedStudent = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
+        const getUpdatedStudent = await mysqlQuery(/*sql*/`
+            SELECT 
+                * FROM student 
+            WHERE studentId = ?`,
             [studentId], mysqlClient)
         res.status(200).send({
             status: 'successfull',
@@ -371,6 +394,7 @@ async function updateStudentById(req, res) {
         })
     }
     catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -401,7 +425,14 @@ async function deleteStudentById(req, res) {
             return res.status(404).send("studentId is not defined")
         }
 
-        const deletedStudent = await mysqlQuery(/*sql*/`UPDATE student SET deletedAt = NOW(), deletedBy = ? WHERE studentId = ? AND deletedAt IS NULL`,
+        const deletedStudent = await mysqlQuery(/*sql*/`
+            UPDATE 
+                student 
+            SET 
+                deletedAt = NOW(), 
+                deletedBy = ? 
+            WHERE studentId = ? 
+                AND deletedAt IS NULL`,
             [deletedBy, studentId],
             mysqlClient
         )
@@ -414,7 +445,10 @@ async function deleteStudentById(req, res) {
 
         await deleteFile(imagePath, fs);
 
-        const getDeletedStudent = await mysqlQuery(/*sql*/`SELECT * FROM student WHERE studentId = ?`,
+        const getDeletedStudent = await mysqlQuery(/*sql*/`
+            SELECT 
+                * FROM student
+            WHERE studentId = ?`,
             [studentId],
             mysqlClient
         )
@@ -449,7 +483,7 @@ async function validateStudentById(studentId, mysqlClient) {
     return false
 }
 
-function validateInsertItems(body, isUpdate = false) {
+async function validateInsertItems(body, isUpdate = false, studentId = null, mysqlClient) {
     const {
         roomId,
         blockFloorId,
@@ -469,119 +503,138 @@ function validateInsertItems(body, isUpdate = false) {
     const errors = []
 
     if (roomId !== undefined) {
-        if (isNaN(roomId) || roomId <= 0)
-            errors.push('roomId is invalid')
-    } else if (!isUpdate) {
-        errors.push('roomId is missing')
+        if (isNaN(roomId) || roomId <= 0) {
+            errors.push('RoomId is invalid')
+        }
+    } else {
+        errors.push('RoomId is missing')
     }
 
     if (blockFloorId !== undefined) {
-        if (isNaN(blockFloorId) || blockFloorId <= 0)
-            errors.push('blockFloorId is invalid')
-    } else if (!isUpdate) {
-        errors.push('blockFloorId is missing')
+        if (isNaN(blockFloorId) || blockFloorId <= 0) {
+            errors.push('BlockFloorId is invalid')
+        }
+    } else {
+        errors.push('BlockFloorId is missing')
     }
 
     if (blockId !== undefined) {
-        if (isNaN(blockId) || blockId <= 0)
-            errors.push('blockId is invalid')
-    } else if (!isUpdate) {
-        errors.push('blockId is missing')
+        if (isNaN(blockId) || blockId <= 0) {
+            errors.push('BlockId is invalid')
+        }
+    } else {
+        errors.push('BlockId is missing')
     }
 
     if (name !== undefined) {
         if (name.length < 2) {
-            errors.push('name is invalid')
+            errors.push('Name is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('name is missing')
+    } else {
+        errors.push('Name is missing')
     }
 
     if (registerNumber !== undefined) {
         if (registerNumber.length < 2) {
-            errors.push('registerNumber is invalid')
+            errors.push('Register Number is invalid')
+        } else {
+            if (isUpdate === true) {
+                const validateRegNo = await mysqlQuery(/*sql*/`
+                    SELECT 
+                        COUNT(*) AS count
+                    FROM student 
+                    WHERE registerNumber = ? 
+                          AND studentId != ?`,
+                    [registerNumber, studentId],
+                    mysqlClient)
+
+                if (validateRegNo[0].count > 0) {
+                    errors.push('Register Number already exists')
+                }
+            }
         }
-    } else if (!isUpdate) {
-        errors.push('registerNumber is missing')
+    } else {
+        errors.push('Register Number is missing')
     }
 
     if (dob !== undefined) {
         const date = new Date(dob);
         if (isNaN(date.getTime())) {
-            errors.push('dob is invalid');
+            errors.push('DOB is invalid');
         } else {
             const today = new Date();
             if (date > today) {
-                errors.push('dob cannot be in the future');
+                errors.push('DOB cannot be in the future');
             }
         }
-    } else if (!isUpdate) {
-        errors.push('dob is missing')
+    } else {
+        errors.push('DOB is missing')
     }
 
     if (courseId !== undefined) {
-        if (isNaN(courseId) || courseId <= 0)
-            errors.push('courseId is invalid')
-    } else if (!isUpdate) {
-        errors.push('courseId is missing')
+        if (isNaN(courseId) || courseId <= 0) {
+            errors.push('CourseId is invalid')
+        }
+    } else {
+        errors.push('CourseId is missing')
     }
 
     if (joinedDate !== undefined) {
         const date = new Date(joinedDate);
         if (isNaN(date.getTime())) {
-            errors.push('joinedDate is invalid');
+            errors.push('Joined Date is invalid');
         } else {
             const today = new Date();
             if (date > today) {
-                errors.push('joinedDate cannot be in the future');
+                errors.push('Joined Date cannot be in the future');
             }
         }
-    } else if (!isUpdate) {
-        errors.push('dob is missing')
+    } else {
+        errors.push('Joined Date is missing')
     }
 
     if (phoneNumber !== undefined) {
         var phoneNumberCheck = phoneNumberPattern.test(phoneNumber)
         if (phoneNumberCheck === false) {
-            errors.push('phoneNumber is invalid');
+            errors.push('Phone Number is invalid');
         }
-    } else if (!isUpdate) {
-        errors.push('phoneNumber is missing');
+    } else {
+        errors.push('Phone Number is missing');
     }
 
     if (emailId !== undefined) {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         var emailCheck = emailPattern.test(emailId)
         if (emailCheck === false) {
-            errors.push('emailId is invalid');
+            errors.push('EmailId is invalid');
         }
-    } else if (!isUpdate) {
-        errors.push('emailId is missing');
+    } else {
+        errors.push('EmailId is missing');
     }
 
     if (fatherName !== undefined) {
         if (fatherName.length < 2) {
-            errors.push('fatherName is invalid')
+            errors.push('Father Name is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('fatherName is missing')
+    } else {
+        errors.push('Father Name is missing')
     }
 
     if (fatherNumber !== undefined) {
         var phoneNumberCheck = phoneNumberPattern.test(fatherNumber)
         if (phoneNumberCheck === false) {
-            errors.push('fatherNumber is invalid');
+            errors.push('Father Number is invalid');
         }
-    } else if (!isUpdate) {
-        errors.push('fatherNumber is missing');
+    } else {
+        errors.push('Father Number is missing');
     }
 
     if (address !== undefined) {
         if (address.length < 5) {
-            errors.push('address is invalid')
+            errors.push('Address is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('address is missing')
+    } else {
+        errors.push('Address is missing')
     }
 
     return errors

@@ -20,8 +20,6 @@ const room = require('./apicontroller/room.js');
 const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
 const studentUse = require('./apicontroller/studentuse.js');
-const logger = pino({ level: 'info' });
-// const logger = pino({ level: 'debug' });
 
 
 //uicontroller
@@ -39,7 +37,6 @@ const { getAppUrl } = require('./utilityclient/url.js');
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
-app.use(pinoHttp({ logger }));
 app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
@@ -50,6 +47,9 @@ app.use(session({
         maxAge: (1000 * 60 * 15)
     }
 }));
+const logger = pino({
+     level: 'info'
+});
 
 const pageSessionExclude = [
     '/login',

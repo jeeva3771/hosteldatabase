@@ -123,13 +123,18 @@
 
         fetch(url, requestOptions)
             .then(async (response) => {
-                if (response.status === 201 || 200) {
+                if ([200, 201].includes(response.status)) {
                     window.location = getAppUrl('room');
                 } else {
-                    alert(await response.text())
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
                 }
-                })
-            .catch(error => console.error('error', error));
+        })
+            .catch(error => alert('Internal Server Error'));
     }
 
     function toggleSubmitButton() {
