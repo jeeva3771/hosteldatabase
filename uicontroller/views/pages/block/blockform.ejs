@@ -65,7 +65,7 @@
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
-            "blockCode": blockCodeDom.value,
+            "blockCode": blockCodeDom.value.trim(),
             "blockLocation": blockLocationDom.value,
             "isActive": selectedStatusValue
         });

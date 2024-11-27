@@ -59,7 +59,7 @@ function resetPasswordUi(req, res) {
     res.render('pages/resetpassword.ejs')
 }
 
-function wardenProfileUi(req, res) {
+function wardenImageUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/warden/wardenprofile.ejs',{
         appURL: getAppUrl(),
@@ -68,13 +68,13 @@ function wardenProfileUi(req, res) {
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
             {name:'User', link:''},
-            {name:'Profile', link:'/warden/profile'}
+            {name:'Profile', link:'/warden/image'}
         ]
     })
 }
 
 module.exports = (app) => {
-    app.get('/warden/profile', wardenProfileUi)
+    app.get('/warden/image', wardenImageUi)
     app.get('/warden/resetpassword', resetPasswordUi)
     app.get('/warden', wardenPageUi)
     app.get('/warden/add', addWardenUi)

@@ -107,8 +107,8 @@
         var raw = JSON.stringify({
             "blockId": blockCodeDom.value,
             "blockFloorId": floorNumberDom.value,
-            "roomNumber": parseInt(roomNumberDom.value),
-            "roomCapacity": parseInt(roomCapacityDom.value),
+            "roomNumber": parseInt(roomNumberDom.value.trim()),
+            "roomCapacity": parseInt(roomCapacityDom.value.trim()),
             "isActive": selectedStatusValue,
             "isAirConditioner": selectedAirConditionerValue
         });

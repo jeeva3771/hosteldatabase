@@ -184,7 +184,7 @@
                         <tr>
                             <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
                             <td class="text-center">
-                                <img src="" alt="Profile" class="rounded-circle profileImage" id="studentProfile-${student.studentId}" name="image">
+                                <img src="" alt="Profile" class="rounded-circle profileImage" id="studentImage-${student.studentId}" name="image">
                             </td>
                             <td>${student.name}</td>
                             <td>${student.registerNumber}</td>
@@ -206,16 +206,16 @@
                             </td>
                         </tr>`
                 }
-                tableDataDom.innerHTML = trHtml
+                tableDataDom.innerHTML = trHtml;
                 students.forEach((student) => {
-                const studentProfileDom = document.getElementById(`studentProfile-${student.studentId}`);
-                    studentProfile(student.studentId, studentProfileDom);
+                    const studentImageDom = document.getElementById(`studentImage-${student.studentId}`);
+                    studentImage(student.studentId, studentImageDom);
                 });
-                var totalPages = Math.ceil(studentCount / limitDom.value)
-                var paginationHtml = ''
+                var totalPages = Math.ceil(studentCount / limitDom.value);
+                var paginationHtml = '';
 
                 if (totalPages === 0) {
-                    paginationHtml = '<h6>No results found.</h6>'
+                    paginationHtml = '<h6>No results found.</h6>';
                 } 
 
                 if (totalPages > 1) {
@@ -242,7 +242,7 @@
                 .catch((error) => alert('Something went wrong.Please try later.'));
             }
 
-    function studentProfile (studentId, studentProfileDom) {
+    function studentImage (studentId, studentImageDom) {
         var myHeaders = new Headers();
 
         var requestOptions = {
@@ -261,10 +261,10 @@
             .then((blob) => {
                 const imageUrl = URL.createObjectURL(blob);
 
-                if (studentProfileDom) {
-                    studentProfileDom.src = imageUrl
+                if (studentImageDom) {
+                    studentImageDom.src = imageUrl
                 } else {
-                console.error('Profile DOM element not found!');
+                console.error('Image DOM element not found!');
                 }
             })
             .catch((error) => alert('Student image something went wrong.Please try later'));

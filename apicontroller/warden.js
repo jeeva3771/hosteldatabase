@@ -110,7 +110,7 @@ async function readWardens(req, res) {
             wardenCount: totalCount[0].totalWardenCount
         });
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -145,6 +145,7 @@ async function readWardenById(req, res) {
         }
         res.status(200).send(warden[0])
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -164,13 +165,12 @@ function readWardenAvatarById(req, res) {
         fs.createReadStream(imageToServe).pipe(res);
 
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
 
-
 async function createWarden(req, res) {
-
     let uploadedFilePath;
     const mysqlClient = req.app.mysqlClient
     const {
@@ -246,7 +246,7 @@ async function createWarden(req, res) {
         });
         res.status(201).send('insert successfully')
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -292,6 +292,7 @@ async function updateWardenById(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -323,7 +324,7 @@ async function updateWardenAvatar(req, res) {
             .toFile(uploadedFilePath);
         return res.status(200).json('Warden Image updated successfully');
     } catch (error) {
-        console.error('Error updating avatar:', error);
+        req.log.error(error)
         return res.status(500).json('Internal server error');
     }
 }
@@ -343,6 +344,7 @@ async function deleteWardenAvatar(req, res) {
         res.status(200).send('Avatar deleted successfully');
 
     } catch (error) {
+        req.log.error(error)
         res.status(500).send('Internal Server Error');
     }
 }
@@ -379,7 +381,7 @@ async function deleteWardenById(req, res) {
             data: getDeletedWarden[0]
         });
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -407,6 +409,7 @@ async function authentication(req, res) {
             res.status(409).send('Invalid emailId or password !')
         }
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -463,6 +466,7 @@ async function generateOtp(req, res) {
         req.session.resetPassword = emailId
         return res.status(200).send('success')
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -543,7 +547,8 @@ async function processResetPassword(req, res) {
             }
         }
     } catch (error) {
-        return res.status(500).send(error.message)
+        req.log.error(error)
+        res.status(500).send(error.message)
     }
 }
 
@@ -589,13 +594,13 @@ function validateInsertItems(body, isUpdate = false) {
     }
 
     if (emailId !== undefined) {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         var emailCheck = emailPattern.test(emailId)
         if (emailCheck === false) {
             errors.push('emailId is invalid');
         }
     } else if (!isUpdate) {
-        errors.push('emailId is missing');
+        errors.push('email Id is missing');
     }
 
     if (password !== undefined) {

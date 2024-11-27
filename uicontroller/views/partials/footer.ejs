@@ -28,8 +28,8 @@
 
 <script>
 var wardenId = <%= avatarWardenId || 'null' %>;
-const userProfileDom = document.getElementById('userProfile');
-const profileDom = document.getElementById('profile');
+const userImageDom = document.getElementById('userImage');
+const imageDom = document.getElementById('image');
 
 function getSelectedRadioValue(radioName) {
     let selectedValue = null;
@@ -64,13 +64,13 @@ function getSelectedRadioValue(radioName) {
       .then((blob) => {
         const imageUrl = URL.createObjectURL(blob);
 
-        if (userProfileDom && profileDom) {
-          userProfileDom.src = imageUrl;
-          profileDom.src = imageUrl
-        } else if (userProfileDom) {
-          userProfileDom.src = imageUrl
+        if (userImageDom && imageDom) {
+          userImageDom.src = imageUrl;
+          imageDom.src = imageUrl
+        } else if (userImageDom) {
+          userImageDom.src = imageUrl
         } else {
-          console.error('Profile DOM element not found!');
+          console.error('Image DOM element not found!');
         }
       })
       .catch((error) => {

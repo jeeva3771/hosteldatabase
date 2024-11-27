@@ -4,10 +4,12 @@ const mysql = require('mysql');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 const path = require('path');
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
-var fileStoreOptions = {};
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
+const fileStoreOptions = {};
+const { v4: uuidv4 } = require('uuid');
+
 
 dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
@@ -84,7 +86,8 @@ app.use(
         customSuccessMessage: (req, res) => `Request to ${req.url} processed`,
         genReqId: (req) => {
             req.startTime = Date.now();
-            return req.id || `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            // Use UUID for unique request IDs
+            return req.id || uuidv4();
         },
         customAttributeKeys: {
             reqId: 'requestId',

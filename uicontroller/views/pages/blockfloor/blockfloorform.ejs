@@ -72,7 +72,7 @@
 
         var raw = JSON.stringify({
             "blockId": blockCodeDom.value,
-            "floorNumber": parseInt(floorNumberDom.value),
+            "floorNumber": parseInt(floorNumberDom.value.trim()),
             "isActive": selectedStatusValue
         });
 

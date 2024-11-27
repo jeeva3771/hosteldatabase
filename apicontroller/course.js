@@ -60,7 +60,7 @@ async function readCourses(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -94,6 +94,7 @@ async function readCourseById(req, res) {
         res.status(200).send(course[0])
     }
     catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -117,6 +118,7 @@ async function createCourse(req, res) {
             res.status(201).send("insert successfull")
         }
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -165,6 +167,7 @@ async function updateCourseById(req, res) {
             data: getUpdatedCourse[0]
         })
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -209,6 +212,7 @@ async function deleteCourseById(req, res) {
         });
 
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -270,7 +274,6 @@ async function validateInsertItems(body, isUpdate = false, courseId = null, mysq
        return "Course Name missing";
     }
 }
-
 
 module.exports = (app) => {
     app.get('/api/course', readCourses)

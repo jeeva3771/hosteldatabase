@@ -96,6 +96,13 @@
                               <input type="date" class="form-control" id="joinedDate">
                             </div>
                         </div>
+                        <div class="row mb-3" id="uploadFileSection">
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
+                            <div class="col-sm-10">
+                              <input class="form-control" type="file" id="updateImage" name="studentImage"
+                              onchange="updateStudentImage()">
+                            </div>
+                        </div>
                         <div class="text-center">
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="button" onclick="saveOrUpdateStudent()" class="btn btn-primary"
@@ -124,6 +131,8 @@
     var floorNumberDom = document.getElementById('floorNumber');
     var roomNumberDom = document.getElementById('roomNumber');
     var joinedDateDom = document.getElementById('joinedDate');
+    var uploadFileSectionDom = document.getElementById('uploadFileSection');
+    var updateImageDom = document.getElementById('updateImage');
     var submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
 
@@ -136,13 +145,13 @@
 
         var raw = JSON.stringify({
             "name": studentNameDom.value,
-            "registerNumber": registerNumDom.value,
+            "registerNumber": registerNumDom.value.trim(),
             "dob": dobDom.value,
             "courseId": courseDom.value,
-            "emailId": emailIdDom.value,
-            "phoneNumber": studNumDom.value,
+            "emailId": emailIdDom.value.trim(),
+            "phoneNumber": studNumDom.value.trim(),
             "fatherName": fatherNameDom.value,
-            "fatherNumber": fatherNumDom.value,
+            "fatherNumber": fatherNumDom.value.trim(),
             "address": addressDom.value,
             "blockId": blockCodeDom.value,
             "blockFloorId": floorNumberDom.value,
@@ -164,9 +173,12 @@
                     window.location = getAppUrl('student');
                 } else {
                     const responseText = await response.json();
+
                     if (Array.isArray(responseText)) {
-                        alert(responseText[0]);
+                        const errorMessage = responseText.join('\n');
+                        alert(errorMessage);
                     } else {
+                        console.log(responseText + '2')
                         alert(responseText);
                     }
                 }
@@ -198,7 +210,10 @@
         await populateRoomNumber()
 
         if (studentId) {
+            await studentImage()
             await getStudentById(studentId);
+        } else {
+            uploadFileSectionDom.style.display = 'none';
         }
 
         studentNameDom.addEventListener('input', toggleSubmitButton);
@@ -352,6 +367,36 @@
         }
     }
 
+    async function studentImage() {
+        var myHeaders = new Headers();
+
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(`${getAppUrl('api/student')}${studentId}/image`, requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                throw new Error(`Error fetching avatar: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then((blob) => {
+                console.log(blob)
+                const imageUrl = URL.createObjectURL(blob);
+
+                if (updateImageDom) {
+                    updateImageDom.src = imageUrl
+                } else {
+                console.error('Image DOM element not found!');
+                }
+            })
+            .catch((error) => alert('Student image something went wrong.Please try later'));
+    }
+
+
     async function getStudentById(studentId) {
         try {
             const response = await fetch(getAppUrl(`api/student/${studentId}`));
@@ -374,5 +419,23 @@
         } catch (error) {
             alert('Something went wrong.Please try later.')
         }
+    }
+
+    function updateStudentImage() {
+        var myHeaders = new Headers();
+        var formdata = new FormData();
+        formdata.append("studentImage", updateImageDom.files[0]);
+
+        var requestOptions = {
+            method: 'PUT',
+            headers: myHeaders,
+            body: formdata,
+            redirect: 'follow'
+        };
+
+        fetch(`http://localhost:1005/api/student/${studentId}/editimage?operation=update`, requestOptions)
+            .then(response => response.text())
+            .then(result => console.log(result))
+            .catch(error => console.log('error', error));
     }
 </script>

@@ -80,7 +80,7 @@ async function readRooms(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -119,6 +119,7 @@ async function readRoomById(req, res) {
         }
         res.status(200).send(room[0])
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -152,6 +153,7 @@ async function readRoomNumberByBlockFloorId(req, res) {
 
         res.status(200).send(enrichedRooms)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -170,6 +172,7 @@ async function createRoom(req, res) {
 
     try {
         const validateInsert = await validateInsertItems(req.body, false, roomId = null, mysqlClient);
+        console.log(validateInsert)
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
         }
@@ -186,6 +189,7 @@ async function createRoom(req, res) {
             res.status(201).send("Insert Successfully")
         }
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -237,6 +241,7 @@ async function updateRoomById(req, res) {
             data: getUpdatedRoom[0]
         })
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -283,6 +288,7 @@ async function deleteRoomById(req, res) {
             data: getDeletedBlock[0]
         });
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -338,12 +344,14 @@ async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlC
     if (roomCapacity !== undefined) {
         if (isNaN(roomCapacity) || roomCapacity < 0) {
             errors.push('Room Capacity is invalid')
-        } else if (isUpdate = true) {
+        } else if (isUpdate === true) {
             const validateRoomCapacity = await mysqlQuery(/*sql*/`
                 SELECT 
                     COUNT(*) AS studentCount
                 FROM student 
-                WHERE roomId = ?`, [roomId], mysqlClient)
+                WHERE roomId = ?
+                    AND deletedAt IS NULL
+                `, [roomId], mysqlClient)
             if (validateRoomCapacity[0].studentCount > roomCapacity) {
                 errors.push('Transfer a student to another room and attempt to reduce the capacity of this room.')
             }

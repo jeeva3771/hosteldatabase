@@ -49,7 +49,7 @@
                             </div>
                         </fieldset>
                         <div class="row mb-3">
-                            <label for="emailId" class="col-sm-2 col-form-label">Email</label>
+                            <label for="emailId" class="col-sm-2 col-form-label">Email Id</label>
                             <div class="col-sm-10">
                               <input type="email" class="form-control" id="emailId">
                             </div>
@@ -67,9 +67,9 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="inputNumber" class="col-sm-2 col-form-label">Profile Upload</label>
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
                             <div class="col-sm-10">
-                              <input class="form-control" type="file" id="profileUpload" name="image">
+                              <input class="form-control" type="file" id="imageUpload" name="image">
                             </div>
                         </div>
                         <div class="text-center">
@@ -91,11 +91,11 @@
     const firstNameDom = document.getElementById('firstName');
     const lastNameDom = document.getElementById('lastName');
     const dobDom = document.getElementById('dob');
-    var adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
+    const adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
     const emailIdDom = document.getElementById('emailId');
     const passwordDom = document.getElementById('password');
     const conformDom = document.getElementById('conform');
-    const profileUploadDom = document.getElementById('profileUpload');
+    const imageUploadDom = document.getElementById('imageUpload');
     var wardenId = <%= wardenId || 'null' %>;
     const submitDom = document.getElementById('submitButton');
 
@@ -114,7 +114,7 @@
 
         var myHeaders = new Headers();
         var formData = new FormData();
-        formData.append("image", profileUploadDom.files[0]);
+        formData.append("image", imageUploadDom.files[0]);
         formData.append("firstName", firstNameDom.value);
         formData.append("lastName", lastNameDom.value);
         formData.append("dob", dobDom.value);

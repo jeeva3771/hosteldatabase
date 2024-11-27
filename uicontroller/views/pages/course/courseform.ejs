@@ -41,7 +41,7 @@
         myHeaders.append("Content-Type", "application/json");
 
         var raw = JSON.stringify({
-            "courseName": courseNameDom.value
+            "courseName": courseNameDom.value.trim()
         });
 
         var requestOptions = {

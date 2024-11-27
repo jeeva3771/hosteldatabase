@@ -9,16 +9,16 @@
 
               <div class="card">
                 <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
-
-                  <img src="" alt="Profile" class="rounded-circle" id="profile" name="image">
+                  <img src="" alt="Profile" class="rounded-circle" id="image" name="image">
                   <div class="row mb-3">
                     <label for="inputNumber" class="col-sm-2 col-form-label">Profile Upload</label>
                     <div class="col-sm-10">
-                      <i class="bi bi-upload"><input class="form-control" type="file" id="changeProfile" class="hidden" name="image" onchange="updateAvatar()"></i>
-                      
+                      <i class="bi bi-upload"><input class="form-control" type="file" id="changeImage" 
+                        class="hidden" name="image" onchange="updateAvatar()"></i>
                     </div>
                   </div>
-                  <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteAvatar()">remove</button>
+                  <button type="button" class="btn btn-outline-danger btn-sm" 
+                    onclick="deleteAvatar()">Remove</button>
 
                   <h2>Kevin Anderson</h2>
                   <h3>Web Designer</h3>
@@ -312,12 +312,12 @@
         <%- include('../../partials/footer.ejs') %>
 
 <script>
-const changeProfile = document.getElementById('changeProfile')
+const changeImageDom = document.getElementById('changeImage')
 
 function updateAvatar() {
     var myHeaders = new Headers();
     var formdata = new FormData();
-    formdata.append("image", changeProfile.files[0]);
+    formdata.append("image", changeImageDom.files[0]);
 
     var requestOptions = {
       method: 'PUT',
@@ -327,7 +327,7 @@ function updateAvatar() {
     };
 
     fetch(`${getAppUrl(`api/warden/${wardenId}/editavatar`)}?operation=update`, requestOptions)
-      .then(updated => window.location.href= getAppUrl('warden/profile'))
+      .then(updated => window.location.href= getAppUrl('warden/image'))
       .catch(error => console.log('error', error));
   }
 
@@ -341,7 +341,7 @@ function updateAvatar() {
     };
 
     fetch(`${getAppUrl(`api/warden/${wardenId}/deleteavatar`)}`, requestOptions)
-      .then(deleted => window.location.href= getAppUrl('warden/profile'))
+      .then(deleted => window.location.href= getAppUrl('warden/image'))
       .catch(error => console.log('error', error));
   }
 </script>

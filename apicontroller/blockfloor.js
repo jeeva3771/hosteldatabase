@@ -67,6 +67,7 @@ async function readBlockFloors(req, res) {
         });
 
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -105,6 +106,7 @@ async function readBlockFloorById(req, res) {
         res.status(200).send(blockFloor[0])
     }
     catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -137,6 +139,7 @@ async function readFloorNumberByBlockFloorId(req, res) {
         }
         res.status(200).send(roomBlockFloorCount)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -167,7 +170,7 @@ async function createBlockFloor(req, res) {
             res.status(201).send('insert successfully')
         }
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -225,6 +228,7 @@ async function updateBlockFloorById(req, res) {
         })
     }
     catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -269,7 +273,7 @@ async function deleteBlockFloorById(req, res) {
         });
     }
     catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }

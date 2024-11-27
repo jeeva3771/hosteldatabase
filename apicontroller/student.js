@@ -18,10 +18,10 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req, file, cb) => {
     if (file.mimetype === 'image/jpeg') {
-      cb(null, true);
+        cb(null, true);
     } else {
-      req.fileValidationError = 'Invalid file type. Only JPEG files are allowed.';
-      cb(null, false);
+        req.fileValidationError = 'Invalid file type. Only JPEG files are allowed.';
+        cb(null, false);
     }
 };
 
@@ -125,7 +125,7 @@ async function readStudents(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -169,6 +169,7 @@ async function readStudentById(req, res) {
         }
         res.status(200).send(student[0])
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -188,6 +189,7 @@ function readStudentImageById(req, res) {
         fs.createReadStream(imageToServe).pipe(res);
 
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -211,6 +213,7 @@ async function readStudentsByRoomId(req, res) {
 
         res.status(200).send(students)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -225,7 +228,7 @@ async function getStudentsForAttendanceReport(req, res) {
             FROM student 
             WHERE deletedAt IS NULL 
             ORDER BY name ASC`,
-        [], mysqlClient)
+            [], mysqlClient)
 
         if (studentsForAttendanceReport.length === 0) {
             return res.status(404).send('No content found')
@@ -233,13 +236,12 @@ async function getStudentsForAttendanceReport(req, res) {
 
         return res.status(200).send(studentsForAttendanceReport)
     } catch (error) {
-        req.log.error(error.message)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
 
 async function createStudent(req, res) {
-    const existErrors = []
     const {
         roomId,
         blockFloorId,
@@ -256,12 +258,6 @@ async function createStudent(req, res) {
         address
     } = req.body;
     const createdBy = req.session.warden.wardenId;
-    const validateExistingItems = [
-        { name: 'Phone Number', value: phoneNumber },
-        { name: 'Father Number', value: fatherNumber },
-        { name: 'EmailId', value: emailId },
-        { name: 'Register Number', value: registerNumber }
-    ]
     const mysqlClient = req.app.mysqlClient;
 
     try {
@@ -270,27 +266,27 @@ async function createStudent(req, res) {
             return res.status(400).send(validateInsert);
         }
 
-        await Promise.all(validateExistingItems.map(async (item) => {
-            const checkExisting = await mysqlQuery(/*sql*/`
-                SELECT 
-                    COUNT(*) AS count
-                FROM student
-                WHERE phoneNumber = ? 
-                    OR fatherNumber = ? 
-                    OR emailId = ?
-                    OR registerNumber = ?`,
-                [item.value, item.value, item.value, item.value],
-                mysqlClient
-            );
+        // await Promise.all(validateExistingItems.map(async (item) => {
+        //     const checkExisting = await mysqlQuery(/*sql*/`
+        //         SELECT 
+        //             COUNT(*) AS count
+        //         FROM student
+        //         WHERE phoneNumber = ? 
+        //             OR fatherNumber = ? 
+        //             OR emailId = ?
+        //             OR registerNumber = ?`,
+        //         [item.value, item.value, item.value, item.value],
+        //         mysqlClient
+        //     );
 
-            if (checkExisting[0].count > 0) {
-                existErrors.push(`${item.name} already exists`);
-            }
-        }));
+        //     if (checkExisting[0].count > 0) {
+        //         existErrors.push(`${item.name} already exists`);
+        //     }
+        // }));
 
-        if (existErrors.length > 0) {
-            return res.status(409).send(existErrors);
-        }
+        // if (existErrors.length > 0) {
+        //     return res.status(409).send(existErrors);
+        // }
 
         const newStudent = await mysqlQuery(/*sql*/`
             INSERT 
@@ -299,7 +295,7 @@ async function createStudent(req, res) {
             phoneNumber,emailId,fatherName,fatherNumber,address,createdBy)
             VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
             [roomId, blockFloorId, blockId, name, registerNumber, dob, courseId, joinedDate, phoneNumber,
-            emailId, fatherName, fatherNumber, address, createdBy],
+                emailId, fatherName, fatherNumber, address, createdBy],
             mysqlClient)
 
         if (newStudent.affectedRows === 0) {
@@ -307,6 +303,7 @@ async function createStudent(req, res) {
         }
         res.status(201).send('Insert successfully')
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -338,8 +335,8 @@ async function updateStudentImage(req, res) {
             .toFile(uploadedFilePath);
         return res.status(200).json('Student image updated successfully');
     } catch (error) {
-        console.error(error);
-        return res.status(500).json(error);
+        req.log.error(error)
+        res.status(500).json(error);
     }
 }
 
@@ -366,12 +363,13 @@ async function updateStudentById(req, res) {
         if (!student) {
             return res.status(404).send("Student not found or already deleted");
         }
-        console.log('ooooooooooooooooooooo')
+
         const validateInsert = await validateInsertItems(req.body, true, studentId, mysqlClient);
+        console.log(validateInsert)
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
-        console.log('jjjjjjjjjjjjj')
+
         const updateStudent = await mysqlQuery(/*sql*/`
             UPDATE 
                 student SET 
@@ -394,22 +392,20 @@ async function updateStudentById(req, res) {
         })
     }
     catch (error) {
-        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
 
 async function deleteStudentImage(req, res) {
     const studentId = req.params.studentId;
-   
+
     try {
         const rootDir = path.resolve(__dirname, '../');
         const imagePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
         await deleteFile(imagePath, fs);
         res.status(200).send('Student Image updated successfully');
-
     } catch (error) {
-        console.log(error)
         res.status(500).send('Internal Server Error');
     }
 }
@@ -428,7 +424,10 @@ async function deleteStudentById(req, res) {
         const deletedStudent = await mysqlQuery(/*sql*/`
             UPDATE 
                 student 
-            SET 
+            SET registerNumber = CONCAT(IFNULL(registerNumber, ''), '-', NOW()),
+                phoneNumber = CONCAT(IFNULL(phoneNumber, ''), '-', NOW()),
+                fatherNumber = CONCAT(IFNULL(fatherNumber, ''), '-', NOW()),
+                emailId = CONCAT(IFNULL(emailId, ''), '-', NOW()),
                 deletedAt = NOW(), 
                 deletedBy = ? 
             WHERE studentId = ? 
@@ -458,6 +457,7 @@ async function deleteStudentById(req, res) {
         })
     }
     catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -470,8 +470,8 @@ function getStudentById(studentId, mysqlClient) {
                 if (err) {
                     return reject(err)
                 }
-            resolve(student[0].count  > 0 ? student[0] : null)
-        })
+                resolve(student[0].count > 0 ? student[0] : null)
+            })
     })
 }
 
@@ -498,9 +498,38 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
         fatherName,
         fatherNumber,
         address
-    } = body
+    } = body;
     const phoneNumberPattern = /^(\d{10}|\(\d{3}\)\s?\d{3}-\d{4}|\d{3}-\d{3}-\d{4}|\d{3}\s\d{3}\s\d{4})$/;
-    const errors = []
+    const errors = [];
+
+    const validateExistingItems = [
+        { name: 'Phone Number', value: phoneNumber },
+        { name: 'Father Number', value: fatherNumber },
+        { name: 'Email ID', value: emailId },
+        { name: 'Register Number', value: registerNumber }
+    ]
+
+    await Promise.all(validateExistingItems.map(async (item) => {
+        const query = /*sql*/ `
+                SELECT 
+                    COUNT(*) AS count
+                FROM student
+                WHERE ${isUpdate === true ? `studentId != ? AND` : ''}
+                    (   phoneNumber = ? 
+                        OR fatherNumber = ? 
+                        OR emailId = ? 
+                        OR registerNumber = ?  )
+                    AND deletedAt IS NULL`;
+
+        const params = isUpdate
+            ? [studentId, item.value.trim, item.value, item.value, item.value]
+            : [item.value, item.value, item.value, item.value];
+
+        const checkExisting = await mysqlQuery(query, params, mysqlClient);
+        if (checkExisting[0].count > 0) {
+            errors.push(`${item.name} already exists`);
+        }
+    }));
 
     if (roomId !== undefined) {
         if (isNaN(roomId) || roomId <= 0) {
@@ -537,21 +566,6 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
     if (registerNumber !== undefined) {
         if (registerNumber.length < 2) {
             errors.push('Register Number is invalid')
-        } else {
-            if (isUpdate === true) {
-                const validateRegNo = await mysqlQuery(/*sql*/`
-                    SELECT 
-                        COUNT(*) AS count
-                    FROM student 
-                    WHERE registerNumber = ? 
-                          AND studentId != ?`,
-                    [registerNumber, studentId],
-                    mysqlClient)
-
-                if (validateRegNo[0].count > 0) {
-                    errors.push('Register Number already exists')
-                }
-            }
         }
     } else {
         errors.push('Register Number is missing')
@@ -603,13 +617,13 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
     }
 
     if (emailId !== undefined) {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         var emailCheck = emailPattern.test(emailId)
         if (emailCheck === false) {
-            errors.push('EmailId is invalid');
+            errors.push('Email Id is invalid');
         }
     } else {
-        errors.push('EmailId is missing');
+        errors.push('Email Id is missing');
     }
 
     if (fatherName !== undefined) {
@@ -636,9 +650,9 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
     } else {
         errors.push('Address is missing')
     }
-
     return errors
 }
+
 
 module.exports = (app) => {
     app.get('/api/student/:studentId/image', readStudentImageById)
