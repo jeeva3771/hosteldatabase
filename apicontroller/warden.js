@@ -73,7 +73,7 @@ async function readWardens(req, res) {
             WHERE 
               w.deletedAt IS NULL 
             AND (w.firstName LIKE ? OR w.lastName LIKE ? OR w.emailId LIKE ?
-              OR w.superAdmin LIKE ? OR w.createdBy LIKE ?)
+              OR w.superAdmin LIKE ? OR ww.firstName LIKE ? OR ww.lastName Like ?)
             ORDER BY 
               ${orderBy} ${sort}`;
 
@@ -85,19 +85,21 @@ async function readWardens(req, res) {
         WHERE 
             w.deletedAt IS NULL 
         AND (w.firstName LIKE ? OR w.lastName LIKE ? OR w.emailId LIKE ?
-            OR w.superAdmin LIKE ? OR w.createdBy LIKE ?)
+            OR w.superAdmin LIKE ? OR ww.firstName LIKE ? OR ww.lastName Like ?)
         ORDER BY 
             ${orderBy} ${sort}`;
 
     if (limit >= 0) {
         wardensQuery += ' LIMIT ? OFFSET ?';
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, limit, offset];
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+                            searchPattern, searchPattern, limit, offset];
     } else {
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, 
+                            searchPattern, searchPattern];
     }
 
-    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern];
-
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+                                    searchPattern, searchPattern];
 
     try {
         const [wardens, totalCount] = await Promise.all([
@@ -116,7 +118,6 @@ async function readWardens(req, res) {
 }
 
 async function readWardenById(req, res) {
-    req.log.info('test test')
     const wardenId = req.params.wardenId
     const mysqlClient = req.app.mysqlClient
     try {
@@ -145,6 +146,7 @@ async function readWardenById(req, res) {
         }
         res.status(200).send(warden[0])
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -183,9 +185,8 @@ async function createWarden(req, res) {
     } = req.body
     const createdBy = req.session.warden.wardenId;
 
-    const isValidInsert = validateInsertItems(req.body);
-
     try {
+        const isValidInsert = await validateInsertItems(req.body, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
             if (req.file.path) {
                 await deleteFile(req.file.path, fs);
@@ -213,16 +214,6 @@ async function createWarden(req, res) {
                 .toFile(uploadedFilePath);
         }
 
-        const existingWarden = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM warden WHERE emailId = ?
-                                AND deletedAt IS NULL`, [emailId], mysqlClient);
-
-        if (existingWarden[0].count > 0) {
-            if (uploadedFilePath) {
-                await deleteFile(uploadedFilePath, fs)
-            }
-            return res.status(409).send("emailId already exists");
-        }
-
         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
             warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
             VALUES(?,?,?,?,?,?,?)`,
@@ -230,20 +221,24 @@ async function createWarden(req, res) {
             mysqlClient
         )
         if (newWarden.affectedRows === 0) {
-            if (uploadedFilePath) {
+            if (uploadedFilePath.includes('default.jpg')) {
+                console.log('Skip image deletion operation')
+            } else {
                 await deleteFile(uploadedFilePath, fs)
             }
-            return res.status(400).send("no insert was made")
+            return res.status(400).send("No insert was made")
         }
 
-        const originalDir = path.dirname(uploadedFilePath);
-        const newFilePath = path.join(originalDir, `${newWarden.insertId}.jpg`);
+        if (!uploadedFilePath.includes('default.jpg')) {
+            const originalDir = path.dirname(uploadedFilePath);
+            const newFilePath = path.join(originalDir, `${newWarden.insertId}.jpg`);
 
-        fs.rename(uploadedFilePath, newFilePath, (err) => {
-            if (err) {
-                return res.status(400).send('Error renaming file');
-            }
+            fs.rename(uploadedFilePath, newFilePath, (err) => {
+                if (err) {
+                    return res.status(400).send('Error renaming file');
+                }
         });
+    }
         res.status(201).send('insert successfully')
     } catch (error) {
         req.log.error(error)
@@ -275,12 +270,30 @@ async function updateWardenById(req, res) {
             return res.status(404).send("warden not found or already deleted");
         }
 
-        const isValidInsert = validateInsertItems(req.body, true);
+        const isValidInsert = await validateInsertItems(req.body, true, wardenId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ? AND deletedAt IS NULL`,
+        await handleFileUpload(req, res, multerMiddleware, multer);
+
+        if (!req.file) {
+            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
+        } else {
+            uploadedFilePath = req.file.path;
+        }
+
+        sharp(fs.readFileSync(uploadedFilePath))
+            .resize({
+                width: parseInt(process.env.IMAGE_WIDTH),
+                height: parseInt(process.env.IMAGE_HEIGHT),
+                fit: sharp.fit.cover,
+                position: sharp.strategy.center,
+            })
+            .toFile(uploadedFilePath);
+
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ?
+            AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
             res.status(204).send("warden not found or no changes made")
@@ -292,6 +305,7 @@ async function updateWardenById(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -552,7 +566,7 @@ async function processResetPassword(req, res) {
     }
 }
 
-function validateInsertItems(body, isUpdate = false) {
+async function validateInsertItems(body, isUpdate = false, wardenId = null, mysqlClient) {
     const {
         firstName,
         lastName,
@@ -565,58 +579,85 @@ function validateInsertItems(body, isUpdate = false) {
     const errors = []
     if (firstName !== undefined) {
         if (firstName.length < 2) {
-            errors.push('firstName is invalid')
+            errors.push('First Name is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('firstName is missing')
+    } else {
+        errors.push('First Name is missing')
     }
 
     if (lastName !== undefined) {
         if (lastName.length < 1) {
-            errors.push('lastName is invalid')
+            errors.push('Last Name is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('lastName is missing')
+    } else {
+        errors.push('Last Name is missing')
     }
 
     if (dob !== undefined) {
         const date = new Date(dob);
         if (isNaN(date.getTime())) {
-            errors.push('dob is invalid');
+            errors.push('Dob is invalid');
         } else {
             const today = new Date();
             if (date > today) {
-                errors.push('dob cannot be in the future');
+                errors.push('Dob cannot be in the future');
             }
         }
-    } else if (!isUpdate) {
-        errors.push('dob is missing')
+    } else {
+        errors.push('Dob is missing')
     }
 
     if (emailId !== undefined) {
         const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
         var emailCheck = emailPattern.test(emailId)
         if (emailCheck === false) {
-            errors.push('emailId is invalid');
+            errors.push('Email Id is invalid');
+        } else {
+            let query;
+            let params;
+
+            if (isUpdate === true) {
+                query = /*sql*/`
+                            SELECT 
+                                COUNT(*) AS count
+                            FROM warden 
+                            WHERE emailId = ?
+                                AND wardenId != ?
+                                AND deletedAt IS NULL`
+                params = [emailId, wardenId];
+            } else {
+                query = /*sql*/`
+                            SELECT 
+                                COUNT(*) AS count
+                            FROM warden 
+                            WHERE emailId = ? 
+                                AND deletedAt IS NULL`;
+                params = [emailId];
+            }
+
+            const validateEmailId = await mysqlQuery(query, params, mysqlClient);
+            if (validateEmailId[0].count > 0) {
+                errors.push("Email Id already exists");
+            }
         }
-    } else if (!isUpdate) {
-        errors.push('email Id is missing');
+    } else {
+        errors.push('Email Id is missing');
     }
 
     if (password !== undefined) {
         if (password.length < 6) {
-            errors.push('password is invalid')
+            errors.push('Password is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('password is missing')
+    } else {
+        errors.push('Password is missing')
     }
 
     if (superAdmin !== undefined) {
         if (![0, 1].includes(parseInt(superAdmin))) {
-            errors.push('superAdmin is invalid')
+            errors.push('SuperAdmin is invalid')
         }
-    } else if (!isUpdate) {
-        errors.push('superAdmin is missing')
+    } else {
+        errors.push('SuperAdmin is missing')
     }
     return errors
 }
@@ -650,7 +691,7 @@ module.exports = (app) => {
     app.get('/api/warden', readWardens)
     app.get('/api/warden/:wardenId', readWardenById)
     app.post('/api/warden', multerMiddleware, createWarden)
-    app.put('/api/warden/:wardenId', updateWardenById)
+    app.put('/api/warden/:wardenId', multerMiddleware, updateWardenById)
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
     app.get('/api/logout', userLogOut)

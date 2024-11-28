@@ -1,97 +1,194 @@
-// async function updateWardenAvatar(req, res) {
-//     const wardenId = req.params.wardenId;
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Warden form' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Warden form' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
 
-//     if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
-//         return res.status(409).send('Warden is not valid to edit')
-//     }
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
 
-//     try {
-//         const uploadedFilePath = req.file.path;
-//         const originalDir = path.dirname(uploadedFilePath);
+                    <!-- Horizontal Form -->
+                    <form class="mt-4">
+                        <div class="row mb-3">
+                            <label for="firstName" class="col-sm-2 col-form-label">First Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="firstName" 
+                                    onkeyup="toggleSubmitButton()">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="lastName" class="col-sm-2 col-form-label">Last Name</label>
+                            <div class="col-sm-10">
+                                <input type="text" class="form-control" id="lastName">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="dob" class="col-sm-2 col-form-label">DOB</label>
+                            <div class="col-sm-10">
+                              <input type="date" class="form-control" id="dob">
+                            </div>
+                        </div>
+                        <fieldset class="row mb-3">
+                            <legend class="col-form-label col-sm-2 pt-0">Admin</legend>
+                            <div class="col-sm-10">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAdmin"
+                                        id="isAdmin" value="1">
+                                    <label class="form-check-label" for="isAdmin">
+                                        Yes
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="isAdmin"
+                                        id="notAdmin" value="0">
+                                    <label class="form-check-label" for="notAdmin">
+                                        No
+                                    </label>
+                                </div>
+                            </div>
+                        </fieldset>
+                        <div class="row mb-3">
+                            <label for="emailId" class="col-sm-2 col-form-label">Email Id</label>
+                            <div class="col-sm-10">
+                              <input type="email" class="form-control" id="emailId">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="password" class="col-sm-2 col-form-label">Password</label>
+                            <div class="col-sm-10">
+                              <input type="password" class="form-control" id="password">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="conform" class="col-sm-2 col-form-label">Confirm Password</label>
+                            <div class="col-sm-10">
+                              <input type="password" class="form-control" id="conform">
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
+                            <div class="col-sm-10">
+                              <input class="form-control" type="file" id="imageUpload" name="image">
+                            </div>
+                        </div>
+                        <div class="text-center">
+                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="button" onclick="authentication()" class="btn btn-primary"
+                                id="submitButton" >Submit</button>
+                        </div>
+                    </form><!-- End Horizontal Form -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+</main>
 
-//         const tempFilePath = path.join(originalDir, `${uniqueSuffix}${wardenId}`);
-//         const finalFilePath = path.join(originalDir, `${wardenId}.jpg`);
+<%- include('../../partials/footer.ejs') %>
 
-//         await sharp(uploadedFilePath)
-//             .resize({
-//                 width: parseInt(process.env.IMAGE_WIDTH),
-//                 height: parseInt(process.env.IMAGE_HEIGHT),
-//                 fit: sharp.fit.cover,
-//                 position: sharp.strategy.center,
-//             })
-//             .toFile(tempFilePath);
+<script>
+    const firstNameDom = document.getElementById('firstName');
+    const lastNameDom = document.getElementById('lastName');
+    const dobDom = document.getElementById('dob');
+    var isAdminDom = document.getElementById('isAdmin');
+    var notAdminDom = document.getElementById('notAdmin');
+    const emailIdDom = document.getElementById('emailId');
+    const passwordDom = document.getElementById('password');
+    const conformDom = document.getElementById('conform');
+    const imageUploadDom = document.getElementById('imageUpload');
+    var wardenId = <%= wardenId || 'null' %>;
+    const submitDom = document.getElementById('submitButton');
 
-//         fs.rename(tempFilePath, finalFilePath, (err) => {
-//             if (err) {
-//                 return res.status(400).json('Error renaming file');
-//             }
+    function authentication() {
+        const adminStatusValue = getSelectedRadioValue('isAdmin');
+        var myHeaders = new Headers();
+        var formData = new FormData();
 
-//             return res.status(200).json('Warden profile updated successfully');
-//         });
-//     } catch (error) {
-//         console.error('Error updating avatar:', error);
-//         return res.status(500).json('Internal server error');
-//     }
-// }
+        if (imageUploadDom.files.length > 0) {
+            formData.append("image", imageUploadDom.files[0]);
+        }       
 
-async function studentReport(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const {
-        month,
-        year
-    } = req.query
-    var errors = []
+        formData.append("firstName", firstNameDom.value);
+        formData.append("lastName", lastNameDom.value);
+        formData.append("dob", dobDom.value);
+        formData.append("emailId", emailIdDom.value);
+        formData.append("password", passwordDom.value);
+        formData.append("superAdmin", adminStatusValue);
 
-    if (isNaN(month)) {
-        errors.push('month')
+        var requestOptions = {
+            method: 'POST',
+            headers: myHeaders,
+            body: formData,
+            redirect: 'follow'
+        };
+
+        fetch("http://localhost:1005/api/warden", requestOptions)
+            .then(async (response) => {
+                if (response.status === 201 || 200) {
+                    window.location = '/warden'
+                } else {
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
+                }
+            })
+            .catch(error => console.error('error', error));
     }
+        
+        
+            if (wardenId) {
+                getWarden(wardenId)
+            }
 
-    if (isNaN(year)) {
-        errors.push('year')
-    }
+            function getWarden(wardenId) {
+                const requestOptions = {
+                    method: "GET"
+                };
 
-    if (studentName === "Select a Student") {
-        errors.push('student')
-    }
+                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
+                    .then((response) => response.json())
+                    .then((warden) => {
+                        firstNameDom.value = warden.firstName;
+                        lastNameDom.value = warden.lastName;
+                        dobDom.value = warden.dob.split('T')[0];
+                        emailIdDom.value = warden.emailId;
 
-    if (errors.length > 0) {
-        let errorMessage;
+                        if (warden.superAdmin) {
+                            isAdminDom.checked = true;
+                        } else {
+                            notAdminDom.checked = true;
+                        }
 
-        if (errors.length === 1) {
-            errorMessage = `Please select a ${errors[0]} before generating the report.`
-        } else {
-            errorMessage = `Please select a ${errors.join(", ")} before generating the report.`
-        }
+                        passwordDom.value = warden.password;
+                        conformDom.value = warden.password;
+                    })
+                    .catch((error) => console.error(error));
+            }
 
-        return res.status(400).send(errorMessage)
-    }
+            function toggleSubmitButton() {
+                const adminOrNot = getSelectedRadioValue('isAdmin');
+                submitDom.disabled = !(
+                    firstNameDom.value.length > 0 &&
+                    lastNameDom.value.length > 0 &&
+                    dobDom.value.length > 0 &&
+                    emailIdDom.value.length > 0 &&
+                    adminOrNot !== null &&
+                    passwordDom.value.length > 0 &&
+                    conformDom.value.length > 0 &&
+                    passwordDom.value === conformDom.value
+                );
+            }
 
-    try {
-        const studentReport = await mysqlQuery(/*sql*/`
-        SELECT 
-            DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
-            a.isPresent
-        FROM 
-            attendance AS a
-        INNER JOIN 
-            student AS s ON s.studentId = a.studentId
-        WHERE 
-            MONTH(a.checkInDate) = ?
-            AND YEAR(a.checkInDate) = ?
-            AND s.name = ?`,
-            [month, year, studentName], mysqlClient)
-
-        if (studentReport.length === 0) {
-            return res.status(404).send('Student attendance report not found for the selected month and year.')
-        }
-
-        const formattedReport = studentReport.reduce((acc, { checkIn, isPresent }) => {
-            acc[checkIn] = isPresent;
-            return acc;
-        }, {});
-
-        return res.status(200).send(formattedReport);
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
+            firstNameDom.addEventListener('input', toggleSubmitButton);
+            lastNameDom.addEventListener('input', toggleSubmitButton);
+            dobDom.addEventListener('input', toggleSubmitButton);
+            emailIdDom.addEventListener('input', toggleSubmitButton);
+            document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
+            passwordDom.addEventListener('input', toggleSubmitButton);
+            conformDom.addEventListener('input', toggleSubmitButton);
+</script>

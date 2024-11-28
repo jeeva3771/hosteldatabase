@@ -4,7 +4,7 @@ const { getAppUrl } = require('../../utilityclient/url');
 function wardenPageUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
     if (!req.session || !req.session.warden || req.session.warden.superAdmin !== 1) {
-        res.status(403).redirect('/warden/error')
+        return res.status(403).redirect('/error')
     } else {
         res.render('pages/warden/wardenlist.ejs', {
             appURL: getAppUrl(),
@@ -51,7 +51,7 @@ function editWardenUi(req, res) {
 
 function errorUi(req, res) {
     res.render('pages/error.ejs', {
-        user: getUserProfile(req.session)
+        appURL: getAppUrl()
     })
 }
 
@@ -79,7 +79,5 @@ module.exports = (app) => {
     app.get('/warden', wardenPageUi)
     app.get('/warden/add', addWardenUi)
     app.get('/warden/:wardenId', editWardenUi)
-    app.get('/warden/error', errorUi)
+    app.get('/error', errorUi)
 }
-
-

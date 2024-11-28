@@ -199,154 +199,154 @@
                 </td>
             </tr>`
         }
-            tableDataDom.innerHTML = trHtml
-            var totalPages = Math.ceil(responseData.blockCount / limitDom.value)
-            var paginationHtml = ''
+        tableDataDom.innerHTML = trHtml
+        var totalPages = Math.ceil(responseData.blockCount / limitDom.value)
+        var paginationHtml = ''
 
-            if (totalPages === 0) {
-                paginationHtml = '<h6>No results found.</h6>'
-            } 
+        if (totalPages === 0) {
+            paginationHtml = '<h6>No results found.</h6>'
+        } 
 
-            if (totalPages > 1) {
+        if (totalPages > 1) {
+            paginationHtml += `
+            <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
+            </li>`;
+
+            for (let i = 1; i <= totalPages; i++) {
                 paginationHtml += `
-                <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                    <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
+                <li class="page-item${i === pageNo ? ' active' : ''}">
+                    <a class="page-link" onclick="blockPage(${i})">${i}</a>
                 </li>`;
+            }
 
-                for (let i = 1; i <= totalPages; i++) {
-                    paginationHtml += `
-                    <li class="page-item${i === pageNo ? ' active' : ''}">
-                        <a class="page-link" onclick="blockPage(${i})">${i}</a>
-                    </li>`;
+            paginationHtml += `
+            <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
+            </li>`;
+        }
+            paginationDom.innerHTML = paginationHtml;
+        })
+        .catch((error) => alert('Something went wrong.Please try later.'));
+    }
+
+    function readBlockById(blockId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };
+
+        fetch(`${appURL}api/block/` + blockId, requestOptions)
+            .then(async (response) => {
+                var block = await response.json()
+                const existingModal = document.getElementById('blockModal');
+
+                if (existingModal) {
+                    existingModal.remove();
                 }
 
-                paginationHtml += `
-                <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                    <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
-                </li>`;
-            }
-                paginationDom.innerHTML = paginationHtml;
-            })
-                .catch((error) => console.error(error));
-            }
-
-            function readBlockById(blockId) {
-                var myHeaders = new Headers();
-                var requestOptions = {
-                    method: 'GET',
-                    headers: myHeaders
-                };
-
-                fetch(`${appURL}api/block/` + blockId, requestOptions)
-                    .then(async (response) => {
-                        var block = await response.json()
-                        const existingModal = document.getElementById('blockModal');
-
-                        if (existingModal) {
-                            existingModal.remove();
-                        }
-
-                    const modalHtml = `
-                        <div class="modal fade" id="blockModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                const modalHtml = `
+                    <div class="modal fade" id="blockModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Block Code</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.blockCode}
+                                        </div>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Block Code</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.blockCode}
-                                            </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Location</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Location</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.blockLocation}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.blockLocation}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Status</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.isActive === 1 ? 'Active' : 'InActive'}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Status</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.createdTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.isActive === 1 ? 'Active' : 'InActive'}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.createdFirstName} ${block.createdLastName}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created At</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.updatedTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.createdTimeStamp}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${block.updatedFirstName !== null ?
-                                                block.updatedFirstName : '---'} ${block.updatedLastName !== null ? block.updatedLastName : ''}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.createdFirstName} ${block.createdLastName}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated At</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.updatedTimeStamp}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${block.updatedFirstName !== null ?
+                                            block.updatedFirstName : '---'} ${block.updatedLastName !== null ? 
+                                            block.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(document.getElementById('blockModal'));
-                        modal.show();
-                    })
-                        .catch(error => console.log('error', error));
-                    }
+                        </div>
+                    </div>`;
 
-                    function deleteBlockById(blockId) {
-                        var validateDelete = confirm('are you sure you want to delete?')
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                var modal = new bootstrap.Modal(document.getElementById('blockModal'));
+                modal.show();
+        })
+            .catch(error => alert('Something went wrong.Please try later.'));
+    }
 
-                            if (!validateDelete)
-                                return
+    function deleteBlockById(blockId) {
+        var validateDelete = confirm('Are you sure you want to delete?')
 
-                            var requestOptions = {
-                                method: 'DELETE',
-                            };
+        if (!validateDelete)
+            return
 
-                            fetch(getAppUrl(`api/block/${blockId}`), requestOptions)
-                                .then(async (response) => {
-                                    if (response.status === 200) {
-                                        return window.location = getAppUrl('block')
-                                    }
-                                    return alert(await response.text())
+        var requestOptions = {
+            method: 'DELETE'
+        };
 
-                                })
+        fetch(getAppUrl(`api/block/${blockId}`), requestOptions)
+            .then(async (response) => {
+                if (response.status === 200) {
+                    return window.location = getAppUrl('block')
+                }
+                return alert(await response.text())
+            })
+            .catch((error) => alert('Something went wrong.Please try later.'));
+    }
 
-                            .catch((error) => alert(`An error occurred: ${error.message}`));
-                        }
-
-                window.addEventListener('load', () => {
-                    blockPage()
-                })
+    window.addEventListener('load', () => {
+        blockPage()
+    })
 
 </script>

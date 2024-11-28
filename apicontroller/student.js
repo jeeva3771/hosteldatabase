@@ -67,19 +67,19 @@ async function readStudents(req, res) {
             DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
             DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
             DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp
-            FROM student AS s
+                FROM student AS s
             LEFT JOIN 
-            block AS bk ON bk.blockId = s.blockId
+                block AS bk ON bk.blockId = s.blockId
             LEFT JOIN 
-            blockfloor AS b ON b.blockFloorId = s.blockFloorId
+                blockfloor AS b ON b.blockFloorId = s.blockFloorId
             LEFT JOIN 
-            room AS r ON r.roomId = s.roomId
+                room AS r ON r.roomId = s.roomId
             LEFT JOIN 
-            course AS c ON c.courseId = s.courseId
+                course AS c ON c.courseId = s.courseId
             LEFT JOIN 
-            warden AS w ON w.wardenId = s.createdBy
+                warden AS w ON w.wardenId = s.createdBy
             WHERE 
-            s.deletedAt IS NULL 
+                s.deletedAt IS NULL 
             AND (s.name LIKE ? OR s.registerNumber LIKE ? OR
                 w.firstName LIKE ? OR w.lastName Like ?) 
             ORDER BY 
@@ -87,7 +87,7 @@ async function readStudents(req, res) {
 
     let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalStudentCount 
-        FROM student AS s
+            FROM student AS s
         LEFT JOIN 
             block AS bk ON bk.blockId = s.blockId
         LEFT JOIN 
@@ -123,9 +123,8 @@ async function readStudents(req, res) {
             students: students,
             studentCount: totalCount[0].totalStudentCount
         });
-
     } catch (error) {
-        req.log.error(error)
+        req.log.error(error);
         res.status(500).send(error.message);
     }
 }
@@ -148,21 +147,21 @@ async function readStudentById(req, res) {
             DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
             DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp,
             DATE_FORMAT(s.updatedAt, "%y-%b-%D %r") AS updatedTimeStamp
-            FROM student AS s
+                FROM student AS s
             LEFT JOIN 
-            block AS bk ON bk.blockId = s.blockId
+                block AS bk ON bk.blockId = s.blockId
             LEFT JOIN 
-            blockfloor AS b ON b.blockFloorId = s.blockFloorId
+                blockfloor AS b ON b.blockFloorId = s.blockFloorId
             LEFT JOIN 
-            room AS r ON r.roomId = s.roomId
+                room AS r ON r.roomId = s.roomId
             LEFT JOIN 
-            course AS c ON c.courseId = s.courseId
+                course AS c ON c.courseId = s.courseId
             LEFT JOIN 
-            warden AS w ON w.wardenId = s.createdBy
+                warden AS w ON w.wardenId = s.createdBy
             LEFT JOIN 
-            warden AS w2 ON w2.wardenId = s.updatedBy
+                warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
-            s.deletedAt IS NULL AND studentId = ?`,
+                s.deletedAt IS NULL AND studentId = ?`,
             [studentId], mysqlClient)
         if (student.length === 0) {
             return res.status(404).send("StudentId not valid");
@@ -178,7 +177,6 @@ function readStudentImageById(req, res) {
     const studentId = req.params.studentId;
     try {
         var fileName = `${studentId}.jpg`;
-
         const baseDir = path.join(__dirname, '..', 'studentuploads');
         const imagePath = path.join(baseDir, fileName);
         const defaultImagePath = path.join(baseDir, 'studentdefault.jpg');
@@ -187,10 +185,9 @@ function readStudentImageById(req, res) {
 
         res.setHeader('Content-Type', 'image/jpeg');
         fs.createReadStream(imageToServe).pipe(res);
-
     } catch (error) {
-        req.log.error(error)
-        res.status(500).send(error.message)
+        req.log.error(error);
+        res.status(500).send(error.message);
     }
 }
 
@@ -233,7 +230,6 @@ async function getStudentsForAttendanceReport(req, res) {
         if (studentsForAttendanceReport.length === 0) {
             return res.status(404).send('No content found')
         }
-
         return res.status(200).send(studentsForAttendanceReport)
     } catch (error) {
         req.log.error(error)
@@ -266,28 +262,6 @@ async function createStudent(req, res) {
             return res.status(400).send(validateInsert);
         }
 
-        // await Promise.all(validateExistingItems.map(async (item) => {
-        //     const checkExisting = await mysqlQuery(/*sql*/`
-        //         SELECT 
-        //             COUNT(*) AS count
-        //         FROM student
-        //         WHERE phoneNumber = ? 
-        //             OR fatherNumber = ? 
-        //             OR emailId = ?
-        //             OR registerNumber = ?`,
-        //         [item.value, item.value, item.value, item.value],
-        //         mysqlClient
-        //     );
-
-        //     if (checkExisting[0].count > 0) {
-        //         existErrors.push(`${item.name} already exists`);
-        //     }
-        // }));
-
-        // if (existErrors.length > 0) {
-        //     return res.status(409).send(existErrors);
-        // }
-
         const newStudent = await mysqlQuery(/*sql*/`
             INSERT 
                 INTO student 
@@ -312,11 +286,11 @@ async function updateStudentImage(req, res) {
     let uploadedFilePath;
     const wardenId = req.session.warden.wardenId;
 
-    if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
-        return res.status(409).send('Warden is not valid to edit')
-    }
-
     try {
+        if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
+            return res.status(409).send('Warden is not valid to edit')
+        }
+
         await handleFileUpload(req, res, multerMiddleware, multer);
 
         if (!req.file) {
@@ -365,7 +339,6 @@ async function updateStudentById(req, res) {
         }
 
         const validateInsert = await validateInsertItems(req.body, true, studentId, mysqlClient);
-        console.log(validateInsert)
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }

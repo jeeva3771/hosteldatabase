@@ -207,12 +207,12 @@
         await populateCourse()
         await populateBlockCode();
         await populateFloorNumber();
-        await populateRoomNumber()
+        await populateRoomNumber();
+        await studentImage();
 
         if (studentId) {
-            await studentImage()
             await getStudentById(studentId);
-        } else {
+        } else if (!studentId) {
             uploadFileSectionDom.style.display = 'none';
         }
 
@@ -384,13 +384,12 @@
                 return response.blob();
             })
             .then((blob) => {
-                console.log(blob)
                 const imageUrl = URL.createObjectURL(blob);
 
                 if (updateImageDom) {
                     updateImageDom.src = imageUrl
                 } else {
-                console.error('Image DOM element not found!');
+                    console.error('Image DOM element not found!');
                 }
             })
             .catch((error) => alert('Student image something went wrong.Please try later'));

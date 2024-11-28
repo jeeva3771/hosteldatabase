@@ -390,8 +390,8 @@ async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlC
                 params = [blockId, blockFloorId, roomNumber];
             }
 
-            const validRoomNumber = await mysqlQuery(query, params, mysqlClient);
-            if (validRoomNumber[0].count > 0) {
+            const validateRoomNumber = await mysqlQuery(query, params, mysqlClient);
+            if (validateRoomNumber[0].count > 0) {
                 errors.push("Room Number already exists");
             }
         }

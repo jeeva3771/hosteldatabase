@@ -45,7 +45,7 @@ function getSelectedRadioValue(radioName) {
     return selectedValue;
   }
 
-  function wardenProfile() {
+  function wardenImage() {
     const myHeaders = new Headers();
 
     const requestOptions = {
@@ -54,7 +54,7 @@ function getSelectedRadioValue(radioName) {
       redirect: 'follow',
     };
 
-    fetch(`http://localhost:1005/api/warden/${wardenId}/avatar`, requestOptions)
+    fetch(getAppUrl(`api/warden/${wardenId}/avatar`), requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching avatar: ${response.status}`);
@@ -79,7 +79,7 @@ function getSelectedRadioValue(radioName) {
   }
 
   window.addEventListener('load', () => {
-    wardenProfile()
+    wardenImage()
   })
 
 </script>

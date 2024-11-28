@@ -312,9 +312,9 @@
         <%- include('../../partials/footer.ejs') %>
 
 <script>
-const changeImageDom = document.getElementById('changeImage')
+  const changeImageDom = document.getElementById('changeImage')
 
-function updateAvatar() {
+  function updateAvatar() {
     var myHeaders = new Headers();
     var formdata = new FormData();
     formdata.append("image", changeImageDom.files[0]);
