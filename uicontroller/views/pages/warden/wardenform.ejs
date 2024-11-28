@@ -14,7 +14,8 @@
                         <div class="row mb-3">
                             <label for="firstName" class="col-sm-2 col-form-label">First Name</label>
                             <div class="col-sm-10">
-                                <input type="text" class="form-control" id="firstName" onkeyup="toggleSubmitButton()">
+                                <input type="text" class="form-control" id="firstName" 
+                                    onkeyup="toggleSubmitButton()">
                             </div>
                         </div>
                         <div class="row mb-3">
@@ -49,31 +50,31 @@
                             </div>
                         </fieldset>
                         <div class="row mb-3">
-                            <label for="emailId" class="col-sm-2 col-form-label">Email</label>
+                            <label for="emailId" class="col-sm-2 col-form-label">Email Id</label>
                             <div class="col-sm-10">
                               <input type="email" class="form-control" id="emailId">
                             </div>
-                          </div>
-                          <div class="row mb-3">
+                        </div>
+                        <div class="row mb-3">
                             <label for="password" class="col-sm-2 col-form-label">Password</label>
                             <div class="col-sm-10">
                               <input type="password" class="form-control" id="password">
                             </div>
-                          </div>
-                          <div class="row mb-3">
+                        </div>
+                        <div class="row mb-3">
                             <label for="conform" class="col-sm-2 col-form-label">Confirm Password</label>
                             <div class="col-sm-10">
                               <input type="password" class="form-control" id="conform">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="inputNumber" class="col-sm-2 col-form-label">Profile Upload</label>
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
                             <div class="col-sm-10">
-                              <input class="form-control" type="file" id="profileUpload" name="image">
+                              <input class="form-control" type="file" id="imageUpload" name="image">
+                              <p class="fs-6 fw-lighter ms-2">Optional.</p>
                             </div>
-                          </div>
+                        </div>
                         <div class="text-center">
-                            <input type="hidden" value="<%=wardenId%>" id="wardenId"/>
                             <button type="reset" class="btn btn-secondary">Reset</button>
                             <button type="button" onclick="authentication()" class="btn btn-primary"
                                 id="submitButton" >Submit</button>
@@ -92,48 +93,44 @@
     const firstNameDom = document.getElementById('firstName');
     const lastNameDom = document.getElementById('lastName');
     const dobDom = document.getElementById('dob');
-    var adminStatusDom = document.querySelectorAll('input[name="isAdmin"]');
+    var isAdminDom = document.getElementById('isAdmin');
+    var notAdminDom = document.getElementById('notAdmin');
     const emailIdDom = document.getElementById('emailId');
     const passwordDom = document.getElementById('password');
     const conformDom = document.getElementById('conform');
-    const profileUploadDom = document.getElementById('profileUpload');
-    var wardenId = document.getElementById('wardenId').value;
+    const imageUploadDom = document.getElementById('imageUpload');
+    var wardenId = <%= wardenId || 'null' %>;
     const submitDom = document.getElementById('submitButton');
 
-    function getAdminStatus() {
-        let adminStatusValue = null;
-        adminStatusDom.forEach(radio => {
-            if (radio.checked) {
-                adminStatusValue = radio.value;
-            }
-        });
-        return adminStatusValue;
-    }
-
     function authentication() {
-        const selectedAdminStatus = getAdminStatus();
-
+        const adminStatusValue = getSelectedRadioValue('isAdmin');
         var myHeaders = new Headers();
+        
         var formData = new FormData();
-        formData.append("image", profileUploadDom.files[0]);
+        if (imageUploadDom.files.length > 0) {
+            formData.append("image", imageUploadDom.files[0]);
+        }       
+
         formData.append("firstName", firstNameDom.value);
         formData.append("lastName", lastNameDom.value);
         formData.append("dob", dobDom.value);
         formData.append("emailId", emailIdDom.value);
         formData.append("password", passwordDom.value);
-        formData.append("superAdmin", selectedAdminStatus);
+        formData.append("superAdmin", adminStatusValue);
 
         var requestOptions = {
-            method: 'POST',
+            method: wardenId ? 'PUT' : 'POST',
             headers: myHeaders,
             body: formData,
             redirect: 'follow'
         };
 
-        fetch("http://localhost:1005/api/warden", requestOptions)
+        let url = getAppUrl(`api/warden${wardenId ? `/${wardenId}` : ''}`);
+
+        fetch(url, requestOptions)
             .then(async (response) => {
                 if (response.status === 201 || 200) {
-                    window.location = '/warden'
+                    window.location = getAppUrl('/warden')
                 } else {
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {
@@ -143,52 +140,10 @@
                     }
                 }
             })
-            .catch(error => console.error('error', error));
+            .catch(error => alert('Something went wrong.Please try later.'));
     }
         
-
-
-            //     const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
-            //     const myHeaders = new Headers();
-            //     myHeaders.append("Content-Type", "application/json");
-
-            //     const raw = JSON.stringify({
-            //         "firstName": firstName.value,
-            //         "lastName": lastName.value,
-            //         "dob": dob.value,
-            //         "superAdmin": parseInt(isAdmin.value),
-            //         "emailId": emailId.value,
-            //         "password": password.value
-            //     });
-
-            //     var requestOptions = {
-            //         method: wardenId ? 'PUT' : 'POST',
-            //         headers: myHeaders,
-            //         body: raw
-            //     };
-
-            //     let url = "http://localhost:1005/api/warden";
-            //     if (wardenId) {
-            //         url = url + '/' + wardenId
-            //     }
-
-            //     fetch(url, requestOptions)
-            //         .then(async (response) => {
-            //             if (response.status === 201 || 200) {
-            //                 alert('ok')
-            //                 window.location = '/warden'
-            //             } else {
-            //                 const responseText = await response.json();
-            //                 if (Array.isArray(responseText)) {
-            //                     alert(responseText[0]);
-            //                 } else {
-            //                     alert(responseText);
-            //                 }
-            //             }
-            //         })
-            //         .catch(error => console.error('error', error));
-            // }
-
+        
             if (wardenId) {
                 getWarden(wardenId)
             }
@@ -201,42 +156,42 @@
                 fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
                     .then((response) => response.json())
                     .then((warden) => {
-                        firstName.value = warden.firstName;
-                        lastName.value = warden.lastName;
-                        dob.value = warden.dob.split('T')[0];
-                        emailId.value = warden.emailId;
+                        firstNameDom.value = warden.firstName;
+                        lastNameDom.value = warden.lastName;
+                        dobDom.value = warden.dob.split('T')[0];
+                        emailIdDom.value = warden.emailId;
 
                         if (warden.superAdmin) {
-                            document.getElementById('isAdmin').checked = true;
+                            isAdminDom.checked = true;
                         } else {
-                            document.getElementById('notAdmin').checked = true;
+                            notAdminDom.checked = true;
                         }
 
-                        password.value = warden.password;
-                        conform.value = warden.password;
+                        passwordDom.value = warden.password;
+                        conformDom.value = warden.password;
                     })
-                    .catch((error) => console.error(error));
+                    .catch((error) => alert('Something went wrong.Please try later.'));
             }
 
             function toggleSubmitButton() {
-                const isAdmin = document.querySelector('input[name="isAdmin"]:checked');
+                const adminOrNot = getSelectedRadioValue('isAdmin');
                 submitDom.disabled = !(
-                    firstName.value.length > 0 &&
-                    lastName.value.length > 0 &&
-                    dob.value.length > 0 &&
-                    emailId.value.length > 0 &&
-                    isAdmin !== null &&
-                    password.value.length > 0 &&
-                    conform.value.length > 0 &&
-                    password.value === conform.value
+                    firstNameDom.value.length > 0 &&
+                    lastNameDom.value.length > 0 &&
+                    dobDom.value.length > 0 &&
+                    emailIdDom.value.length > 0 &&
+                    adminOrNot !== null &&
+                    passwordDom.value.length > 0 &&
+                    conformDom.value.length > 0 &&
+                    passwordDom.value === conformDom.value
                 );
             }
 
-            firstName.addEventListener('input', toggleSubmitButton);
-            lastName.addEventListener('input', toggleSubmitButton);
-            dob.addEventListener('input', toggleSubmitButton);
-            emailId.addEventListener('input', toggleSubmitButton);
+            firstNameDom.addEventListener('input', toggleSubmitButton);
+            lastNameDom.addEventListener('input', toggleSubmitButton);
+            dobDom.addEventListener('input', toggleSubmitButton);
+            emailIdDom.addEventListener('input', toggleSubmitButton);
             document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            password.addEventListener('input', toggleSubmitButton);
-            conform.addEventListener('input', toggleSubmitButton);
-        </script>
+            passwordDom.addEventListener('input', toggleSubmitButton);
+            conformDom.addEventListener('input', toggleSubmitButton);
+</script>

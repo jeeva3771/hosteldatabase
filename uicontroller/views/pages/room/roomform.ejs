@@ -107,8 +107,8 @@
         var raw = JSON.stringify({
             "blockId": blockCodeDom.value,
             "blockFloorId": floorNumberDom.value,
-            "roomNumber": parseInt(roomNumberDom.value),
-            "roomCapacity": parseInt(roomCapacityDom.value),
+            "roomNumber": parseInt(roomNumberDom.value.trim()),
+            "roomCapacity": parseInt(roomCapacityDom.value.trim()),
             "isActive": selectedStatusValue,
             "isAirConditioner": selectedAirConditionerValue
         });
@@ -123,13 +123,18 @@
 
         fetch(url, requestOptions)
             .then(async (response) => {
-                if (response.status === 201 || 200) {
-                    window.location = `${appURL}room`;
+                if ([200, 201].includes(response.status)) {
+                    window.location = getAppUrl('room');
                 } else {
-                    alert(await response.text())
+                    const responseText = await response.json();
+                    if (Array.isArray(responseText)) {
+                        alert(responseText[0]);
+                    } else {
+                        alert(responseText);
+                    }
                 }
-                })
-            .catch(error => console.error('error', error));
+        })
+            .catch(error => alert('Internal Server Error'));
     }
 
     function toggleSubmitButton() {
@@ -150,7 +155,7 @@
         await populateFloorNumber();
 
         if (roomId) {
-        await getRoomById(roomId);
+            await getRoomById(roomId);
         }
 
         blockCodeDom.addEventListener('input', populateFloorNumber);
@@ -211,7 +216,7 @@
                 return;
             }
 
-            const response = await fetch(`${getAppUrl('api/blockfloor/room/floorcount')}?blockId=${blockId}&blockFloor=true`);
+            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
             const blockFloors = await response.json();
 
             const activeOptions = [];

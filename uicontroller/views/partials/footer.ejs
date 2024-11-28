@@ -27,10 +27,9 @@
 <script src="<%=appURL%>assets/js/main.js"></script>
 
 <script>
-
 var wardenId = <%= avatarWardenId || 'null' %>;
-const userProfileDom = document.getElementById('userProfile');
-const profileDom = document.getElementById('profile');
+const userImageDom = document.getElementById('userImage');
+const imageDom = document.getElementById('image');
 
 function getSelectedRadioValue(radioName) {
     let selectedValue = null;
@@ -46,7 +45,7 @@ function getSelectedRadioValue(radioName) {
     return selectedValue;
   }
 
-  function wardenProfile() {
+  function wardenImage() {
     const myHeaders = new Headers();
 
     const requestOptions = {
@@ -55,7 +54,7 @@ function getSelectedRadioValue(radioName) {
       redirect: 'follow',
     };
 
-    fetch(`http://localhost:1005/api/warden/${wardenId}/avatar`, requestOptions)
+    fetch(getAppUrl(`api/warden/${wardenId}/avatar`), requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching avatar: ${response.status}`);
@@ -65,13 +64,13 @@ function getSelectedRadioValue(radioName) {
       .then((blob) => {
         const imageUrl = URL.createObjectURL(blob);
 
-        if (userProfileDom && profileDom) {
-          userProfileDom.src = imageUrl;
-          profileDom.src = imageUrl
-        } else if (userProfileDom) {
-          userProfileDom.src = imageUrl
+        if (userImageDom && imageDom) {
+          userImageDom.src = imageUrl;
+          imageDom.src = imageUrl
+        } else if (userImageDom) {
+          userImageDom.src = imageUrl
         } else {
-          console.error('Profile DOM element not found!');
+          console.error('Image DOM element not found!');
         }
       })
       .catch((error) => {
@@ -80,7 +79,7 @@ function getSelectedRadioValue(radioName) {
   }
 
   window.addEventListener('load', () => {
-    wardenProfile()
+    wardenImage()
   })
 
 </script>

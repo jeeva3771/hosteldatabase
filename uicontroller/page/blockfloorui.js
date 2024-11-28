@@ -2,8 +2,10 @@ const { getUserProfile } = require('../../utilityclient/query');
 const { getAppUrl } = require('../../utilityclient/url');
 
 function blockFloorPageUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/blockfloor/blockfloorlist.ejs', {
         appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
@@ -13,8 +15,10 @@ function blockFloorPageUi(req, res) {
 }
 
 function addBlockFloorUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/blockfloor/blockfloorform.ejs', {
         appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         blockFloorId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
@@ -26,9 +30,11 @@ function addBlockFloorUi(req, res) {
 }
 
 function editBlockFloorUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     const blockFloorId = req.params.blockFloorId;
     res.render('pages/blockfloor/blockfloorform.ejs', {
         appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         blockFloorId: blockFloorId,
         user: getUserProfile(req.session),
         breadCrumbs: [

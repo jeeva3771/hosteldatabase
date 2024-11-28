@@ -122,6 +122,13 @@
                 <ul class="pagination justify-content-center" id="pagination"></ul>
             </nav>
         </div>
+        </div>
+    </div>
+</div>
+</div>
+</section>
+
+</main><!-- End #main -->
 
 <%- include('../../partials/footer.ejs') %>
                                      
@@ -223,6 +230,10 @@
             var totalPages = Math.ceil(responseData.roomCount / limitDom.value)
             var paginationHtml = ''
 
+            if (totalPages === 0) {
+                paginationHtml = '<h6>No results found.</h6>'
+            } 
+
             if (totalPages > 1) {
                 paginationHtml += `
                 <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
@@ -244,7 +255,7 @@
             
             paginationDom.innerHTML = paginationHtml;
         })
-        .catch((error) => console.error(error));
+        .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     function readRoomById(roomId) {
@@ -361,11 +372,11 @@
             var modal = new bootstrap.Modal(document.getElementById('roomModal'));
             modal.show();
         })
-        .catch(error => console.log('error', error));
+        .catch(error => alert('Something went wrong.Please try later.'));
     }
 
     function deleteRoomById(roomId) {
-        var validateDelete = confirm('are you sure you want to delete?')
+        var validateDelete = confirm('Are you sure you want to delete?')
 
         if (!validateDelete)
             return
@@ -381,7 +392,7 @@
                 }
                 return alert(await response.text())
             })
-        .catch(error => console.log('error', error));
+        .catch(error => alert('Something went wrong.Please try later.'));
     }
 
     window.addEventListener('load', () => {

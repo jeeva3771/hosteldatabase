@@ -144,7 +144,6 @@ async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
 
         res.status(200).send(getBlocksStudentCountAndAttendanceCount)
     } catch (error) {
-        console.log(error)
         res.status(500).send(error.message)
     }
 }
@@ -284,13 +283,15 @@ async function addOrEditAttendance(req, res) {
 }
 
 async function studentAttendanceReport(req, res) {
-    const mysqlClient = req.app.mysqlClient
+    const mysqlClient = req.app.mysqlClient;
     const {
         month,
         year,
-        studentName
-    } = req.query
+        studentName,
+        registerNumber
+    } = req.query;
     var errors = []
+    let queryParameters = [month, year, studentName];
 
     if (isNaN(month)) {
         errors.push('month')
@@ -317,7 +318,7 @@ async function studentAttendanceReport(req, res) {
     }
 
     try {
-        const studentReport = await mysqlQuery(/*sql*/`
+        let sqlQuery = /*sql*/`
         SELECT 
             DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
             a.isPresent
@@ -328,8 +329,15 @@ async function studentAttendanceReport(req, res) {
         WHERE 
             MONTH(a.checkInDate) = ?
             AND YEAR(a.checkInDate) = ?
-            AND s.name = ?`,
-            [month, year, studentName], mysqlClient)
+            AND s.name = ?`;
+        
+        if (req.query.studentuse === 'true') {
+            console.log('true')
+            sqlQuery += ' AND s.registerNumber = ?'
+            queryParameters.push(registerNumber)
+        }
+        
+        const studentReport = await mysqlQuery(sqlQuery, queryParameters, mysqlClient)
 
         if (studentReport.length === 0) {
             return res.status(404).send('Student attendance report not found for the selected month and year.')
@@ -342,9 +350,9 @@ async function studentAttendanceReport(req, res) {
 
         return res.status(200).send(formattedReport);
     } catch (error) {
+        console.log(error)
         res.status(500).send(error.message)
     }
-
 }
 
 async function validateInsertItems(params, body, mysqlClient) {

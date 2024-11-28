@@ -69,6 +69,7 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
+        req.log.error(error); 
         res.status(500).send(error.message)
     }
 }
@@ -101,6 +102,7 @@ async function readBlockById(req, res) {
         }
         res.status(200).send(block[0])
     } catch (error) {
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
@@ -133,6 +135,7 @@ async function readBlockFloorBlockCodeCount(req, res) {
 
         res.status(200).send(blockFloorBlockCodeCount);
     } catch (error) {
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
@@ -156,7 +159,7 @@ async function readBlockAttendancePercentage(req, res) {
 
         res.status(200).send(calculationPercentage)
     } catch (error) {
-        console.log(error)
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
@@ -170,23 +173,23 @@ async function createBlock(req, res) {
         isActive
     } = req.body
     const createdBy = req.session.warden.wardenId;
-
-    const isValidInsert = validateInsert(req.body, false, null, mysqlClient);
-    if (isValidInsert.length > 0) {
-        return res.status(400).send(isValidInsert)
-    }
-
+    
     try {
+        const isValidInsert = await validateInsertItems(req.body, false, null, mysqlClient);
+        if (isValidInsert.length > 0) {
+            return res.status(400).send(isValidInsert)
+        }
+
         const newBlock = await mysqlQuery(/*sql*/`INSERT INTO BLOCK(blockCode, blockLocation, isActive, createdBy) VALUES(?,?,?,?)`,
             [blockCode, blockLocation, isActive, createdBy], mysqlClient)
 
         if (newBlock.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+            res.status(400).send("No insert was made")
         } else {
-            res.status(201).send('insert successfully')
+            res.status(201).send('Insert successfully')
         }
     } catch (error) {
-        console.log(error)
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
@@ -220,7 +223,7 @@ async function updateBlockById(req, res) {
             return res.status(409).send("students in block shift to another block");
         }
 
-        const isValidInsert = validateInsert(req.body, true, blockId, mysqlClient);
+        const isValidInsert = await validateInsertItems(req.body, true, blockId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
@@ -229,7 +232,7 @@ async function updateBlockById(req, res) {
             values, mysqlClient
         )
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Block not found or no changes made")
+            res.status(204).send("No changes made")
         }
 
         const getUpdatedBlock = await mysqlQuery(/*sql*/`SELECT * FROM block WHERE blockId = ? `,
@@ -240,6 +243,7 @@ async function updateBlockById(req, res) {
         })
     }
     catch (error) {
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
@@ -285,28 +289,29 @@ async function deleteBlockById(req, res) {
         });
     }
     catch (error) {
-        console.log(error)
+        req.log.error(error);
         res.status(500).send(error.message)
     }
 }
 
-async function readBlockCount(req, res) {
-    const mysqlClient = req.app.mysqlClient;
+// async function readBlockCount(req, res) {
+//     const mysqlClient = req.app.mysqlClient;
 
-    try {
-        const getBlockCount = await mysqlQuery(/*sql*/`
-        SELECT COUNT(*) AS totalBlockCount 
-        FROM block 
-        WHERE deletedAt IS NULL`, [], mysqlClient)
+//     try {
+//         const getBlockCount = await mysqlQuery(/*sql*/`
+//         SELECT COUNT(*) AS totalBlockCount 
+//         FROM block 
+//         WHERE deletedAt IS NULL`, [], mysqlClient)
 
-        if (getBlockCount) {
-            return res.status(404).send('No Block count content found')
-        }
+//         if (getBlockCount) {
+//             return res.status(404).send('No Block count content found')
+//         }
 
-    } catch (error) {
-        res.status(500).send(error.message)
-    }
-}
+//     } catch (error) {
+//         req.log.error(error);
+//         res.status(500).send(error.message)
+//     }
+// }
 
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
@@ -328,41 +333,52 @@ async function validateBlockById(blockId, mysqlClient) {
     return false
 }
 
-async function validateInsert(body, isUpdate = false, blockId = null, mysqlClient) {
+async function validateInsertItems(body, isUpdate = false, blockId = null, mysqlClient) {
     const { blockCode, blockLocation, isActive } = body;
     const errors = [];
 
     try {
         if (blockCode !== undefined) {
             if (blockCode.length < 1) {
-                errors.push("BlockCode is invalid");
+                errors.push("Block Code is invalid");
             } else {
                 let query;
                 let params;
 
                 if (isUpdate === true) {
-                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND blockId != ? AND deletedAt IS NULL`;
+                    query = /*sql*/`
+                        SELECT 
+                            COUNT(*) AS count
+                        FROM block 
+                        WHERE blockCode = ?
+                            AND blockId != ?
+                            AND deletedAt IS NULL`;
                     params = [blockCode, blockId];
                 } else {
-                    query = /*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockCode = ? AND deletedAt IS NULL`;
+                    query = /*sql*/`
+                        SELECT 
+                            COUNT(*) AS count 
+                        FROM block
+                        WHERE blockCode = ? 
+                            AND deletedAt IS NULL`;
                     params = [blockCode];
                 }
 
-                const isValidBlockCode = await mysqlQuery(query, params, mysqlClient);
-                if (isValidBlockCode[0].count > 0) {
-                    errors.push("BlockCode already exists");
+                const validBlockCode = await mysqlQuery(query, params, mysqlClient);
+                if (validBlockCode[0].count > 0) {
+                    errors.push("Block Code already exists");
                 }
             }
         } else {
-            errors.push("BlockCode is missing");
+            errors.push("Block Code is missing");
         }
 
         if (blockLocation !== undefined) {
             if (blockLocation.length < 1) {
-                errors.push("location is invalid")
+                errors.push("Location is invalid")
             }
         } else {
-            errors.push("location is missing")
+            errors.push("Location is missing")
         }
 
         if (isActive !== undefined) {
@@ -406,7 +422,7 @@ module.exports = (app) => {
     app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
     app.get('/api/block/blockfloor/blockcodecount', readBlockFloorBlockCodeCount)
-    app.get('/api/block/count', readBlockCount)
+    // app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)

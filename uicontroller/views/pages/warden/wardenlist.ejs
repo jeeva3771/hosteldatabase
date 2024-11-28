@@ -8,14 +8,13 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-
                     <div class="datatable-top mt-4">
                         <div class="datatable-search d-flex justify-content-between align-items-center">
                             <!-- Search and entries per page -->
                             <div class="d-flex gap-2">
                                 <div class="datatable-search">
                                     <input class="datatable-input" id="searchInput"
-                                        onkeyup="handleSearch()" placeholder="Search..." type="search"
+                                        oninput="handleSearch()" placeholder="Search..." type="search"
                                         name="search" title="Search within table">
                                 </div>
                                 <div class="datatable-dropdown">
@@ -39,6 +38,7 @@
                         <thead>
                             <tr>
                                 <th scope="col">Sno</th>
+                                <th scope="col">Profile</th>
                                 <th scope="col">First Name
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                         fill="currentColor" class="bi bi-arrow-down-short sortIcon"
@@ -63,22 +63,6 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                         fill="currentColor" class="bi bi-arrow-up-short sortIcon"
                                         viewBox="0 0 16 16" onclick="sortByColumn('lastName', 'ASC')">
-                                        <path fill-rule="evenodd"
-                                            d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
-                                    </svg>
-                                </th>
-                                <th scope="col">Email Id
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        fill="currentColor" class="bi bi-arrow-down-short sortIcon"
-                                        viewBox="0 0 16 16"
-                                        onclick="sortByColumn('emailId', 'DESC')">
-                                        <path fill-rule="evenodd"
-                                            d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
-                                    </svg>
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                        fill="currentColor" class="bi bi-arrow-up-short sortIcon"
-                                        viewBox="0 0 16 16"
-                                        onclick="sortByColumn('emailId', 'ASC')">
                                         <path fill-rule="evenodd"
                                             d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                                     </svg>
@@ -125,25 +109,31 @@
             </div>
         </div>
     </div>
-    </div>
+</div>
+</div>
 </section>
 </main><!-- End #main -->
 <%- include('../../partials/footer.ejs') %>
 
 <script>
-    var tableData = document.getElementById("wardensData");
-    var limit = document.getElementById("limit").value;
+    var tableDataDom = document.getElementById("wardensData");
+    var limitDom = document.getElementById("limit");
     var paginationDom = document.getElementById("pagination");
+    var orderIconDom = document.querySelectorAll('.sortIcon');
+    var searchDom = document.getElementById("searchInput");
     var columnSortOrders = {
         firstName: 'ASC',
         lastName: 'ASC',
-        emailId: 'ASC',
         superAdmin: 'ASC',
         createdBy: 'ASC'
     };
 
     var currentColumn = 'createdAt';
     var url = `&orderby=w.${currentColumn}&sort=DESC`;
+
+    orderIconDom.forEach((icon) => {
+        icon.classList.add('light');
+    })
 
     function changeLimit() {
         wardenPage()
@@ -157,191 +147,256 @@
         columnSortOrders[column] = sortOrder;
         currentColumn = column;
         url = `&orderby=w.${currentColumn}&sort=${sortOrder}`;
+        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+
+        activeIcons.forEach(icon => {
+            icon.classList.remove('light');
+            icon.classList.add('dark');
+        });
         wardenPage();
     }
 
     function wardenPage(pageNo = 1) {
+        var fetchUrl = `${getAppUrl('api/warden')}?limit=${limitDom.value}&page=${pageNo}${url}`;
+
+        if (searchDom.value.length > 0) {
+            var searchText = searchDom.value.trim();
+            fetchUrl += `&search=${searchText}`;
+        }
+
         var requestOptions = {
             method: 'GET'
         };
 
-        fetch(`http://localhost:1005/api/warden?limit=${limit}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
-        .then(response => response.json())
-        .then(responseData => {
-        const { wardens, wardenCount } = responseData;
+        fetch(fetchUrl, requestOptions)
+        .then(async (response) => {
+            var responseData = await response.json();
+            const { wardens, wardenCount } = responseData;
 
             var trHtml = ''
-                            for (var i = 0; i < wardens.length; i++) {
-                            var warden = wardens[i]
+            for (var i = 0; i < wardens.length; i++) {
+                var warden = wardens[i]
 
-                            trHtml = trHtml + `<tr>
-                            <td>${(pageNo - 1) * limit + i + 1}</td>
-                            <td>${warden.firstName}</td>
-                            <td>${warden.lastName}</td>
-                            <td>${warden.emailId}</td>
-                            <td>${warden.superAdmin === 1 ? 'Admin' : ''}</td>
-                            <td>${warden.createdFirstName} ${warden.createdLastName}</td>
-                            <td> 
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readWardenById(${warden.wardenId})">
-                                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16" onClick="editWardenById(${warden.wardenId})">
-                                    <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                    <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                </svg>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus" onClick="deleteWardenById(${warden.wardenId})" viewBox="0 0 16 16">
-                                  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
-                                    <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
-                                </svg>
-                            </td>
-                        </tr>`
-                        }
-                        tableData.innerHTML = trHtml
-                        var totalPages = Math.ceil(wardenCount / limit)
-                        var paginationHtml = ''
-
-                        for (var i = 1; i <= totalPages; i++) {
-                            paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="wardenPage(${i})">${i}</a>
-                       </li>`;
-                        }
-                        paginationDom.innerHTML = paginationHtml;
-                    })
-                    .catch((error) => console.error(error));
+                trHtml = trHtml + `
+                <tr>
+                    <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
+                    <td class="text-center">
+                        <img src="" alt="Profile" class="rounded-circle imageSizing"
+                            id="wardenImage-${warden.wardenId}" name="image">
+                    </td>
+                    <td>${warden.firstName}</td>
+                    <td>${warden.lastName}</td>
+                    <td>${warden.superAdmin === 1 ? 'Admin' : ''}</td>
+                    <td>${warden.createdFirstName} ${warden.createdLastName}</td>
+                    <td> 
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readWardenById(${warden.wardenId})">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                        <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
+                        </svg>
+                        <a href="${getAppUrl(`warden/${warden.wardenId}`)}" class="dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16">
+                        <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
+                        <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
+                        </svg></a>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-trash focus" onClick="deleteWardenById(${warden.wardenId})" viewBox="0 0 16 16">
+                        <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+                        <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+                        </svg>
+                    </td>
+                </tr>`
             }
+            tableDataDom.innerHTML = trHtml;
+            wardens.forEach((warden) => {
+                const wardenImageDom = document.getElementById(`wardenImage-${warden.wardenId}`);
+                populateWardenImage(warden.wardenId, wardenImageDom);
+            });
+            var totalPages = Math.ceil(wardenCount / limitDom.value);
+            var paginationHtml = '';
 
-            function editWardenById(wardenId) {
-                window.location.href = `/warden/${wardenId}`;
+            if (totalPages === 0) {
+                paginationHtml = '<h6>No results found.</h6>';
+            } 
+
+            if (totalPages > 1) {
+                paginationHtml += `
+                <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                <a class="page-link" onclick="wardenPage(${pageNo - 1})">Previous</a>
+                </li>`;
+
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `
+                    <li class="page-item${i === pageNo ? ' active' : ''}">
+                    <a class="page-link" onclick="wardenPage(${i})">${i}</a>
+                    </li>`;
+                }
+
+                paginationHtml += `
+                <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                <a class="page-link" onclick="wardenPage(${pageNo + 1})">Next</a>
+                </li>`;
             }
+            paginationDom.innerHTML = paginationHtml;
+        })
+        .catch((error) => alert('Something went wrong.Please try later.'));
+    }
 
-            function readWardenById(wardenId) {
-                var myHeaders = new Headers();
-                var requestOptions = {
-                    method: 'GET',
-                    headers: myHeaders
-                };
+    function populateWardenImage(wardenId, wardenImageDom) {
+        const myHeaders = new Headers();
 
-                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
-                    .then(response => response.json())
-                    .then(warden => {
-                        const existingModal = document.getElementById('wardenModal');
-                        if (existingModal) {
-                            existingModal.remove();
-                        }
-                        const modalHtml = `
-                        <div class="modal fade" id="wardenModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        const requestOptions = {
+        method: 'GET',
+        headers: myHeaders,
+        redirect: 'follow',
+        };
+
+        fetch(getAppUrl(`api/warden/${wardenId}/avatar`), requestOptions)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error(`Error fetching avatar: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then((blob) => {
+                const imageUrl = URL.createObjectURL(blob);
+
+                if (wardenImageDom) {
+                    wardenImageDom.src = imageUrl
+                } else {
+                console.error('Image DOM element not found!');
+                }
+            })
+            .catch((error) => alert('Something went wrong.Please try later.'));
+    }
+
+    function readWardenById(wardenId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };
+
+        fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
+            .then(async (response) => {
+                const warden = await response.json()
+                const existingModal = document.getElementById('wardenModal');
+
+                if (existingModal) {
+                    existingModal.remove();
+                }
+
+                const modalHtml = `
+                <div class="modal fade" id="wardenModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>First Name</strong>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>First Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.firstName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Last Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.lastName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>DOB</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.birth}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Email Id</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.emailId}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Super Admin</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.superAdmin === 1 ? 'Admin' : '---'}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.createdTimeStamp}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.createdFirstName} ${warden.createdLastName}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.updatedTimeStamp}
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${warden.updatedFirstName !== null ? warden.updatedFirstName : '---'} ${warden.updatedLastName !== null ? warden.updatedLastName : ''}
-                                            </div>
-                                        </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.firstName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Last Name</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.lastName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>DOB</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.birth}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Email Id</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.emailId}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Super Admin</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.superAdmin === 1 ? 'Admin' : '---'}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Created At</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.createdTimeStamp}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Created By</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.createdFirstName} ${warden.createdLastName}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Updated At</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.updatedTimeStamp}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-sm-4">
+                                        <strong>Updated By</strong>
+                                    </div>
+                                    <div class="col-sm-8">
+                                        <strong> : </strong>${warden.updatedFirstName !== null ? warden.updatedFirstName : '---'} ${warden.updatedLastName !== null ? warden.updatedLastName : ''}
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml);
-                        var modal = new bootstrap.Modal(document.getElementById('wardenModal'));
-                        modal.show();
-
-                    })
-                    .catch(error => console.log('error', error));
-            }
-
-            function deleteWardenById(wardenId) {
-                var validateDelete = confirm('are you sure you want to delete?')
-
-                if (!validateDelete)
-                    return
-
-                var requestOptions = {
-                    method: 'DELETE',
-                };
-
-                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
-                    .then(response => response.text())
-                    .then(deleted =>
-                        window.location = '/warden'
-                    )
-                    .catch(error => console.log('error', error));
-            }
-
-            window.addEventListener('load', () => {
-                wardenPage()
+                        </div>
+                    </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                var modal = new bootstrap.Modal(document.getElementById('wardenModal'));
+                modal.show();
             })
+            .catch(error => alert('Something went wrong.Please try later.'));
+    }
 
-        </script>
+    function deleteWardenById(wardenId) {
+        var validateDelete = confirm('Are you sure you want to delete?')
+
+        if (!validateDelete)
+            return
+
+        var requestOptions = {
+            method: 'DELETE'
+        };
+
+        fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
+            .then(async (response) => {
+                if (response.status === 200) {
+                    return window.location = getAppUrl('warden')
+                }
+                return alert(await response.text())
+            })
+            .catch(error => alert('Something went wrong.Please try later.'));
+    }
+
+    window.addEventListener('load', () => {
+        wardenPage()
+    })
+
+</script>

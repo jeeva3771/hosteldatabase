@@ -1,13 +1,15 @@
 const dotenv = require('dotenv');
 const express = require('express');
 const mysql = require('mysql');
-const logger = require('pino')();
-const pinoReqLogger = require('pino-http')();
+const pino = require('pino');
+const pinoHttp = require('pino-http');
 const path = require('path');
-var cookieParser = require('cookie-parser');
-var session = require('express-session');
-var FileStore = require('session-file-store')(session);
-var fileStoreOptions = {};
+const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const FileStore = require('session-file-store')(session);
+const fileStoreOptions = {};
+const { v4: uuidv4 } = require('uuid');
+
 
 dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
@@ -19,6 +21,8 @@ const blockFloor = require('./apicontroller/blockfloor.js');
 const room = require('./apicontroller/room.js');
 const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
+const studentUse = require('./apicontroller/studentuse.js');
+
 
 //uicontroller
 const homeUi = require('./uicontroller/page/homeui.js');
@@ -35,7 +39,6 @@ const { getAppUrl } = require('./utilityclient/url.js');
 const app = express()
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json())
-app.use(pinoReqLogger)
 app.use(cookieParser());
 app.use(session({
     store: new FileStore(fileStoreOptions),
@@ -46,11 +49,15 @@ app.use(session({
         maxAge: (1000 * 60 * 15)
     }
 }));
+const logger = pino({
+     level: 'info'
+});
 
 const pageSessionExclude = [
-    '/login', 
-    '/api/login', 
-    '/warden/resetpassword', 
+    '/login',
+    '/login/',
+    '/api/login/',
+    '/warden/resetpassword',
     '/api/warden/generateotp',
     '/api/warden/resetpassword'
 ]
@@ -66,6 +73,36 @@ app.use((req, res, next) => {
     }
     return next()
 })
+
+app.use((req, res, next) => {
+    req.startTime = Date.now(); // Set request start time
+    next();
+});
+
+app.use(
+    pinoHttp({
+        logger,
+        customLogLevel: (res, err) => (res.statusCode >= 500 ? 'error' : 'info'),
+        customSuccessMessage: (req, res) => `Request to ${req.url} processed`,
+        genReqId: (req) => {
+            req.startTime = Date.now();
+            // Use UUID for unique request IDs
+            return req.id || uuidv4();
+        },
+        customAttributeKeys: {
+            reqId: 'requestId',
+        },
+    })
+);
+
+// Middleware to log the total process time
+app.use((req, res, next) => {
+    res.on('finish', () => {
+        const processTime = Date.now() - req.startTime;
+        req.log.info({ processTime }, `Request processed in ${processTime}ms`);
+    });
+    next();
+});
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, '/uicontroller/views'));
@@ -89,7 +126,8 @@ app.mysqlClient.connect(function (err) {
         blockFloor(app)
         room(app)
         student(app)
-        attendance(app)    
+        attendance(app)
+        studentUse(app)
 
         homeUi(app)
         courseUi(app)
@@ -99,7 +137,6 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
-        
 
         app.listen(process.env.APP_PORT, () => {
             logger.info(`listen ${process.env.APP_PORT} port`)
