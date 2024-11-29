@@ -1,49 +1,128 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance List' }) %>
-    <div class="contentMain">
-        <div class="d-flex justify-content-between align-items-center my-2">
-            <h3 class="col-auto me-2 controlAlign">Attendance</h3>
-            <div class="d-flex align-items-center">
-                <div class="mx-1">
-                    <a class="btn btn-secondary" href="/attendance/report">Report</a>
-                </div>
-                <div class="mx-1">
-                    <select class="form-select" id="limit" onchange="changeLimit()">
-                        <option value="50" href="#">50</option>
-                        <option value="100" href="#" selected>100</option>
-                        <option value="150" href="#">150</option>
-                        <option value="200" href="#">200</option>
-                    </select>
-                </div>
-                <div class="mx-1" onkeyup="handleSearch(event)">
-                    <input class="form-control" id="searchInput" type="search" placeholder="Search" aria-label="Search">
-                </div>
-                <div class="mx-1">
-                    <a class="btn btn-primary" href="/attendance/add">Take Attendance</a>
-                </div>
-            </div>
-        </div>
-        <table class="table table-striped table-hover table-bordered">
-            <thead>
-                <tr>
-                    <th scope="col">Sno</th>
-                    <th scope="col" onclick="sortByColumn('studentId')">Student Name</th>
-                    <th scope="col" onclick="sortByColumn('registerNumber')">Register Number</th>
-                    <th scope="col" onclick="sortByColumn('checkInDate')">Check-in Date</th>
-                    <th scope="col" onclick="sortByColumn('isPresent')">Is Present</th>
-                    <th scope="col" onclick="sortByColumn('wardenId')">Reviewed Warden</th>
-                    <th scope="col">Action</th>
-                </tr>
-            </thead>
-            <tbody id="attendancesData">
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance List' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance List' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
 
-            </tbody>
-        </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination justify-content-center" id="pagination">
-            </ul>
-        </nav>
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="datatable-top mt-4">
+                        <div class="datatable-search d-flex justify-content-between align-items-center">
+                            <!-- Search and entries per page -->
+                            <div class="d-flex gap-2">
+                                <div class="datatable-search">
+                                    <input class="datatable-input" id="searchInput"
+                                        oninput="handleSearch()" placeholder="Search..." type="search"
+                                        name="search" title="Search within table">
+                                </div>
+                            <div class="datatable-dropdown">
+                                <label>
+                                    <select class="datatable-selector cursor" name="per-page" id="limit"
+                                    onchange="changeLimit()">
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="-1">All</option>
+                                    </select> entries per page
+                                </label>
+                                <a href="<%=appURL%>attendance/report/" class="btn btn-secondary">Report</a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <a href="<%=appURL%>attendance/add/" class="btn btn-primary">Take Attendance</a>
+                    </div>
+                </div>        
+
+                <table class="table table-striped table-hover table-bordered">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sno</th>
+                            <th scope="col">Student Name
+                                <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                    viewBox="0 0 16 16" onclick="sortByColumn('name', 'DESC')">
+                                    <path fill-rule="evenodd"
+                                    d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                    viewBox="0 0 16 16" onclick="sortByColumn('name', 'ASC')">
+                                    <path fill-rule="evenodd"
+                                    d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                </svg> -->
+                            </th>
+                            <th scope="col">Register Number
+                                <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                    viewBox="0 0 16 16"
+                                    onclick="sortByColumn('registerNumber', 'DESC')">
+                                    <path fill-rule="evenodd"
+                                    d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                viewBox="0 0 16 16"
+                                onclick="sortByColumn('registerNumber', 'ASC')">
+                                <path fill-rule="evenodd"
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                            </svg> -->
+                        </th>
+                        <th scope="col">Check-in Date
+                            <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                viewBox="0 0 16 16"
+                                onclick="sortByColumn('checkInDate', 'DESC')">
+                                <path fill-rule="evenodd"
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                viewBox="0 0 16 16" onclick="sortByColumn('checkInDate', 'ASC')">
+                                <path fill-rule="evenodd"
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                            </svg> -->
+                        </th>
+                        <th scope="col">Is Present
+                            <!-- <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                viewBox="0 0 16 16" onclick="sortByColumn('isPresent', 'DESC')">
+                                <path fill-rule="evenodd"
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                viewBox="0 0 16 16" onclick="sortByColumn('isPresent', 'ASC')">
+                                <path fill-rule="evenodd"
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                            </svg> -->
+                        </th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="attendancesData">
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div class="spinner-border" role="status"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination justify-content-center cursor" id="pagination"></ul>
+            </nav>
+        </div>
+        </div>
     </div>
-    <%- include('../../partials/footer.ejs') %>
+</div>
+</div>
+</section>
+
+</main><!-- End #main -->
+
+<%- include('../../partials/footer.ejs') %>
         <script>
             var currentPage = 1;
             var searchQuery = '';
@@ -56,12 +135,39 @@
             var yearSelect = document.getElementById("yearSelect");
             var dateLabel = document.getElementById('dateLabel');
             var columnSortOrders = {
-                studentId: 'ASC',
+                name: 'ASC',
                 registerNumber: 'ASC',
                 checkInDate: 'ASC',
-                isPresent: 'ASC',
-                wardenId: 'ASC'
+                isPresent: 'ASC'
             };
+
+            function changeLimit() {
+                attendancePage()
+            }
+
+            function handleSearch() {
+                attendancePage();
+            }
+
+            // function sortByColumn(column, sortOrder) {
+            //     columnSortOrders[column] = sortOrder;
+            //     currentColumn = column;
+
+            //     if (column === 'name') {
+            //         url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
+            //     } else {
+            //         url = `&orderby=b.${currentColumn}&sort=${sortOrder}`;
+            //     }                            
+
+            //     const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+            //     activeIcons.forEach(icon => {
+            //         icon.classList.remove('light');
+            //         icon.classList.add('dark');
+            //     });
+
+            //     attendancePage();
+            // }
+
             const currentTime = new Date();
             const currentYear = currentTime.getFullYear();
             const yearRange = 20;
@@ -88,41 +194,25 @@
                 yearSelect.value = currentYear
             }
 
-            function changeLimit() {
-                limit = document.getElementById("limit").value
-                attendancePage()
-            }
-
-            function handleSearch(event) {
-                event.preventDefault()
-                searchQuery = document.getElementById("searchInput").value
-                attendancePage()
-            }
-
             function sortByColumn(column, sortOrder) {
                 columnSortOrders[column] = sortOrder
                 currentColumn = column
                 url = `&orderby=a.${currentColumn}&sort=${sortOrder}`
-                wardenPage(currentPage)
+                const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
+                activeIcons.forEach(icon => {
+                    icon.classList.remove('light');
+                    icon.classList.add('dark');
+                });
+
+                attendancePage();
             }
 
             function attendancePage(pageNo = 1) {
-                currentPage = pageNo
-
-                tableData.innerHTML = `
-                    <tr id="spinnerRow">
-                        <td colspan="7" class="text-center">
-                            <div class="spinner-border" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                        </td>
-                    </tr>`
-
                 var requestOptions = {
                     method: 'GET'
                 }
 
-                fetch(`http://localhost:1005/api/attendance?limit=${limit}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
+                fetch(`http://localhost:1005/api/attendance?limit=${limit.value}&page=${pageNo}` + url + `&search=${searchQuery}`, requestOptions)
                     .then(response => {
                         if (!response.ok) {
                             throw new Error('Network response was not ok ' + response.statusText)
@@ -141,7 +231,6 @@
                             <td>${attendance.registerNumber}</td>
                             <td>${attendance.checkIn}</td>
                             <td>${attendance.isPresent === 1 ? 'Present' : 'Absent'}</td>
-                            <td>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}</td>
                             <td>
                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onclick="readAttendanceById(${attendance.attendanceId})">
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -157,15 +246,32 @@
                         tableData.innerHTML = trHtml
                         var totalPages = Math.ceil(responseData.attendanceCount / limit)
                         var paginationHtml = ''
-                        for (var i = 1; i <= totalPages; i++) {
-                            paginationHtml += `<li class="page-item">
-                          <a class="page-link" href="#" onclick="attendancePage(${i})">${i}</a>
-                       </li>`;
-                        }
-                        paginationDom.innerHTML = paginationHtml
-                    })
-                    .catch((error) => console.error(error))
-            }
+                        if (totalPages === 0) {
+                    paginationHtml = '<h6>No results found.</h6>'
+                } 
+
+                if (totalPages > 1) {
+                    paginationHtml += `
+                    <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                        <a class="page-link" onclick="attendancePage(${pageNo - 1})">Previous</a>
+                    </li>`;
+
+                    for (let i = 1; i <= totalPages; i++) {
+                        paginationHtml += `
+                        <li class="page-item${i === pageNo ? ' active' : ''}">
+                        <a class="page-link" onclick="attendancePage(${i})">${i}</a>
+                        </li>`;
+                    }
+
+                    paginationHtml += `
+                    <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                        <a class="page-link" onclick="attendancePage(${pageNo + 1})">Next</a>
+                    </li>`;
+                }
+                paginationDom.innerHTML = paginationHtml;
+            })
+                .catch((error) => console.error(error));
+        }
 
 
             function editAttendance(blockId, blockFloorId, roomId, checkIn) {

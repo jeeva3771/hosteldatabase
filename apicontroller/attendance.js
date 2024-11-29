@@ -9,7 +9,6 @@ async function readAttendances(req, res) {
     const sort = req.query.sort || 'ASC';
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
-    // const queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern, searchPattern]
     let queryParameters = null;
 
     var attendancesQuery = /*sql*/`
@@ -20,8 +19,6 @@ async function readAttendances(req, res) {
             r.roomNumber,
             b.floorNumber,
             bk.blockCode,
-            w.firstName AS reviewedWardenFirstName,
-            w.LastName AS reviewedWardenLastName,
         DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
         DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS createdTimeStamp
         FROM attendance AS a
@@ -35,29 +32,47 @@ async function readAttendances(req, res) {
             blockfloor AS b ON b.blockFloorId = a.blockFloorId 
         LEFT JOIN 
             block AS bk ON bk.blockId = a.blockId
-        LEFT JOIN
-            warden AS w ON w.wardenId = a.wardenId
-        LEFT JOIN 
-            warden AS w2 ON w2.wardenId = a.updatedBy
         WHERE
         (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
         OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
         ORDER BY 
          ${orderBy} ${sort}`;
 
-    if (limit && offset !== null) {
-        attendancesQuery += ` LIMIT ? OFFSET ?`;
-        queryParameters.push(limit, offset)
+    const countQuery = /*sql*/ `
+    SELECT COUNT(*) AS totalAttendanceCount 
+    FROM attendance AS a
+    LEFT JOIN
+            student AS s ON s.studentId = a.studentId
+        LEFT JOIN
+            student AS s2 ON s2.studentId = a.studentId
+        LEFT JOIN 
+            room AS r ON r.roomId = a.roomId  
+        LEFT JOIN 
+            blockfloor AS b ON b.blockFloorId = a.blockFloorId 
+        LEFT JOIN 
+            block AS bk ON bk.blockId = a.blockId
+        WHERE
+        (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
+        OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
+        ORDER BY 
+         ${orderBy} ${sort}`;
+
+    if (limit >= 0) {
+        attendancesQuery += ' LIMIT ? OFFSET ?';
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, 
+            searchPattern, searchPattern, searchPattern, limit, offset];
+    } else {
+        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+            searchPattern, searchPattern, searchPattern];
     }
 
-    const countQuery = /*sql*/ `
-        SELECT COUNT(*) AS totalAttendanceCount 
-        FROM attendance`;
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+        searchPattern, searchPattern, searchPattern];
 
     try {
         const [attendances, totalCount] = await Promise.all([
             mysqlQuery(attendancesQuery, queryParameters, mysqlClient),
-            mysqlQuery(countQuery, [], mysqlClient)
+            mysqlQuery(countQuery, countQueryParameters, mysqlClient)
         ]);
 
         res.status(200).send({
@@ -66,6 +81,8 @@ async function readAttendances(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -287,8 +304,8 @@ async function studentAttendanceReport(req, res) {
     const {
         month,
         year,
-        studentName,
-        registerNumber
+        studentName
+        // registerNumber
     } = req.query;
     var errors = []
     let queryParameters = [month, year, studentName];
@@ -331,11 +348,11 @@ async function studentAttendanceReport(req, res) {
             AND YEAR(a.checkInDate) = ?
             AND s.name = ?`;
         
-        if (req.query.studentuse === 'true') {
-            console.log('true')
-            sqlQuery += ' AND s.registerNumber = ?'
-            queryParameters.push(registerNumber)
-        }
+        // if (req.query.studentuse === 'true') {
+        //     console.log('true')
+        //     sqlQuery += ' AND s.registerNumber = ?'
+        //     queryParameters.push(registerNumber)
+        // }
         
         const studentReport = await mysqlQuery(sqlQuery, queryParameters, mysqlClient)
 
