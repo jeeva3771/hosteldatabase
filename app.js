@@ -58,8 +58,9 @@ const pageSessionExclude = [
     '/login/',
     '/api/login/',
     '/warden/resetpassword',
-    '/api/warden/generateotp',
-    '/api/warden/resetpassword'
+    '/warden/resetpassword/',
+    '/api/warden/generateotp/',
+    '/api/warden/resetpassword/'
 ]
 app.use((req, res, next) => {
     if (pageSessionExclude.includes(req.originalUrl)) {

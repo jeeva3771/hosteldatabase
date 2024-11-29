@@ -8,7 +8,6 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
-
                     <!-- Horizontal Form -->
                     <form class="mt-4">
                         <div class="row mb-3">
@@ -67,11 +66,11 @@
                               <input type="password" class="form-control" id="conform">
                             </div>
                         </div>
-                        <div class="row mb-3">
+                        <div class="row mb-3" id="fileUploadSection">
                             <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
                             <div class="col-sm-10">
                               <input class="form-control" type="file" id="imageUpload" name="image">
-                              <p class="fs-6 fw-lighter ms-2">Optional.</p>
+                              <p class="fw-medium ms-2">Optional.</p>
                             </div>
                         </div>
                         <div class="text-center">
@@ -86,18 +85,17 @@
     </div>
 </section>
 </main>
-
 <%- include('../../partials/footer.ejs') %>
-
 <script>
     const firstNameDom = document.getElementById('firstName');
     const lastNameDom = document.getElementById('lastName');
     const dobDom = document.getElementById('dob');
-    var isAdminDom = document.getElementById('isAdmin');
-    var notAdminDom = document.getElementById('notAdmin');
+    const isAdminDom = document.getElementById('isAdmin');
+    const notAdminDom = document.getElementById('notAdmin');
     const emailIdDom = document.getElementById('emailId');
     const passwordDom = document.getElementById('password');
     const conformDom = document.getElementById('conform');
+    const fileUploadSectionDom = document.getElementById('fileUploadSection');
     const imageUploadDom = document.getElementById('imageUpload');
     var wardenId = <%= wardenId || 'null' %>;
     const submitDom = document.getElementById('submitButton');
@@ -144,54 +142,56 @@
     }
         
         
-            if (wardenId) {
-                getWarden(wardenId)
-            }
+    if (wardenId) {
+        getWardenById(wardenId);
+        fileUploadSectionDom.style.display = 'none';
+    }
 
-            function getWarden(wardenId) {
-                const requestOptions = {
-                    method: "GET"
-                };
+    function getWardenById(wardenId) {
+        const requestOptions = {
+            method: "GET"
+        };
 
-                fetch("http://localhost:1005/api/warden/" + wardenId, requestOptions)
-                    .then((response) => response.json())
-                    .then((warden) => {
-                        firstNameDom.value = warden.firstName;
-                        lastNameDom.value = warden.lastName;
-                        dobDom.value = warden.dob.split('T')[0];
-                        emailIdDom.value = warden.emailId;
+        fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
+            .then(async (response) => {
+                    const warden = await response.json();
+                    firstNameDom.value = warden.firstName;
+                    lastNameDom.value = warden.lastName;
+                    dobDom.value = warden.dob.split('T')[0];
+                    emailIdDom.value = warden.emailId;
 
-                        if (warden.superAdmin) {
-                            isAdminDom.checked = true;
-                        } else {
-                            notAdminDom.checked = true;
-                        }
+                    if (warden.superAdmin) {
+                        isAdminDom.checked = true;
+                    } else {
+                        notAdminDom.checked = true;
+                    }
 
-                        passwordDom.value = warden.password;
-                        conformDom.value = warden.password;
-                    })
-                    .catch((error) => alert('Something went wrong.Please try later.'));
-            }
+                    passwordDom.value = warden.password;
+                    conformDom.value = warden.password;
+                })
+            .catch((error) => alert('Something went wrong.Please try later.'));
+    }
 
-            function toggleSubmitButton() {
-                const adminOrNot = getSelectedRadioValue('isAdmin');
-                submitDom.disabled = !(
-                    firstNameDom.value.length > 0 &&
-                    lastNameDom.value.length > 0 &&
-                    dobDom.value.length > 0 &&
-                    emailIdDom.value.length > 0 &&
-                    adminOrNot !== null &&
-                    passwordDom.value.length > 0 &&
-                    conformDom.value.length > 0 &&
-                    passwordDom.value === conformDom.value
-                );
-            }
+    function toggleSubmitButton() {
+        const adminOrNot = getSelectedRadioValue('isAdmin');
+            submitDom.disabled = !(
+                firstNameDom.value.length > 0 &&
+                lastNameDom.value.length > 0 &&
+                dobDom.value.length > 0 &&
+                emailIdDom.value.length > 0 &&
+                adminOrNot !== null &&
+                passwordDom.value.length > 0 &&
+                conformDom.value.length > 0 &&
+                passwordDom.value === conformDom.value);
+    }
 
-            firstNameDom.addEventListener('input', toggleSubmitButton);
-            lastNameDom.addEventListener('input', toggleSubmitButton);
-            dobDom.addEventListener('input', toggleSubmitButton);
-            emailIdDom.addEventListener('input', toggleSubmitButton);
-            document.querySelectorAll('input[name="isAdmin"]').forEach(radio => radio.addEventListener('change', toggleSubmitButton));
-            passwordDom.addEventListener('input', toggleSubmitButton);
-            conformDom.addEventListener('input', toggleSubmitButton);
+    firstNameDom.addEventListener('input', toggleSubmitButton);
+    lastNameDom.addEventListener('input', toggleSubmitButton);
+    dobDom.addEventListener('input', toggleSubmitButton);
+    emailIdDom.addEventListener('input', toggleSubmitButton);
+    document.querySelectorAll('input[name="isAdmin"]').forEach(radio => 
+        radio.addEventListener('change', toggleSubmitButton));
+    passwordDom.addEventListener('input', toggleSubmitButton);
+    conformDom.addEventListener('input', toggleSubmitButton);
+
 </script>

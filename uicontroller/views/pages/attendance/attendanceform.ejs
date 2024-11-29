@@ -1,67 +1,78 @@
-<%- include('../../partials/header.ejs', { isMenuVisible : true, title: 'Attendance' }) %>
-    <div class="contentMain">
-        <h2 class="mb-4">Attendance Form</h2>
-        <div class="row justify-content-center">
-            <div class="col-4 text-center">
-                <div class="form-group">
-                    <label for="date" class="mb-2"><strong>Date</strong></label>
-                    <input type="date" class="form-control controlInputType" id="checkIn"
-                        onchange="populateBlockCode()">
-                </div>
-            </div>
-        </div>
-        <div class="container text-center mt-2">
-            <div class="row justify-content-center" id="blockCodeContainer">
-                <p><strong>Block</strong></p>
-                <div class="col-5">
-                    <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row justify-content-center">
+                        <div class="col-4 text-center mt-4">
+                            <div class="form-group">
+                                <label for="date" class="mb-2"><strong>Date</strong></label>
+                                <input type="date" class="form-control controlInputType" id="checkIn"
+                                    onchange="populateBlockCode()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container text-center mt-2">
+                        <div class="row justify-content-center" id="blockCodeContainer">
+                            <p><strong>Block</strong></p>
+                            <div class="col-5">
+                                <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container text-center mt-2">
+                        <div class="row justify-content-center hidden" id="floorNumberContainer">
+                            <p><strong>Floor Number</strong></p>
+                            <div class="col-4 mx-auto">
+                                <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container text-center mt-2">
+                        <div class="row justify-content-center hidden" id="roomNumberContainer">
+                            <p><strong>Room Number</strong></p>
+                            <div class="col-4 mx-auto">
+                                <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-row mb-3 align-items-center justify-content-center mt-4" id="status">
+                        <b class="me-2">Attendance Taken :</b>
+                        <div class="p-2 smallBox mt-0 clr1"></div>
+                        <span class="ms-2">100%</span>
+
+                        <div class="p-2 smallBox mt-0 clr3 ms-3"></div>
+                        <span class="ms-2">Below-99%</span>
+
+                        <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1 clr2"></div>
+                        <span class="ms-2">0%</span>
+
+                        <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1 clr4"></div>
+                        <span class="ms-2">No Field</span>
+                    </div>
+                    <div class="container text-center mt-2">
+                        <div id="studentContainer" class="hidden">
+                            <p><strong>Students</strong></p>
+                            <div id="studentList" class="mb-4">
+                            </div>
+                            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success"
+                                id="submitButton">Submit</button>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-        <div class="container text-center mt-2">
-            <div class="row justify-content-center hidden" id="floorNumberContainer">
-                <p><strong>Floor Number</strong></p>
-                <div class="col-4 mx-auto">
-                    <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="container text-center mt-2">
-            <div class="row justify-content-center hidden" id="roomNumberContainer">
-                <p><strong>Room Number</strong></p>
-                <div class="col-4 mx-auto">
-                    <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="d-flex flex-row mb-3 align-items-center justify-content-center mt-4" id="status">
-            <b class="me-2">Attendance Taken :</b>
-            <div class="p-2 smallBox mt-0 clr1"></div>
-            <span class="ms-2">100%</span>
-
-            <div class="p-2 smallBox mt-0 clr3 ms-3"></div>
-            <span class="ms-2">Below-99%</span>
-
-            <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1 clr2"></div>
-            <span class="ms-2">0%</span>
-
-            <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1 clr4"></div>
-            <span class="ms-2">No Field</span>
-        </div>
-        <div class="container text-center mt-2">
-            <div id="studentContainer" class="hidden">
-                <p><strong>Students</strong></p>
-
-                <div id="studentList" class="mb-4">
-                </div>
-                <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success"
-                    id="submitButton">Submit</button>
             </div>
         </div>
     </div>
+</section>
+</main>
 
     <%- include('../../partials/footer.ejs') %>
         <script>
@@ -121,7 +132,7 @@
             }
 
             function saveOrUpdateAttendance() {
-                const students = document.querySelectorAll('#studentList li');
+                const students = Array.from(document.querySelectorAll('#studentList table tr:not(:first-child)'));
                 let studentAttendanceData = [];
 
                 students.forEach((student) => {
@@ -157,7 +168,9 @@
 
                     fetch(url, requestOptions)
                         .then(async (response) => {
-                            if (response.status === 201 || 200) {
+                            console.log('fkk4444444444')
+
+                            if (response.status === 200) {
                                 window.location = '/attendance';
                             } else {
                                 alert(await response.text())
@@ -166,7 +179,6 @@
                         .catch(error => console.error('error', error));
                 }
             }
-
 
             function toggleSubmitButton() {
                 const students = document.querySelectorAll('#studentList li');
@@ -471,7 +483,7 @@
 
                     blockCodeContainer.style.display = 'none';
                     studentContainer.style.display = 'block';
-
+                    console.log(studentList.appendChild(table))
                 } catch (error) {
                     console.log('Error fetching student list:', error);
                 }
@@ -480,7 +492,7 @@
             checkIn.addEventListener('change', () => {
                 if (checkIn.value > today) {
                     alert('Date cannot be in the future');
-                    // status.style.display = 'none'
+                    status.style.display = 'none'
                 }
 
                 if (floorNumberContainer.style.display === 'block') {
@@ -496,3 +508,4 @@
                 populateBlockCode()
             })
         </script>
+        

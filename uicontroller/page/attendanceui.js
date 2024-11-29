@@ -1,7 +1,11 @@
-const { getUserProfile } = require('../../utilityclient/query')
+const { getUserProfile } = require('../../utilityclient/query');
+const { getAppUrl } = require('../../utilityclient/url');
 
 function attendancePageUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/attendance/attendancelist.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
@@ -11,7 +15,10 @@ function attendancePageUi(req, res) {
 }
 
 function addOrEditAttendanceUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/attendance/attendanceform.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
@@ -21,7 +28,10 @@ function addOrEditAttendanceUi(req, res) {
 }
 
 function getAttendanceStudentReportUi(req, res) {
+    const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/attendance/report.ejs', {
+        appURL: getAppUrl(),
+        avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:'/home'},

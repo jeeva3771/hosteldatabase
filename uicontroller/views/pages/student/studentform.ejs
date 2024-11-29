@@ -11,25 +11,29 @@
                     <!-- Horizontal Form -->
                     <form class="mt-4">
                         <div class="row mb-3">
-                            <label for="studentName" class="col-sm-2 col-form-label">Name</label>
+                            <label for="studentName" class="col-sm-2 col-form-label">
+                                Name<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="studentName">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="registerNum" class="col-sm-2 col-form-label">Register Number</label>
+                            <label for="registerNum" class="col-sm-2 col-form-label">
+                                Register Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="registerNum">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="dob" class="col-sm-2 col-form-label">DOB</label>
+                            <label for="dob" class="col-sm-2 col-form-label">
+                                DOB<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                               <input type="date" class="form-control" id="dob">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="col-sm-2 col-form-label" for="course">Course Name</label>
+                            <label class="col-sm-2 col-form-label" for="course">
+                                Course Name<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <select class="form-select" aria-label="Default select example"
                                     id="course">
@@ -37,37 +41,43 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="email" class="col-sm-2 col-form-label">Email Id</label>
+                            <label for="email" class="col-sm-2 col-form-label">
+                                Email Id<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                               <input type="email" class="form-control" id="email">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="studNum" class="col-sm-2 col-form-label">Phone Number</label>
+                            <label for="studNum" class="col-sm-2 col-form-label">
+                                Phone Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="number" class="form-control" id="studNum">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="fatherName" class="col-sm-2 col-form-label">Father Name</label>
+                            <label for="fatherName" class="col-sm-2 col-form-label">
+                                Father Name<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="fatherName">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="fatherNum" class="col-sm-2 col-form-label">Father Number</label>
+                            <label for="fatherNum" class="col-sm-2 col-form-label">
+                                Father Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="number" class="form-control" id="fatherNum">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="address" class="col-sm-2 col-form-label">Address</label>
+                            <label for="address" class="col-sm-2 col-form-label">
+                                Address<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="text" class="form-control" id="address">
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
+                            <label class="col-sm-2 col-form-label" for="blockCode">
+                                Block Code<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <select class="form-select" aria-label="Default select example"
                                     id="blockCode">
@@ -75,7 +85,8 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="col-sm-2 col-form-label" for="floorNumber">Floor Number</label>
+                            <label class="col-sm-2 col-form-label" for="floorNumber">
+                                Floor Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <select class="form-select" aria-label="Default select example"
                                     id="floorNumber">
@@ -83,7 +94,8 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label class="col-sm-2 col-form-label" for="roomNumber">Room Number</label>
+                            <label class="col-sm-2 col-form-label" for="roomNumber">
+                                Room Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <select class="form-select" aria-label="Default select example"
                                     id="roomNumber">
@@ -91,16 +103,25 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="joinedDate" class="col-sm-2 col-form-label">Joined Date</label>
+                            <label for="joinedDate" class="col-sm-2 col-form-label">
+                                Joined Date<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                               <input type="date" class="form-control" id="joinedDate">
                             </div>
                         </div>
                         <div class="row mb-3" id="uploadFileSection">
-                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload</label>
+                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload
+                            <div class="ms-4 mt-2">
+                                <img src="" alt="Profile" class="rounded-circle imageSizing" id="studentImage" 
+                                    name="studentImage">
+                                <button type="button" class="btn btn-outline-danger btn-sm removeImage" 
+                                    onclick="deleteStudentImage()">Remove</button>
+                            </div>
+                            </label>
                             <div class="col-sm-10">
                               <input class="form-control" type="file" id="updateImage" name="studentImage"
-                              onchange="updateStudentImage()">
+                                onchange="updateStudentImage()">
+                                <p class="fw-medium ms-3">Optional.</p>
                             </div>
                         </div>
                         <div class="text-center">
@@ -116,24 +137,24 @@
 </section>
 </main>     
 <%- include('../../partials/footer.ejs') %>
-
 <script>
-    var studentNameDom = document.getElementById('studentName');
-    var registerNumDom = document.getElementById('registerNum');
-    var dobDom = document.getElementById('dob');
-    var courseDom = document.getElementById('course');
-    var emailIdDom = document.getElementById('email');
-    var studNumDom = document.getElementById('studNum');
-    var fatherNameDom = document.getElementById('fatherName');
-    var fatherNumDom = document.getElementById('fatherNum');
-    var addressDom = document.getElementById('address');
-    var blockCodeDom = document.getElementById('blockCode');
-    var floorNumberDom = document.getElementById('floorNumber');
-    var roomNumberDom = document.getElementById('roomNumber');
-    var joinedDateDom = document.getElementById('joinedDate');
-    var uploadFileSectionDom = document.getElementById('uploadFileSection');
-    var updateImageDom = document.getElementById('updateImage');
-    var submitButtonDom = document.getElementById('submitButton');
+    const studentNameDom = document.getElementById('studentName');
+    const registerNumDom = document.getElementById('registerNum');
+    const dobDom = document.getElementById('dob');
+    const courseDom = document.getElementById('course');
+    const emailIdDom = document.getElementById('email');
+    const studNumDom = document.getElementById('studNum');
+    const fatherNameDom = document.getElementById('fatherName');
+    const fatherNumDom = document.getElementById('fatherNum');
+    const addressDom = document.getElementById('address');
+    const blockCodeDom = document.getElementById('blockCode');
+    const floorNumberDom = document.getElementById('floorNumber');
+    const roomNumberDom = document.getElementById('roomNumber');
+    const joinedDateDom = document.getElementById('joinedDate');
+    const uploadFileSectionDom = document.getElementById('uploadFileSection');
+    const updateImageDom = document.getElementById('updateImage');
+    const studentImageDom = document.getElementById('studentImage');
+    const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
 
     const today = new Date().toISOString().split('T')[0];
@@ -200,15 +221,15 @@
             blockCodeDom.value !== 'Select a Block' &&
             floorNumberDom.value !== 'Select a Floor' &&
             roomNumberDom.value !== 'Select a Room' &&
-            joinedDateDom.value !== '');
+            joinedDateDom.value !== '')
     }
 
     async function initializeForm() {
-        await populateCourse()
+        await populateCourse();
         await populateBlockCode();
         await populateFloorNumber();
         await populateRoomNumber();
-        await studentImage();
+        await getStudentImage();
 
         if (studentId) {
             await getStudentById(studentId);
@@ -289,7 +310,8 @@
                 return;
             }
 
-            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
+            const response = await 
+                fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
             const blockFloors = await response.json();
             const activeOptions = [];
             const disabledOptions = [];
@@ -367,7 +389,7 @@
         }
     }
 
-    async function studentImage() {
+    async function getStudentImage() {
         var myHeaders = new Headers();
 
         var requestOptions = {
@@ -386,8 +408,8 @@
             .then((blob) => {
                 const imageUrl = URL.createObjectURL(blob);
 
-                if (updateImageDom) {
-                    updateImageDom.src = imageUrl
+                if (studentImageDom) {
+                    studentImageDom.src = imageUrl
                 } else {
                     console.error('Image DOM element not found!');
                 }
@@ -432,9 +454,27 @@
             redirect: 'follow'
         };
 
-        fetch(`http://localhost:1005/api/student/${studentId}/editimage?operation=update`, requestOptions)
-            .then(response => response.text())
-            .then(result => console.log(result))
-            .catch(error => console.log('error', error));
+        fetch(getAppUrl(`api/student/${studentId}`) + 'editimage?operation=update', requestOptions)
+            .then(async (response) => {
+                if (response.status != 200) {
+                    alert(await response.text())
+                }
+            })
+            .catch(error => alert('Edit student image something went wrong.Please try later'));
+    }
+
+    function deleteStudentImage() {
+        var myHeaders = new Headers();
+            var timestamp = Date.now();
+
+        var requestOptions = {
+            method: 'DELETE',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(getAppUrl(`api/student/${studentId}/deleteimage`) + `?timestamp=${timestamp}`, requestOptions)
+        // .then(() => ''))
+        .catch(error => console.log('error', error));
     }
 </script>

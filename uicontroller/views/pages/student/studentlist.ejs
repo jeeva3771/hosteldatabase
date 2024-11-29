@@ -19,7 +19,7 @@
                                 </div>
                             <div class="datatable-dropdown">
                                 <label>
-                                    <select class="datatable-selector" name="per-page" id="limit"
+                                    <select class="datatable-selector cursor" name="per-page" id="limit"
                                         onchange="changeLimit()">
                                         <option value="5">5</option>
                                         <option value="10" selected>10</option>
@@ -88,17 +88,21 @@
                     </tr>
                 </thead>
                 <tbody id="studentsData">
+                    <tr>
+                        <td colspan="6" class="text-center">
+                            <div class="spinner-border" role="status"></div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <nav aria-label="Page navigation example">
-                <ul class="pagination justify-content-center" id="pagination"></ul>
+                <ul class="pagination justify-content-center cursor" id="pagination"></ul>
             </nav>
         </div>
     </div>
 </div>
 </div>
 </section>
-
 </main><!-- End #main -->
 
 <%- include('../../partials/footer.ejs') %>

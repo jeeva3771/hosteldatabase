@@ -56,7 +56,9 @@ function errorUi(req, res) {
 }
 
 function resetPasswordUi(req, res) {
-    res.render('pages/resetpassword.ejs')
+    res.render('pages/resetpassword.ejs', {
+        appURL: getAppUrl()
+    })
 }
 
 function wardenImageUi(req, res) {
@@ -68,7 +70,7 @@ function wardenImageUi(req, res) {
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
             {name:'User', link:''},
-            {name:'Profile', link:'/warden/image'}
+            {name:'UserDetails', link:'/warden/image'}
         ]
     })
 }

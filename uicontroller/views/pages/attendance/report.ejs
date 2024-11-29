@@ -1,14 +1,22 @@
-<%- include('../../partials/header.ejs', { isMenuVisible: true, title: 'Attendance Report' }) %>
-    <h2 class="text-center mb-5">Attendance Report</h2>
-    <div class="container d-flex flex-column align-items-center">
-        <div class="row g-3 justify-content-center mb-4">
-            <div class="col-auto">
-                <label class="visually-hidden" for="student">Student</label>
-                <select class="form-select" id="student">
-                    <option selected>Select a Student</option>
-                </select>
-            </div>
-        </div>
+<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance Report' }) %>
+<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance Report' }) %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/aside.ejs') %>
+
+<section class="section">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-body">
+            <div class="container d-flex flex-column align-items-center">
+                <div class="row g-3 justify-content-center mb-4 mt-3">
+                    <div class="col-auto">
+                        <label class="visually-hidden" for="student">Student</label>
+                        <select class="form-select" id="student">
+                            <option selected>Select a Student</option>
+                        </select>
+                    </div>
+                </div>
         <div class="row g-3 justify-content-center mb-5">
             <div class="col-auto">
                 <label class="visually-hidden" for="month">Month</label>
@@ -42,6 +50,13 @@
             <span class="ms-2">Not Marked</span>
         </div>
     </div>
+
+    </div>
+    </div>
+    </div>
+    </div>
+    </section>
+</main>
     <%- include('../../partials/footer.ejs') %>
 
         <script>
