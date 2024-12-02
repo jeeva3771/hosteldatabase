@@ -127,8 +127,8 @@
 
         fetch(url, requestOptions)
             .then(async (response) => {
-                if (response.status === 201 || 200) {
-                    window.location = getAppUrl('/warden')
+                if ([200, 201].includes(response.status)) {
+                    window.location = getAppUrl('warden')
                 } else {
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {

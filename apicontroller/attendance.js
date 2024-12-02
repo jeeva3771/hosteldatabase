@@ -5,8 +5,8 @@ async function readAttendances(req, res) {
     const limit = req.query.limit ? parseInt(req.query.limit) : null;
     const page = req.query.page ? parseInt(req.query.page) : null;
     const offset = limit && page ? (page - 1) * limit : null;
-    const orderBy = req.query.orderby || 'a.attendanceId';
-    const sort = req.query.sort || 'ASC';
+    const orderBy = req.query.orderby;
+    const sort = req.query.sort;
     const searchQuery = req.query.search || '';
     const searchPattern = `%${searchQuery}%`;
     let queryParameters = null;
@@ -19,8 +19,8 @@ async function readAttendances(req, res) {
             r.roomNumber,
             b.floorNumber,
             bk.blockCode,
-        DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
-        DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS createdTimeStamp
+            DATE_FORMAT(a.checkInDate, "%y-%b-%D") AS checkIn,
+            DATE_FORMAT(a.createdAt, "%y-%b-%D %r") AS createdTimeStamp
         FROM attendance AS a
         LEFT JOIN
             student AS s ON s.studentId = a.studentId
@@ -33,15 +33,16 @@ async function readAttendances(req, res) {
         LEFT JOIN 
             block AS bk ON bk.blockId = a.blockId
         WHERE
-        (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
-        OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
+            (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
+            OR r.roomNumber LIKE ? OR a.isPresent LIKE ?)
         ORDER BY 
-         ${orderBy} ${sort}`;
+            ${orderBy} ${sort}`;
 
     const countQuery = /*sql*/ `
-    SELECT COUNT(*) AS totalAttendanceCount 
-    FROM attendance AS a
-    LEFT JOIN
+        SELECT 
+            COUNT(*) AS totalAttendanceCount 
+        FROM attendance AS a
+        LEFT JOIN
             student AS s ON s.studentId = a.studentId
         LEFT JOIN
             student AS s2 ON s2.studentId = a.studentId
@@ -52,21 +53,21 @@ async function readAttendances(req, res) {
         LEFT JOIN 
             block AS bk ON bk.blockId = a.blockId
         WHERE
-        (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
-        OR r.roomNumber LIKE ? OR a.checkInDate LIKE ? OR a.isPresent LIKE ?)
+            (s.name LIKE ? OR S2.registerNumber LIKE ? OR bk.blockCode LIKE ? OR b.floorNumber LIKE ?
+            OR r.roomNumber LIKE ? OR a.isPresent LIKE ?)
         ORDER BY 
-         ${orderBy} ${sort}`;
+            ${orderBy} ${sort}`;
 
     if (limit >= 0) {
         attendancesQuery += ' LIMIT ? OFFSET ?';
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern, 
+        queryParameters = [searchPattern, searchPattern, searchPattern, 
             searchPattern, searchPattern, searchPattern, limit, offset];
     } else {
-        queryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+        queryParameters = [searchPattern, searchPattern, searchPattern,
             searchPattern, searchPattern, searchPattern];
     }
 
-    const countQueryParameters = [searchPattern, searchPattern, searchPattern, searchPattern,
+    const countQueryParameters = [searchPattern, searchPattern, searchPattern,
         searchPattern, searchPattern, searchPattern];
 
     try {
@@ -93,7 +94,7 @@ async function readAttendanceById(req, res) {
 
     try {
         const attendance = await mysqlQuery(/*sql*/`
-             SELECT 
+        SELECT 
             a.*,
             s.name,
             s2.registerNumber,
