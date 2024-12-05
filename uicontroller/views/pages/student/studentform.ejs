@@ -465,7 +465,7 @@
 
     function deleteStudentImage() {
         var myHeaders = new Headers();
-            var timestamp = Date.now();
+        var timestamp = Date.now();
 
         var requestOptions = {
             method: 'DELETE',
@@ -474,7 +474,7 @@
         };
 
         fetch(getAppUrl(`api/student/${studentId}/deleteimage`) + `?timestamp=${timestamp}`, requestOptions)
-        // .then(() => ''))
-        .catch(error => console.log('error', error));
+            // .then(() => ''))
+            .catch(error => alert('Delete Student image something went wrong.Please try later.'));
     }
 </script>

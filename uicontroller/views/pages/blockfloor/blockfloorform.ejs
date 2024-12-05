@@ -12,7 +12,8 @@
                     <!-- Horizontal Form -->
                     <form>
                         <div class="row mb-3">
-                            <label class="col-sm-2 col-form-label" for="blockCode">Block Code</label>
+                            <label class="col-sm-2 col-form-label" for="blockCode">
+                                Block Code<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <select class="form-select" aria-label="Default select example"
                                     id="blockCode">
@@ -20,14 +21,15 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <label for="floorNumber" class="col-sm-2 col-form-label">Floor
-                                Number</label>
+                            <label for="floorNumber" class="col-sm-2 col-form-label">
+                                Floor Number<span class="text-danger">*</span></label>
                             <div class="col-sm-10">
                                 <input type="number" class="form-control" id="floorNumber">
                             </div>
                         </div>
                         <fieldset class="row mb-3">
-                            <legend class="col-form-label col-sm-2 pt-0">Status</legend>
+                            <legend class="col-form-label col-sm-2 pt-0">
+                                Status<span class="text-danger">*</span></legend>
                                 <div class="col-sm-10">
                                     <div class="form-check">
                                         <input class="form-check-input" type="radio" name="status"
@@ -97,7 +99,7 @@
                     }
                 }
         })
-            .catch(error => alert('Internal Server Error'));
+            .catch(error => alert('Something went wrong.Please try later.'));
     }
 
 
@@ -138,7 +140,7 @@
             });
 
         } catch (error) {
-            console.log('Error fetching block codes:', error);
+            alert('Something went wrong.Please try later.')
         }
     }
 
@@ -156,7 +158,7 @@
                 document.getElementById('inActive').checked = true;
             }
         } catch (error) {
-            console.error('Error fetching block floor details:', error);
+            alert('Something went wrong.Please try later.')
         }
     }
 

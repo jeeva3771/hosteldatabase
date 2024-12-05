@@ -1,5 +1,5 @@
 <%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance Report' }) %>
-
+<a class="d-flex ms-auto" href="<%=appURL%>api/student/logout/studlog/">Logout</a>
 <section class="section">
     <div class="row">
         <div class="col-lg-12">
@@ -16,13 +16,11 @@
                     <div class="col-auto">
                         <label class="visually-hidden" for="month">Month</label>
                         <select class="form-select" id="month">
-                            <option selected>Select Month</option>
                         </select>
                     </div>
                     <div class="col-auto">
                         <label class="visually-hidden" for="year">Year</label>
                         <select class="form-select" id="year">
-                            <option selected>Select Year</option>
                         </select>
                     </div>
                 </div>
@@ -45,7 +43,6 @@
                     <span class="ms-2">Not Marked</span>
                 </div>
             </div>
-            <div class="attendanceSummary"></div>
         </div>
     </div>
 </div>
@@ -70,7 +67,7 @@
             await populateDropDownMonthAndYear();
             await renderReport();
         } catch (error) {
-            alert('Something went wrong.Please try later1.')
+            alert('Something went wrong.Please try later.')
         }
     });
 
@@ -127,7 +124,6 @@
                 if (response.status === 404) {
                     renderDefaultCalendar(firstDay, lastDate);
                     toggleAttendanceStatusDisplay(true);
-                    displayAttendanceSummary(year, month, lastDate, 0, 0); // No data
                     return;
                 } else {
                     throw new Error(`Failed to fetch attendance data: ${response.status}`);
@@ -140,12 +136,8 @@
             if (attendanceData.length === 0) {
                 renderDefaultCalendar(firstDay, lastDate);
                 toggleAttendanceStatusDisplay(false); 
-                displayAttendanceSummary(year, month, lastDate, 0, 0); // No data
-
             } else {
                 toggleAttendanceStatusDisplay(true);
-                let presentCount = 0;
-                let absentCount = 0;
                 let date = 1;
 
                 for (let i = 0; i < 6; i++) {
@@ -163,13 +155,7 @@
                             const attendanceRecord = attendanceData.find(record => record.date === formattedDate);
 
                             if (attendanceRecord) {
-                                if (attendanceRecord.status === 1) {
-                                    presentCount++;
-                                    cell.style.backgroundColor = 'green';
-                                } else {
-                                    absentCount++;
-                                    cell.style.backgroundColor = 'red';
-                                }
+                                cell.style.backgroundColor = attendanceRecord.status === 1 ? 'green' : 'red';
                                 cell.classList.add('text-white');
                             }
                             date++;
@@ -178,12 +164,10 @@
                     }
                     dateLabelDom.appendChild(row);
                     if (date > lastDate) break;
-                    displayAttendanceSummary(year, month, lastDate, presentCount, absentCount);
                 }
             }
         } catch (error) {
-            console.log(error)
-            alert('Something went wrong.Please try later2.')
+            alert('Something went wrong.Please try later.')
         }
     }
 
@@ -212,12 +196,6 @@
             dateLabelDom.appendChild(row);
             if (date > lastDate) break;
         }
-    }
-
-    function displayAttendanceSummary(year, month, totalDays, presentCount, absentCount) {
-        const summaryContainer = document.getElementById('attendanceSummary');
-        const monthName = new Date(0, month).toLocaleString('default', { month: 'long' });
-        summaryContainer.textContent = `${year} - ${monthName} ${totalDays} days | present: ${presentCount} | absent: ${absentCount}`;
     }
 
     function toggleAttendanceStatusDisplay(show) {

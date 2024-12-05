@@ -63,7 +63,7 @@ function resetPasswordUi(req, res) {
 
 function wardenImageUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
-    res.render('pages/warden/wardenprofile.ejs',{
+    res.render('pages/warden/wardendetails.ejs',{
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),

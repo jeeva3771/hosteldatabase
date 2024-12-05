@@ -440,7 +440,7 @@ async function generateOtp(req, res) {
     const currentTime = new Date().getTime();
     const {
         emailId = null
-    } = req.body
+    } = req.body;
 
     try {
         const wardenResult = await mysqlQuery(/*sql*/`SELECT otpTiming FROM warden 

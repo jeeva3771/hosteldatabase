@@ -30,6 +30,7 @@
 var wardenId = <%= avatarWardenId || 'null' %>;
 const userImageDom = document.getElementById('userImage');
 const imageDom = document.getElementById('image');
+const editProfileDom = document.getElementById('editProfile');
 
 function getSelectedRadioValue(radioName) {
     let selectedValue = null;
@@ -47,6 +48,8 @@ function getSelectedRadioValue(radioName) {
 
   function wardenImage() {
     const myHeaders = new Headers();
+    myHeaders.append('Cache-Control', 'no-cache');
+    myHeaders.append('Pragma', 'no-cache');
 
     const requestOptions = {
       method: 'GET',
@@ -54,7 +57,7 @@ function getSelectedRadioValue(radioName) {
       redirect: 'follow',
     };
 
-    fetch(getAppUrl(`api/warden/${wardenId}/avatar`), requestOptions)
+    fetch(getAppUrl(`api/warden/${wardenId}/avatar`) + `?${Date.now()}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching avatar: ${response.status}`);
@@ -66,9 +69,10 @@ function getSelectedRadioValue(radioName) {
 
         if (userImageDom && imageDom) {
           userImageDom.src = imageUrl;
-          imageDom.src = imageUrl
+          imageDom.src = imageUrl;
+          editProfileDom.src = imageUrl;
         } else if (userImageDom) {
-          userImageDom.src = imageUrl
+          userImageDom.src = imageUrl;
         } else {
           console.error('Image DOM element not found!');
         }
@@ -83,5 +87,4 @@ function getSelectedRadioValue(radioName) {
   })
 
 </script>
-
 </html>

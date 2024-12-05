@@ -22,6 +22,7 @@ const room = require('./apicontroller/room.js');
 const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
 const studentUse = require('./apicontroller/studentuse.js');
+const home = require('./apicontroller/home.js');
 
 
 //uicontroller
@@ -33,6 +34,7 @@ const roomUi = require('./uicontroller/page/roomui.js');
 const wardenUi = require('./uicontroller/page/wardenui.js');
 const studentUi = require('./uicontroller/page/studentui.js');
 const attendanceUi = require('./uicontroller/page/attendanceui.js');
+const studentUseUi = require('./uicontroller/page/studentuseui.js')
 
 const { getAppUrl } = require('./utilityclient/url.js');
 
@@ -60,7 +62,11 @@ const pageSessionExclude = [
     '/warden/resetpassword',
     '/warden/resetpassword/',
     '/api/warden/generateotp/',
-    '/api/warden/resetpassword/'
+    '/api/warden/resetpassword/',
+    '/student/emailverify/generateotp',
+    '/student/emailverify/generateotp/',
+    '/api/student/generateotp/',
+    '/api/student/verifyotp/authentication/'
 ]
 app.use((req, res, next) => {
     if (pageSessionExclude.includes(req.originalUrl)) {
@@ -72,8 +78,24 @@ app.use((req, res, next) => {
             return res.status(401).redirect(getAppUrl('login'))
         }
     }
+
+    // if (req.originalUrl !== '/login' || req.originalUrl !== '/student/emailverify/generateotp') {
+    //     if (req.session.isLoggedStudent !== true) {
+    //         return res.status(401).redirect(getAppUrl('student/emailverify/generateotp'))
+    //     } else if (req.session.isLogged !== true) {
+    //         return res.status(401).redirect(getAppUrl('login'))
+    //     }
+    // }
     return next()
 })
+
+app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+});
 
 app.use((req, res, next) => {
     req.startTime = Date.now(); // Set request start time
@@ -129,6 +151,7 @@ app.mysqlClient.connect(function (err) {
         student(app)
         attendance(app)
         studentUse(app)
+        home(app)
 
         homeUi(app)
         courseUi(app)
@@ -138,6 +161,7 @@ app.mysqlClient.connect(function (err) {
         wardenUi(app)
         studentUi(app)
         attendanceUi(app)
+        studentUseUi(app)
 
         app.listen(process.env.APP_PORT, () => {
             logger.info(`listen ${process.env.APP_PORT} port`)

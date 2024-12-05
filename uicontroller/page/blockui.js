@@ -9,6 +9,7 @@ function blockPageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Block', link:'#tables-nav'},
             {name:'Block', link:'/block'}
         ]
     });
