@@ -287,56 +287,60 @@ async function validateInsertItems(body, isUpdate = false, blockFloorId = null, 
 
     const errors = []
 
-    if (blockId !== undefined) {
-        if (isNaN(blockId) || blockId <= 0)
-            errors.push('BlockId is invalid')
-    } else {
-        errors.push('BlockId is missing')
-    }
-
-    if (floorNumber !== undefined) {
-        if (isNaN(floorNumber) || floorNumber <= 0) {
-            errors.push('Floor Number is invalid')
+    try {
+        if (blockId !== undefined) {
+            if (isNaN(blockId) || blockId <= 0)
+                errors.push('BlockId is invalid')
         } else {
-            let query;
-            let params;
+            errors.push('BlockId is missing')
+        }
 
-            if (isUpdate === true) {
-                query = /*sql*/`SELECT 
-                                    COUNT(*) AS count 
-                                FROM blockFloor 
-                                WHERE blockId = ? 
-                                    AND floorNumber = ?
-                                    AND blockFloorId != ? 
-                                    AND deletedAt IS NULL`;
-                params = [blockId, floorNumber, blockFloorId];
+        if (floorNumber !== undefined) {
+            if (isNaN(floorNumber) || floorNumber <= 0) {
+                errors.push('Floor Number is invalid')
             } else {
-                query = /*sql*/`SELECT 
-                                    COUNT(*) AS count
-                                FROM blockFloor 
-                                WHERE blockId = ? 
-                                    AND floorNumber = ?
-                                    AND deletedAt IS NULL`;
-                params = [blockId, floorNumber];
-            }
+                let query;
+                let params;
 
-            const validFloorNumber = await mysqlQuery(query, params, mysqlClient);
-            if (validFloorNumber[0].count > 0) {
-                errors.push("Floor Number already exists");
-            }
-        }
-    } else {
-        errors.push('Floor Number is missing')
-    }
+                if (isUpdate === true) {
+                    query = /*sql*/`SELECT 
+                                        COUNT(*) AS count 
+                                    FROM blockFloor 
+                                    WHERE blockId = ? 
+                                        AND floorNumber = ?
+                                        AND blockFloorId != ? 
+                                        AND deletedAt IS NULL`;
+                    params = [blockId, floorNumber, blockFloorId];
+                } else {
+                    query = /*sql*/`SELECT 
+                                        COUNT(*) AS count
+                                    FROM blockFloor 
+                                    WHERE blockId = ? 
+                                        AND floorNumber = ?
+                                        AND deletedAt IS NULL`;
+                    params = [blockId, floorNumber];
+                }
 
-    if (isActive !== undefined) {
-        if (![0, 1].includes(isActive)) {
-            errors.push('isActive is invalid')
+                const validFloorNumber = await mysqlQuery(query, params, mysqlClient);
+                if (validFloorNumber[0].count > 0) {
+                    errors.push("Floor Number already exists");
+                }
+            }
+        } else {
+            errors.push('Floor Number is missing')
         }
-    } else {
-        errors.push('isActive is missing')
+
+        if (isActive !== undefined) {
+            if (![0, 1].includes(isActive)) {
+                errors.push('isActive is invalid')
+            }
+        } else {
+            errors.push('isActive is missing')
+        }
+        return errors
+    } catch(error) {
+        req.log.error(error)
     }
-    return errors
 }
 
 function getBlockFloorById(blockFloorId, mysqlClient) {

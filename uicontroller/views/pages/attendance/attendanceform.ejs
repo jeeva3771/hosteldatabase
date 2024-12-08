@@ -8,6 +8,9 @@
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
+                <div class="mt-3" id="back">
+                    <button onclick="backToView()" class="btn btn-outline-secondary btn-sm">Back</button>
+                </div>
                     <div class="row justify-content-center">
                         <div class="col-4 text-center mt-4">
                             <div class="form-group">
@@ -87,6 +90,7 @@
     const studentContainerDom = document.getElementById('studentContainer');
     const studentListDom = document.getElementById('studentList');
     const statusDom = document.getElementById('status');
+    const backDom = document.getElementById('back');
     const submitButtonDom = document.getElementById('submitButton');
     const today = new Date().toISOString().split('T')[0];
     checkInDom.value = today;
@@ -186,6 +190,7 @@
 
     async function populateBlockCode() {
         blockCodeDom.innerHTML = '';
+        backDom.style.display = 'none';
         var activeOptions = [];
         var disabledOptions = [];
 
@@ -268,6 +273,7 @@
 
     async function populateFloorNumber(blockId) {
         floorNumberDom.innerHTML = '';
+        backDom.style.display = 'block';
         var activeOptions = [];
         var disabledOptions = [];
         try {
@@ -349,6 +355,7 @@
 
     async function populateRoomNumber(blockFloorId) {
         roomNumberDom.innerHTML = '';
+        backDom.style.display = 'block';
         var activeOptions = [];
         var disabledOptions = [];
 
@@ -431,7 +438,9 @@
 
     async function populateStudentList(roomId) {
         studentListDom.innerHTML = '';
+        backDom.style.display = 'block';
         statusDom.style.visibility = 'hidden';
+
 
         try {
             const response = await fetch(getAppUrl(`api/attendance/student/${roomId}`) + 
@@ -491,6 +500,26 @@
             return populateStudentList(currentRoomId)
         }
     });
+
+    function backToView() {
+        if (floorNumberContainerDom.style.display === 'block') {
+            floorNumberContainerDom.style.display = 'none'
+            blockCodeContainerDom.style.display = 'flex';
+            blockCodeContainerDom.classList.add('justify-content-center'); 
+            statusDom.style.display = 'block';
+            backDom.style.display = 'none';
+        } else if (roomNumberContainerDom.style.display === 'block') {
+            roomNumberContainerDom.style.display = 'none'
+            floorNumberContainerDom.style.display = 'block'
+            statusDom.style.display = 'block';
+            backDom.style.display = 'block';
+        } else {
+            studentContainerDom.style.display = 'none'
+            roomNumberContainerDom.style.display = 'block'
+            statusDom.style.display = 'block';
+            backDom.style.display = 'block';
+        }
+    }
 
     window.addEventListener('load', () => {
         populateBlockCode()

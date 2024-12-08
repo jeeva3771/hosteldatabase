@@ -191,7 +191,7 @@
         fetch(url, requestOptions)
             .then(async (response) => {
                 if ([200, 201].includes(response.status)) {
-                    window.location = getAppUrl('student');
+                    window.location = getAppUrl('student/student');
                 } else {
                     const responseText = await response.json();
 

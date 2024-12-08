@@ -1,14 +1,15 @@
 const { getAppUrl } = require('../../utilityclient/url');
 
 function studentGenerateOtp(req, res) {
-    res.render('pages/studentemailverify.ejs', {
+    res.render('pages/studentlogin.ejs', {
         appURL: getAppUrl()
     })
 }
 
 function getStudentReportUi(req, res) {
-    const studentName = req.session.student.name;
-    const studentRegNo = req.session.student.regNo;
+    const studentName = req.session.studentInfo.name;
+    const studentRegNo = req.session.studentInfo.regNo;
+
     if (req.session.isLoggedStudent === true) {
         res.render('pages/studentuse/report.ejs', {
             appURL: getAppUrl(),
@@ -19,13 +20,13 @@ function getStudentReportUi(req, res) {
 }
 
 function studentLogOut(req, res) {
-    res.render('pages/studentemailverify.ejs', {
+    res.render('pages/studentlogin.ejs', {
         appURL: getAppUrl()
     })
 }
 
 module.exports = (app) => {
-    app.get('/student/emailverify/generateotp', studentGenerateOtp)
+    app.get('/student/login', studentGenerateOtp)
     app.get('/student/attendance/report', getStudentReportUi)
-    app.get('/api/student/logout/studlog', studentLogOut)
+    app.get('/student/logout', studentLogOut)
 }

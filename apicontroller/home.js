@@ -14,7 +14,7 @@ async function readBlockCount(req, res) {
         if (getBlockCount[0].totalBlockCount === 0) {
             return res.status(404).send('No Block found')
         }
-        res.status(200).send(getBlockCount)
+        res.status(200).send(getBlockCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
@@ -35,7 +35,7 @@ async function readFloorCount(req, res) {
         if (getFloorCount[0].totalFloorCount === 0) {
             return res.status(404).send('No floor found')
         }
-        res.status(200).send(getFloorCount)
+        res.status(200).send(getFloorCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
@@ -56,7 +56,7 @@ async function readRoomCount(req, res) {
         if (getRoomCount[0].totalRoomCount === 0) {
             return res.status(404).send('No Room found')
         }
-        res.status(200).send(getRoomCount)
+        res.status(200).send(getRoomCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
@@ -77,7 +77,7 @@ async function readCourseCount(req, res) {
         if (getCourseCount[0].totalCourseCount === 0) {
             return res.status(404).send('No Course found')
         }
-        res.status(200).send(getCourseCount)
+        res.status(200).send(getCourseCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
@@ -98,7 +98,7 @@ async function readStudentCount(req, res) {
         if (getStudentCount[0].totalStudentCount === 0) {
             return res.status(404).send('No Student found')
         }
-        res.status(200).send(getStudentCount)
+        res.status(200).send(getStudentCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
@@ -119,13 +119,12 @@ async function readWardenCount(req, res) {
         if (getWardenCount[0].totalWardenCount === 0) {
             return res.status(404).send('No Warden found')
         }
-        res.status(200).send(getWardenCount)
+        res.status(200).send(getWardenCount[0])
     } catch (error) {
         req.log.error(error);
         res.status(500).send(error.message)
     }
 }
-
 
 module.exports = (app) => {
     app.get('/api/block/blockcount/block', readBlockCount)

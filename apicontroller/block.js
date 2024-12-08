@@ -371,7 +371,7 @@ async function validateInsertItems(body, isUpdate = false, blockId = null, mysql
         }
         return errors
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
     }
 }
 

@@ -82,7 +82,6 @@ async function readAttendances(req, res) {
         });
 
     } catch (error) {
-        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message);
     }
@@ -134,6 +133,7 @@ async function readAttendanceById(req, res) {
         }
         res.status(200).send(attendance[0])
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -168,6 +168,7 @@ async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
 
         res.status(200).send(getBlocksStudentCountAndAttendanceCount)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -205,6 +206,7 @@ async function readBlockFloorsAndStudentCountAndAttendanceCount(req, res) {
 
         res.status(200).send(getBlockFloorsStudentCountAndAttendanceCount)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -241,6 +243,7 @@ async function readRoomsAndStudentCountAndAttendanceCount(req, res) {
 
             res.status(200).send(getRoomsStudentCountAndAttendanceCount)
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -270,6 +273,7 @@ async function readRoomStudents(req, res) {
 
         res.status(200).send(studentsWithAttendance);
     } catch (error) {
+        req.log.error(error)
         res.status(500).send('Error fetching student and attendance data: ' + error.message);
     }
 };
@@ -303,6 +307,7 @@ async function addOrEditAttendance(req, res) {
         await Promise.all(attendancePromises);
         res.status(200).send('Attendance successfully recorded.');
     }  catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message);
     }
 }
@@ -374,6 +379,7 @@ async function studentAttendanceReport(req, res) {
 
         return res.status(200).send(formattedReport);
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -387,39 +393,43 @@ async function validateInsertItems(params, mysqlClient) {
 
     const errors = [];
 
-    if (roomId !== undefined) {
-        if (isNaN(roomId) || roomId <= 0) {
-            errors.push('roomId is invalid')
+    try {
+        if (roomId !== undefined) {
+            if (isNaN(roomId) || roomId <= 0) {
+                errors.push('roomId is invalid')
+            }
+        } else {
+            errors.push('roomId is missing')
         }
-    } else {
-        errors.push('roomId is missing')
-    }
 
-    if (blockFloorId !== undefined) {
-        if (isNaN(blockFloorId) || blockFloorId <= 0) {
-            errors.push('blockFloorId is invalid')
+        if (blockFloorId !== undefined) {
+            if (isNaN(blockFloorId) || blockFloorId <= 0) {
+                errors.push('blockFloorId is invalid')
+            }
+        } else {
+            errors.push('blockFloorId is missing')
         }
-    } else {
-        errors.push('blockFloorId is missing')
-    }
 
-    if (blockId !== undefined) {
-        if (isNaN(blockId) || blockId <= 0) {
-            errors.push('blockId is invalid')
+        if (blockId !== undefined) {
+            if (isNaN(blockId) || blockId <= 0) {
+                errors.push('blockId is invalid')
+            }
+        } else {
+            errors.push('blockId is missing')
         }
-    } else {
-        errors.push('blockId is missing')
-    }
 
-    const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE 
-        blockId = ? AND blockFloorId = ? AND  roomId = ?`,
-        [blockId, blockFloorId, roomId],
-        mysqlClient
-    );
-    if (isValidateEntry.length === 0) {
-        errors.push('RoomId or BlockFloorId or BlockId is not valid');
+        const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE 
+            blockId = ? AND blockFloorId = ? AND  roomId = ?`,
+            [blockId, blockFloorId, roomId],
+            mysqlClient
+        );
+        if (isValidateEntry.length === 0) {
+            errors.push('RoomId or BlockFloorId or BlockId is not valid');
+        }
+        return errors
+    } catch(error) {
+        req.log.error(error)
     }
-    return errors
 }
 
 module.exports = (app) => {

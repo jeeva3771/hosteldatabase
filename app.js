@@ -34,7 +34,8 @@ const roomUi = require('./uicontroller/page/roomui.js');
 const wardenUi = require('./uicontroller/page/wardenui.js');
 const studentUi = require('./uicontroller/page/studentui.js');
 const attendanceUi = require('./uicontroller/page/attendanceui.js');
-const studentUseUi = require('./uicontroller/page/studentuseui.js')
+const studentUseUi = require('./uicontroller/page/studentuseui.js');
+const othersUi = require('./uicontroller/page/othersui.js');
 
 const { getAppUrl } = require('./utilityclient/url.js');
 
@@ -55,47 +56,48 @@ const logger = pino({
      level: 'info'
 });
 
-const pageSessionExclude = [
+const pageWardenSessionExclude = [
     '/login',
     '/login/',
     '/api/login/',
     '/warden/resetpassword',
     '/warden/resetpassword/',
     '/api/warden/generateotp/',
-    '/api/warden/resetpassword/',
-    '/student/emailverify/generateotp',
-    '/student/emailverify/generateotp/',
+    '/api/warden/resetpassword/'
+]
+
+const pageStudentSessionExclude = [
+    '/student/login',
+    '/student/login/',
     '/api/student/generateotp/',
     '/api/student/verifyotp/authentication/'
 ]
+
 app.use((req, res, next) => {
-    if (pageSessionExclude.includes(req.originalUrl)) {
+    if (pageWardenSessionExclude.includes(req.originalUrl)) {
         return next()
     }
-
-    if (req.originalUrl !== '/login') {
+    console.log(req.originalUrl !== '/login' && (!pageStudentSessionExclude.includes(req.originalUrl)))
+    if (req.originalUrl !== '/login' && (!pageStudentSessionExclude.includes(req.originalUrl))) {
         if (req.session.isLogged !== true) {
             return res.status(401).redirect(getAppUrl('login'))
         }
     }
-
-    // if (req.originalUrl !== '/login' || req.originalUrl !== '/student/emailverify/generateotp') {
-    //     if (req.session.isLoggedStudent !== true) {
-    //         return res.status(401).redirect(getAppUrl('student/emailverify/generateotp'))
-    //     } else if (req.session.isLogged !== true) {
-    //         return res.status(401).redirect(getAppUrl('login'))
-    //     }
-    // }
     return next()
 })
 
 app.use((req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    res.setHeader('Surrogate-Control', 'no-store');
-    next();
-});
+    if (req.originalUrl === '/student/login') {
+        return next()
+    }
+        
+    if (pageStudentSessionExclude.includes(req.originalUrl)) {
+        if (req.session.isLoggedStudent !== true) {
+            return res.status(401).redirect(getAppUrl('student/login'))
+        }
+    }
+    return next()
+})
 
 app.use((req, res, next) => {
     req.startTime = Date.now(); // Set request start time
@@ -162,6 +164,7 @@ app.mysqlClient.connect(function (err) {
         studentUi(app)
         attendanceUi(app)
         studentUseUi(app)
+        othersUi(app)
 
         app.listen(process.env.APP_PORT, () => {
             logger.info(`listen ${process.env.APP_PORT} port`)

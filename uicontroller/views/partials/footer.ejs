@@ -48,16 +48,13 @@ function getSelectedRadioValue(radioName) {
 
   function wardenImage() {
     const myHeaders = new Headers();
-    myHeaders.append('Cache-Control', 'no-cache');
-    myHeaders.append('Pragma', 'no-cache');
-
     const requestOptions = {
       method: 'GET',
       headers: myHeaders,
       redirect: 'follow',
     };
 
-    fetch(getAppUrl(`api/warden/${wardenId}/avatar`) + `?${Date.now()}`, requestOptions)
+    fetch(getAppUrl(`api/warden/${wardenId}/avatar`) + `?date=${Date.now()}`, requestOptions)
       .then((response) => {
         if (!response.ok) {
           throw new Error(`Error fetching avatar: ${response.status}`);

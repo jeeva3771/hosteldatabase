@@ -49,19 +49,13 @@ function editWardenUi(req, res) {
     });
 }
 
-function errorUi(req, res) {
-    res.render('pages/error.ejs', {
-        appURL: getAppUrl()
-    })
-}
-
 function resetPasswordUi(req, res) {
     res.render('pages/resetpassword.ejs', {
         appURL: getAppUrl()
     })
 }
 
-function wardenImageUi(req, res) {
+function wardenDetailsUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
     res.render('pages/warden/wardendetails.ejs',{
         appURL: getAppUrl(),
@@ -70,16 +64,15 @@ function wardenImageUi(req, res) {
         breadCrumbs : [ 
             {name:'Home', link:'/home'},
             {name:'User', link:''},
-            {name:'UserDetails', link:'/warden/image'}
+            {name:'UserDetails', link:'/warden/details'}
         ]
     })
 }
 
 module.exports = (app) => {
-    app.get('/warden/image', wardenImageUi)
+    app.get('/warden/details', wardenDetailsUi)
     app.get('/warden/resetpassword', resetPasswordUi)
     app.get('/warden', wardenPageUi)
     app.get('/warden/add', addWardenUi)
     app.get('/warden/:wardenId', editWardenUi)
-    app.get('/error', errorUi)
 }

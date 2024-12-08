@@ -55,6 +55,7 @@ async function generateOtp(req, res) {
         req.session.student = emailId
         return res.status(200).send('success')
     } catch (error) {
+        req.log.error(error)
         res.status(500).send(error.message)
     }
 }
@@ -126,13 +127,13 @@ async function verifyOtpStudentAuthentication(req, res) {
             if (studentLog.affectedRows === 0) {
                 return res.status(404).send('Oops! Something went wrong. Please contact admin.')
             } else {
-                req.session.isLoggedStudent = true
-                req.session.student = {
+                req.session.studentInfo = {
                     name: studentName,
                     regNo: studentRegNo
                 }
+                req.session.isLoggedStudent = true
             }
-            return res.status(200).send('success')
+            return res.status(200).send('success');
         } else {
             if (studentOtpAttempt === 2) {
                 var updateBlockedTime = await mysqlQuery(/*sql*/`
@@ -166,19 +167,17 @@ async function verifyOtpStudentAuthentication(req, res) {
             }
         }
     } catch (error) {
+        req.log.error(error)
         return res.status(500).send(error.message)
     }
 }
 
 function studentLogOut(req, res) {
-    console.log('ooooooooooffffffffffffff')
     req.session.destroy((err) => {
         if (err) logger.error();
-        res.redirect('/student/emailverify/generateotp')
+        res.redirect('student/login')
     })
 }
-
-
 
 module.exports = (app) => {
     app.post('/api/student/generateotp', generateOtp)
