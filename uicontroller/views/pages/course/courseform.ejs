@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Course form' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Course form' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Course form' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Course form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -30,7 +30,7 @@
     </div>
 </section>
 </main>
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
     var courseNameDom = document.getElementById('courseName');

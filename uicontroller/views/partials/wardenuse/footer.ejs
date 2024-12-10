@@ -27,12 +27,12 @@
 <script src="<%=appURL%>assets/js/main.js"></script>
 
 <script>
-var wardenId = <%= avatarWardenId || 'null' %>;
-const userImageDom = document.getElementById('userImage');
-const imageDom = document.getElementById('image');
-const editProfileDom = document.getElementById('editProfile');
+  var wardenId = <%= avatarWardenId || 'null' %>;
+  const userImageDom = document.getElementById('userImage');
+  const imageDom = document.getElementById('image');
+  const editProfileDom = document.getElementById('editProfile');
 
-function getSelectedRadioValue(radioName) {
+  function getSelectedRadioValue(radioName) {
     let selectedValue = null;
     const radios = Array.from(document.querySelectorAll(`input[name="${radioName}"]`));
 
@@ -47,36 +47,14 @@ function getSelectedRadioValue(radioName) {
   }
 
   function wardenImage() {
-    const myHeaders = new Headers();
-    const requestOptions = {
-      method: 'GET',
-      headers: myHeaders,
-      redirect: 'follow',
-    };
+    userImageDom.src =  `${getAppUrl(`api/warden/${wardenId}/avatar`)}?date=${Date.now()}`
+    if (imageDom) {
+      imageDom.src = `${getAppUrl(`api/warden/${wardenId}/avatar`)}?date=${Date.now()}`
+    }
 
-    fetch(getAppUrl(`api/warden/${wardenId}/avatar`) + `?date=${Date.now()}`, requestOptions)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`Error fetching avatar: ${response.status}`);
-        }
-        return response.blob();
-      })
-      .then((blob) => {
-        const imageUrl = URL.createObjectURL(blob);
-
-        if (userImageDom && imageDom) {
-          userImageDom.src = imageUrl;
-          imageDom.src = imageUrl;
-          editProfileDom.src = imageUrl;
-        } else if (userImageDom) {
-          userImageDom.src = imageUrl;
-        } else {
-          console.error('Image DOM element not found!');
-        }
-      })
-      .catch((error) => {
-        console.error('Error:', error);
-      });
+    if (editProfileDom) {
+      editProfileDom.src = userImageDom.src
+    }
   }
 
   window.addEventListener('load', () => {

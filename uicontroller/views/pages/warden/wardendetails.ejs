@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'User Details' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'User Details' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'User Details' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'User Details' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section profile">
     <div class="row">
@@ -57,8 +57,15 @@
                         <div class="row mb-3">
                           <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">User Image</label>
                           <div class="col-md-8 col-lg-9">
-                            <img src="" alt="Profile" id="editProfile"> 
-                            <div class="pt-2">
+                            <div style="position: relative; display: inline-block;">
+                              <!-- Spinner -->
+                              <div id="uploadSpinner" class="spinner-border text-secondary" role="status" 
+                                   style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
+                                  <span class="visually-hidden">Updating...</span>
+                              </div>
+                              <!-- Profile Image -->
+                              <img src="default-profile.jpg" alt="Profile" id="editProfile" >
+                          </div>                            <div class="pt-2">
                               <a class="btn btn-primary btn-sm" title="Upload new profile image"
                                 onclick="changeImageDom.click()">
                                 <input class="form-control" type="file" id="changeImage" 
@@ -98,7 +105,8 @@
                         </div>
                         
                         <div class="text-center">
-                          <button type="submit" class="btn btn-primary">Save Changes</button>
+                          <button type="submit" class="btn btn-primary" onclick="editUserData()">
+                            Save Changes</button>
                         </div>
                       </form>                        
                     </div>
@@ -141,7 +149,7 @@
         </div>
   </section>
 </main>
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
   const changeImageDom = document.getElementById('changeImage');
@@ -151,13 +159,14 @@
   const lastNameDom = document.getElementById('lastName');
   const dobDom = document.getElementById('dob');
   const emailDom = document.getElementById('email');
+  const spinnerDom = document.getElementById("uploadSpinner");
+
   
   function updateAvatar() {
     var myHeaders = new Headers();
     var formdata = new FormData();
     formdata.append("image", changeImageDom.files[0]);
-    var timeStamp = Date.now()
-
+    spinnerDom.style.display = "inline-block";
     var requestOptions = {
       method: 'PUT',
       headers: myHeaders,
@@ -165,8 +174,11 @@
       redirect: 'follow'
     };
 
-    fetch(getAppUrl(`api/warden/${wardenId}/editavatar`)+ `?operation=update&date=${Date.now()}`, requestOptions)
-      .catch(error => alert('Edit warden image something went wrong.Please try later'));
+    fetch(getAppUrl(`api/warden/${wardenId}/editavatar`), requestOptions)
+    .then(() => {
+      setTimeout(wardenImage, 1000)
+    })
+    .catch(error => alert('Edit warden image something went wrong.Please try later'));
   }
 
   function deleteAvatar() {
@@ -177,8 +189,11 @@
       redirect: 'follow'
     };
 
-    fetch(getAppUrl(`api/warden/${wardenId}/deleteavatar`) + `?date=${Date.now()}`, requestOptions)
-      // .then(deleted => window.location.href= getAppUrl('warden/details'))
+    fetch(getAppUrl(`api/warden/${wardenId}/deleteavatar`), requestOptions)
+      .then(() => {
+        wardenImage()
+        resetAvatarInput()
+      })
       .catch(error => alert('Deleting warden image something went wrong.Please try later'));
   }
 
@@ -220,6 +235,47 @@
             
             })
             .catch(error => alert('Something went wrong.Please try later.'))
+  }
+
+  function editUserData() {
+    var myHeaders = new Headers(); 
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      "firstName": firstNameDom.value,
+      "lastName": lastNameDom.value,
+      "dob": dobDom.value,
+      "emailId": emailDom.value,
+    });
+
+    var requestOptions = {
+      method: 'PUT',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
+      .then(async (response) => {
+          if (response.status === 200) {
+            window.location = getAppUrl('warden/details')
+          } else {
+            const responseText = await response.json();
+              if (Array.isArray(responseText)) {
+                alert(responseText[0]);
+              } else {
+                alert(responseText);
+              }
+          }
+      })
+      .catch(error => alert('Something went wrong.Please try later.'));
+  }
+
+  function resetAvatarInput() {
+    const fileInput = document.querySelector('input[type="file"]'); 
+    if (fileInput) {
+        fileInput.value = ""; 
+    }
   }
 
   window.addEventListener('load',()=> {

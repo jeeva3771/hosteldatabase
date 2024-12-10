@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Student form' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Student form' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Student form' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Student form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -115,7 +115,7 @@
                                 <img src="" alt="Profile" class="rounded-circle imageSizing" id="studentImage" 
                                     name="studentImage">
                                 <button type="button" class="btn btn-outline-danger btn-sm removeImage" 
-                                    onclick="deleteStudentImage()">Remove</button>
+                                    onclick="deleteStudentImage()" id="removeImage">Remove</button>
                             </div>
                             </label>
                             <div class="col-sm-10">
@@ -136,7 +136,7 @@
     </div>
 </section>
 </main>     
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 <script>
     const studentNameDom = document.getElementById('studentName');
     const registerNumDom = document.getElementById('registerNum');
@@ -154,6 +154,7 @@
     const uploadFileSectionDom = document.getElementById('uploadFileSection');
     const updateImageDom = document.getElementById('updateImage');
     const studentImageDom = document.getElementById('studentImage');
+    const removeImageDom = document.getElementById('removeImage');
     const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
 
@@ -191,7 +192,7 @@
         fetch(url, requestOptions)
             .then(async (response) => {
                 if ([200, 201].includes(response.status)) {
-                    window.location = getAppUrl('student/student');
+                    window.location = getAppUrl('api/student');
                 } else {
                     const responseText = await response.json();
 
@@ -199,7 +200,6 @@
                         const errorMessage = responseText.join('\n');
                         alert(errorMessage);
                     } else {
-                        console.log(responseText + '2')
                         alert(responseText);
                     }
                 }
@@ -250,7 +250,10 @@
         floorNumberDom.addEventListener('change', populateRoomNumber);
         roomNumberDom.addEventListener('change', toggleSubmitButton);
         joinedDateDom.addEventListener('input', toggleSubmitButton);
+        updateImageDom.addEventListener('change', toggleSubmitButton);
+        removeImageDom.addEventListener('click', toggleSubmitButton);
     }
+
     initializeForm();
 
     async function populateCourse() {
@@ -390,33 +393,8 @@
     }
 
     async function getStudentImage() {
-        var myHeaders = new Headers();
-
-        var requestOptions = {
-            method: 'GET',
-            headers: myHeaders,
-            redirect: 'follow'
-        };
-
-        fetch(`${getAppUrl('api/student')}${studentId}/image`, requestOptions)
-            .then((response) => {
-                if (!response.ok) {
-                throw new Error(`Error fetching avatar: ${response.status}`);
-                }
-                return response.blob();
-            })
-            .then((blob) => {
-                const imageUrl = URL.createObjectURL(blob);
-
-                if (studentImageDom) {
-                    studentImageDom.src = imageUrl
-                } else {
-                    console.error('Image DOM element not found!');
-                }
-            })
-            .catch((error) => alert('Student image something went wrong.Please try later'));
+        studentImageDom.src = `${getAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
     }
-
 
     async function getStudentById(studentId) {
         try {
@@ -454,27 +432,26 @@
             redirect: 'follow'
         };
 
-        fetch(getAppUrl(`api/student/${studentId}`) + 'editimage?operation=update', requestOptions)
-            .then(async (response) => {
-                if (response.status != 200) {
-                    alert(await response.text())
-                }
+        fetch(getAppUrl(`api/student/${studentId}/editimage`), requestOptions)
+            .then(() => {
+                setTimeout(getStudentImage, 1000)
             })
             .catch(error => alert('Edit student image something went wrong.Please try later'));
     }
 
     function deleteStudentImage() {
         var myHeaders = new Headers();
-        var timestamp = Date.now();
-
         var requestOptions = {
             method: 'DELETE',
             headers: myHeaders,
             redirect: 'follow'
         };
 
-        fetch(getAppUrl(`api/student/${studentId}/deleteimage`) + `?timestamp=${timestamp}`, requestOptions)
-            // .then(() => ''))
+        fetch(getAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
+            .then(() => {
+                setTimeout(getStudentImage, 1000)
+                updateImageDom.value = ''
+            })
             .catch(error => alert('Delete Student image something went wrong.Please try later.'));
     }
 </script>

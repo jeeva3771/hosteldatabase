@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -118,7 +118,7 @@
 </section>
 </main><!-- End #main -->
 
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
     var tableDataDom = document.getElementById("blockFloorsData");

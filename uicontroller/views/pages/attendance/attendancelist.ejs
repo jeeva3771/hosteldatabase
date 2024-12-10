@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance List' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance List' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -121,7 +121,7 @@
 </section>
 </main><!-- End #main -->
 
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
     const tableDataDom = document.getElementById("attendancesData");

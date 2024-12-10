@@ -1,12 +1,13 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance Report' }) %>
+<%- include('../../partials/studentuse/header.ejs', { studentAppURL: studentAppURL, title: 'Attendance Report' }) %>
+<%- include('../../partials/studentuse/nonloginlayout.ejs', { subTitle: 'Attendance Report' }) %>
+<%- include('../../partials/studentuse/aside.ejs') %>
+
 <section class="section">
     <div class="row">
         <div class="col-lg-12">
             <div class="card">
                 <div class="card-body">
             <div class="container d-flex flex-column align-items-center mt-2">
-                <a class="d-flex ms-auto btn btn-primary" href="<%=appURL%>student/logout/">Logout</a>
-
                 <div class="row g-3 justify-content-center mb-4 mt-3">
                     <div class="col-auto">
                         <label class="visually-hidden" for="student">Student</label>
@@ -40,7 +41,7 @@
                     <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
                     <span class="ms-2">Absent</span>
 
-                    <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1"></div>
+                    <div class="p-2 smallBox mt-0 ms-3 border border-dark-subtle"></div>
                     <span class="ms-2">Not Marked</span>
                 </div>
             </div>
@@ -48,11 +49,10 @@
     </div>
 </div>
 </div>
-<div class="credits">
-    Designed by <a href="https://www.linkedin.com/in/jeeva377">Jeeva|Linkedin</a>
-  </div>
 </section>
 </main>
+<%- include('../../partials/studentuse/footer.ejs') %>
+
 
 <script>
     const studentDom = document.getElementById('student');
@@ -66,6 +66,8 @@
     const studentName = "<%=studentName%>";
     const studentRegNo = "<%=studentRegNo%>";
     studentDom.value = studentName;
+    console.log(studentName,studentRegNo)
+    const reportUrl = getStudentAppUrl('api/attendance/studentattendancereport');
 
     window.addEventListener('load', async () => {
         try {
@@ -117,11 +119,10 @@
         dateLabelDom.innerHTML = '';
 
         try {
-            var fetchUrl = getAppUrl('api/attendance/studentattendancereport') + 
-                `?month=${month + 1}&year=${year}&studentName=${studentDom.value}`
+            var fetchUrl = `${reportUrl}?month=${month + 1}&year=${year}&studentName=${studentDom.value}`
             
-            if (studentName) {
-                fetchUrl += `&registerNumber=${studentRegNo}&studentuse=true`
+            if (studentRegNo) {
+                fetchUrl += `&registerNumber=${studentRegNo}`
             }
 
             const response = await fetch(fetchUrl);

@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient/query');
+const { mysqlQuery, attendanceReport } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 
@@ -82,8 +82,8 @@ async function verifyOtpStudentAuthentication(req, res) {
         if (studentDetails.length === 0) {
             return res.status(404).send('Oops! Something went wrong. Please contact warden or admin.')
         }
-        const studentName = studentDetails[0].name;
-        const studentRegNo = studentDetails[0].registerNumber;
+        let studentName = studentDetails[0].name;
+        let studentRegNo = studentDetails[0].registerNumber;
         const studentOtp = studentDetails[0].otp;
         const studentOtpAttempt = studentDetails[0].otpAttempt || 0;
         const studentOtpTiming = studentDetails[0].otpTiming;
@@ -131,6 +131,9 @@ async function verifyOtpStudentAuthentication(req, res) {
                     name: studentName,
                     regNo: studentRegNo
                 }
+                console.log(req.session.studentInfo.name)
+                console.log(req.session.studentInfo.regNo)
+
                 req.session.isLoggedStudent = true
             }
             return res.status(200).send('success');
@@ -172,15 +175,20 @@ async function verifyOtpStudentAuthentication(req, res) {
     }
 }
 
+async function studentAttendanceReport(req, res) {
+    return await attendanceReport(req, res)
+}
+
 function studentLogOut(req, res) {
     req.session.destroy((err) => {
         if (err) logger.error();
-        res.redirect('student/login')
+        res.redirect('/student/login')
     })
 }
 
 module.exports = (app) => {
     app.post('/api/student/generateotp', generateOtp)
     app.put('/api/student/verifyotp/authentication', verifyOtpStudentAuthentication)
-    app.get('/api/student/logout/studlog', studentLogOut)
+    app.get('/api/student/logout', studentLogOut)
+    app.get('/api/attendance/studentattendancereport', studentAttendanceReport)
 }

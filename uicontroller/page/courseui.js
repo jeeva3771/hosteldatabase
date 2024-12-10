@@ -9,6 +9,7 @@ function coursePageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Others', link:''},
             {name:'Course', link:'/course'},
         ]
     });
@@ -23,6 +24,7 @@ function addCourseUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Others', link:''},
             {name:'Course', link:'/course'},
             {name:'Add', link:'/course/add'}
         ]
@@ -39,6 +41,7 @@ function editCourseUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Others', link:''},
             {name:'Course', link:'/course'},
             {name:'Edit', link:'/course/add'}
         ]

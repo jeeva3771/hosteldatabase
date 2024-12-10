@@ -5,19 +5,13 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, '..', 'useruploads'))
     },
     filename: function (req, file, cb) {
-        const operation = req.query.operation;
         const wardenId = req.params.wardenId;
-        if (operation === 'update' && wardenId) {
-            cb(null, `${wardenId}.jpg`);
-        } else {
-            cb(null, file.fieldname + '-' + uniqueSuffix)
-        }
+        cb(null, `${wardenId}.jpg`);
     }
 })
 
@@ -161,17 +155,8 @@ function readWardenAvatarById(req, res) {
         const defaultImagePath = path.join(baseDir, 'default.jpg');
 
         const imageToServe = fs.existsSync(imagePath) ? imagePath : defaultImagePath;
-
-        req.app.use((req, res, next) => {
-            res.setHeader('Content-Type', 'image/jpeg');
-            res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-            res.setHeader('Pragma', 'no-cache');
-            res.setHeader('Expires', '0');
-            res.setHeader('Surrogate-Control', 'no-store');
-            next();
-        });
+        res.setHeader('Content-Type', 'image/jpeg');
         fs.createReadStream(imageToServe).pipe(res);
-
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)

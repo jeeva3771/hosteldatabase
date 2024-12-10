@@ -46,7 +46,7 @@ function editStudentUi(req, res) {
 }
 
 module.exports = (app) => {
-    app.get('/student/student', studentPageUi)
-    app.get('/student/student/add', addStudentUi)
-    app.get('/student/student/:studentId', editStudentUi)
+    app.get('/student', studentPageUi)
+    app.get('/student/add', addStudentUi)
+    app.get('/student/:studentId', editStudentUi)
 }

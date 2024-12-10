@@ -8,11 +8,8 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, '..', 'studentuploads'))
     },
     filename: function (req, file, cb) {
-        const operation = req.query.operation;
         const studentId = req.params.studentId;
-        if (operation === 'update' && studentId) {
-            cb(null, `${studentId}.jpg`);
-        }
+        cb(null, `${studentId}.jpg`);
     }
 })
 

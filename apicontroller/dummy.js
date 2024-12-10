@@ -225,3 +225,28 @@
     }
 
 </script>
+
+userImageDom.src
+/////////////////////////////////
+
+
+
+
+
+app.use((req, res, next) => {
+    // Handle warden routes
+    if (!pageWardenSessionExclude.includes(req.originalUrl) && req.originalUrl.startsWith('/warden')) {
+        if (!req.session.isLogged) {
+            return res.status(401).redirect(getAppUrl('login'));
+        }
+    }
+
+    // Handle student routes
+    if (!pageStudentSessionExclude.includes(req.originalUrl) && req.originalUrl.startsWith('/student')) {
+        if (!req.session.isLoggedStudent) {
+            return res.status(401).redirect(getAppUrl('student/login'));
+        }
+    }
+
+    return next();
+});

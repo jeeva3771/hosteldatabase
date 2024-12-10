@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance Report' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance Report' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance Report' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance Report' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -46,7 +46,7 @@
                     <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
                     <span class="ms-2">Absent</span>
 
-                    <div class="p-2 smallBox mt-0 ms-3 rounded-0 border border-1"></div>
+                    <div class="p-2 smallBox mt-0 ms-3 border border-dark-subtle"></div>
                     <span class="ms-2">Not Marked</span>
                 </div>
             </div>
@@ -56,7 +56,7 @@
 </div>
 </section>
 </main>
- <%- include('../../partials/footer.ejs') %>
+ <%- include('../../partials/wardenuse/footer.ejs') %>
 <script>
     const selectedStudentDom = document.getElementById('student');
     const selectedMonthDom = document.getElementById('month');

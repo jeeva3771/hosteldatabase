@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -9,10 +9,11 @@
             <div class="card">
                 <div class="card-body">
                 <div class="mt-3" id="back">
-                    <button onclick="backToView()" class="btn btn-outline-secondary btn-sm">Back</button>
+                    <button onclick="backToView()" class="btn btn-outline-secondary btn-sm"
+                    id="backToView">Back</button>
                 </div>
                     <div class="row justify-content-center">
-                        <div class="col-4 text-center mt-4">
+                        <div class="col-3 text-center mt-4">
                             <div class="form-group">
                                 <label for="date" class="mb-2"><strong>Date</strong></label>
                                 <input type="date" class="form-control controlInputType" id="checkIn"
@@ -66,7 +67,7 @@
                             <p><strong>Students</strong></p>
                             <div id="studentList" class="mb-4">
                             </div>
-                            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-success"
+                            <button type="button" onclick="saveOrUpdateAttendance()" class="btn btn-primary"
                                 id="submitButton">Submit</button>
                         </div>
                     </div>
@@ -77,7 +78,7 @@
 </section>
 </main>
 
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 <script>
     const urlParamsDom = new URLSearchParams(window.location.search);
     const blockCodeContainerDom = document.getElementById('blockCodeContainer');
@@ -438,9 +439,14 @@
 
     async function populateStudentList(roomId) {
         studentListDom.innerHTML = '';
-        backDom.style.display = 'block';
-        statusDom.style.visibility = 'hidden';
 
+        if (checkInParam) {
+            backDom.style.display = 'none';
+        } else {
+            backDom.style.display = 'block';
+        }
+
+        statusDom.style.visibility = 'hidden';
 
         try {
             const response = await fetch(getAppUrl(`api/attendance/student/${roomId}`) + 

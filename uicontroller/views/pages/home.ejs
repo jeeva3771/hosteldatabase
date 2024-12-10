@@ -1,7 +1,7 @@
-<%- include('../partials/header.ejs', { appURL: appURL, title: 'Home' }) %>
-<%- include('../partials/nonloginlayout.ejs', { user: user, subTitle: 'Dashboard' }) %>
+<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Home' }) %>
+<%- include('../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Dashboard' }) %>
 <%- include('../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../partials/aside.ejs') %>
+<%- include('../partials/wardenuse/aside.ejs') %>
 
     <section class="section dashboard">
       <div class="row">
@@ -115,8 +115,8 @@
                       <h6>Option</h6>
                     </li>
 
-                    <li><a class="dropdown-item" href="<%=appURL%>student/student/">Student</a></li>
-                    <li><a class="dropdown-item" href="<%=appURL%>student/student/add/">Add Student</a></li>
+                    <li><a class="dropdown-item" href="<%=appURL%>student/">Student</a></li>
+                    <li><a class="dropdown-item" href="<%=appURL%>student/add/">Add Student</a></li>
                   </ul>
                 </div>
 
@@ -638,7 +638,7 @@
 
   </main><!-- End #main -->
 
-<%- include('../partials/footer.ejs') %>
+<%- include('../partials/wardenuse/footer.ejs') %>
 
 <script>
   const blockDom = document.getElementById('block');

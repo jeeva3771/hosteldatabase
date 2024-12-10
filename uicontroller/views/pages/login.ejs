@@ -1,4 +1,4 @@
-<%- include('../partials/header.ejs', { appURL: appURL, title: 'Login' }) %>
+<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, studentAppURL: studentAppURL, title: 'Login' }) %>
 
   <main>
     <div class="container">
@@ -53,7 +53,7 @@
                       <button class="btn btn-primary w-100" type="submit" id="loginButton" onclick="loginUser()">
                         Login</button>
                     </div>
-                    <a class="text-center small" href="<%=appURL%>student/login/">Student login?</a>
+                    <a class="text-center small" href="<%=studentAppURL%>student/login/">Student login?</a>
 
                   </div>
                 </div>
