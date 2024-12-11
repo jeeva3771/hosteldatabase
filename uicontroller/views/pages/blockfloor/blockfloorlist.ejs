@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Block floor list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Block floor list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -118,7 +118,7 @@
 </section>
 </main><!-- End #main -->
 
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
     var tableDataDom = document.getElementById("blockFloorsData");
@@ -240,7 +240,7 @@
                 }
                 paginationDom.innerHTML = paginationHtml;
             })
-                .catch((error) => console.error(error));
+                .catch((error) => alert('Something went wrong.Please try later.'));
         }
 
     function readBlockFloorById(blockFloorId) {
@@ -333,7 +333,7 @@
                 var modal = new bootstrap.Modal(document.getElementById('blockFloorModal'));
                 modal.show();
             })
-                .catch(error => console.log('error', error));
+                .catch(error => alert('Something went wrong.Please try later.'));
         }
 
     function deleteBlockFloorById(blockFloorId) {
@@ -353,7 +353,7 @@
                 }
                 return alert(await response.text())
             })
-            .catch((error) => alert(`An error occurred: ${error.message}`));
+            .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     window.addEventListener('load', () => {

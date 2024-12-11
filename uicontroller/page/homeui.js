@@ -1,14 +1,14 @@
 const { getUserProfile } = require('../../utilityclient/query');
-const { getAppUrl } = require('../../utilityclient/url');
+const { getAppUrl, getStudentAppUrl } = require('../../utilityclient/url');
 
 module.exports = (app) => {
-
     app.get('/login', (req, res) => {
         if (req.session.isLogged === true) {
             res.status(302).redirect(getAppUrl('home'))
         } else {
             res.render('pages/login', {
-                appURL: getAppUrl()
+                appURL: getAppUrl(),
+                studentAppURL: getStudentAppUrl()
             })
         }
     });
@@ -26,7 +26,10 @@ module.exports = (app) => {
                 avatarWardenId: avatarWardenId,
                 appURL: getAppUrl(),
                 user: getUserProfile(req.session),
-                breadCrumbs: [{ name: 'Home', link: '/home' }]
+                breadCrumbs: [
+                    { name: 'Home', link: '/home' },
+                    { name: 'Dashboard', link: '/home' }
+                ]
             })
         }
         else {

@@ -9,23 +9,28 @@
         </a>
       </li><!-- End Dashboard Nav -->
       <li class="nav-item">
-        <a class="nav-link" href="<%=appURL%>attendance/">
+        <a class="nav-link collapsed" href="<%=appURL%>attendance/">
           <i class="bi bi-card-checklist"></i>
           <span>Attendance</span>
         </a>
       </li>
       <li class="nav-item">
-        <a class="nav-link" href="<%=appURL%>student/">
+        <a class="nav-link collapsed" href="<%=appURL%>student/">
           <i class="bi bi-people"></i>
           <span>Student</span>
         </a>
       </li>
-
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="<%=appURL%>warden/">
+          <i class="bi bi-person-fill"></i>
+          <span>Warden</span>
+        </a>
+      </li>
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-layout-text-window-reverse"></i><span>Block</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-layout-text-window-reverse"></i><span>Structure</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
-        <ul id="tables-nav" class="nav-content collapse " data-bs-parent="#sidebar-nav">
+        <ul id="tables-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
           <li>
             <a href="<%=appURL%>block/">
               <i class="bi bi-circle"></i><span>Block</span>
@@ -46,7 +51,8 @@
 
       <li class="nav-item">
         <a class="nav-link collapsed" data-bs-target="#tables-structure" data-bs-toggle="collapse" href="#">
-          <i class="bi bi-layout-text-window-reverse"></i><span>Structure</span><i class="bi bi-chevron-down ms-auto"></i>
+          <i class="bi bi-grid-3x3-gap"></i>
+          <span>Others</span><i class="bi bi-chevron-down ms-auto"></i>
         </a>
         <ul id="tables-structure" class="nav-content collapse " data-bs-parent="#sidebar-nav">
           <li>
@@ -54,50 +60,30 @@
               <i class="bi bi-circle"></i><span>Course</span>
             </a>
           </li>
-          <li>
-            <a href="<%=appURL%>warden/">
-              <i class="bi bi-circle"></i><span>Warden</span>
-            </a>
-          </li>
         </ul>
       </li><!-- End Tables Nav -->
 
       <li class="nav-heading">Pages</li>
-
       <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>warden/image/">
+        <a class="nav-link collapsed" href="<%=appURL%>warden/details/">
           <i class="bi bi-person"></i>
           <span>User</span>
         </a>
-      </li><!-- End Profile Page Nav -->
+      </li>
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="">
+        <a class="nav-link collapsed" href="<%=appURL%>faq/">
           <i class="bi bi-question-circle"></i>
           <span>F.A.Q</span>
         </a>
       </li><!-- End F.A.Q Page Nav -->
 
       <li class="nav-item">
-        <a class="nav-link collapsed" href="">
+        <a class="nav-link collapsed" href="<%=appURL%>contact/">
           <i class="bi bi-envelope"></i>
           <span>Contact</span>
         </a>
       </li><!-- End Contact Page Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>warden/add/">
-          <i class="bi bi-card-list"></i>
-          <span>Register Warden</span>
-        </a>
-      </li><!-- End Register Page Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>error/">
-          <i class="bi bi-dash-circle"></i>
-          <span>Error 404</span>
-        </a>
-      </li><!-- End Error 404 Page Nav -->
 
     </ul>
 

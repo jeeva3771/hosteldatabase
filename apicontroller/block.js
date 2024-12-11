@@ -1,9 +1,9 @@
-const { mysqlQuery } = require('../utilityclient/query')
+const { mysqlQuery } = require('../utilityclient/query');
 const ALLOWED_UPDATE_KEYS = [
     "blockCode",
     "blockLocation",
     "isActive"
-]
+];
 
 async function readBlocks(req, res) {
     const mysqlClient = req.app.mysqlClient;
@@ -294,25 +294,6 @@ async function deleteBlockById(req, res) {
     }
 }
 
-// async function readBlockCount(req, res) {
-//     const mysqlClient = req.app.mysqlClient;
-
-//     try {
-//         const getBlockCount = await mysqlQuery(/*sql*/`
-//         SELECT COUNT(*) AS totalBlockCount 
-//         FROM block 
-//         WHERE deletedAt IS NULL`, [], mysqlClient)
-
-//         if (getBlockCount) {
-//             return res.status(404).send('No Block count content found')
-//         }
-
-//     } catch (error) {
-//         req.log.error(error);
-//         res.status(500).send(error.message)
-//     }
-// }
-
 function getBlockById(blockId, mysqlClient) {
     return new Promise((resolve, reject) => {
         mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM block WHERE blockId = ? AND deletedAt IS NULL`, [blockId], (err, block) => {
@@ -390,7 +371,7 @@ async function validateInsertItems(body, isUpdate = false, blockId = null, mysql
         }
         return errors
     } catch (error) {
-        console.log(error)
+        req.log.error(error)
     }
 }
 
@@ -422,7 +403,6 @@ module.exports = (app) => {
     app.get('/api/block/blockattendancepercentage', readBlockAttendancePercentage)
     app.get('/api/block/:blockId', readBlockById)
     app.get('/api/block/blockfloor/blockcodecount', readBlockFloorBlockCodeCount)
-    // app.get('/api/block/count', readBlockCount)
     app.post('/api/block', createBlock)
     app.put('/api/block/:blockId', updateBlockById)
     app.delete('/api/block/:blockId', deleteBlockById)

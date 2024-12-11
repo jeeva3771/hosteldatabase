@@ -1,7 +1,7 @@
-<%- include('../../partials/header.ejs', { appURL: appURL, title: 'Attendance List' }) %>
-<%- include('../../partials/nonloginlayout.ejs', { user: user, subTitle: 'Attendance List' }) %>
+<%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs') %>
 
 <section class="section">
     <div class="row">
@@ -121,7 +121,7 @@
 </section>
 </main><!-- End #main -->
 
-<%- include('../../partials/footer.ejs') %>
+<%- include('../../partials/wardenuse/footer.ejs') %>
 
 <script>
     const tableDataDom = document.getElementById("attendancesData");
@@ -209,10 +209,10 @@
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                             <path d="m8.93 6.588-2.29.287-.082.38.45.083c.294.07.352.176.288.469l-.738 3.468c-.194.897.105 1.319.808 1.319.545 0 1.178-.252 1.465-.598l.088-.416c-.2.176-.492.246-.686.246-.275 0-.375-.193-.304-.533zM9 4.5a1 1 0 1 1-2 0 1 1 0 0 1 2 0"/>
                             </svg>
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16" onclick="editAttendance(${attendance.blockId}, ${attendance.blockFloorId}, ${attendance.roomId}, '${attendance.checkIn}')">
+                            <a href="${getAppUrl('attendance/add') + `?blockId=${attendance.blockId}&blockFloorId=${attendance.blockFloorId}&roomId=${attendance.roomId}&checkIn=${attendance.checkIn}`}" class="dark"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-pencil-square mr-2 focus" viewBox="0 0 16 16">
                             <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
                             <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                            </svg>
+                            </svg></a>
                         </td>
                     </tr>`
                 }
@@ -243,139 +243,136 @@
                 }
                 paginationDom.innerHTML = paginationHtml;
             })
-        .catch((error) => console.error(error));
+        .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
+    function readAttendanceById(attendanceId) {
+        var myHeaders = new Headers()
+        var requestOptions = {
+            method: 'GET',
+            headers: myHeaders
+        };
 
-            function editAttendance(blockId, blockFloorId, roomId, checkIn) {
-                window.location.href = `/attendance/add?blockId=${blockId}&blockFloorId=${blockFloorId}&roomId=${roomId}&checkIn=${encodeURIComponent(checkIn)}`;
-            }
+        fetch(getAppUrl(`api/attendance/${attendanceId}`), requestOptions)
+            .then(async (response) => {
+                const attendance = await response.json();
+                
+                if (existingModalDom) {
+                    existingModalDom.remove()
+                }
 
-            function readAttendanceById(attendanceId) {
-                var myHeaders = new Headers()
-                var requestOptions = {
-                    method: 'GET',
-                    headers: myHeaders
-                };
-
-                fetch("http://localhost:1005/api/attendance/" + attendanceId, requestOptions)
-                    .then(response => response.json())
-                    .then(attendance => {
-
-                        if (existingModalDom) {
-                            existingModalDom.remove()
-                        }
-                        const modalHtml = `
-                        <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                const modalHtml = `
+                    <div class="modal fade" id="attendanceModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Full Details</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Name</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.name}
+                                        </div>
                                     </div>
-                                    <div class="modal-body">
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Name</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.name}
-                                            </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Register Number</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Register Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.registerNumber}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.registerNumber}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Check-in Date</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.checkIn}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Check-in Date</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Block Code</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.blockCode}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.checkIn}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Floor Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.floorNumber}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Block Code</strong>
                                         </div>
-                                         <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Room Number</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.roomNumber}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.blockCode}
                                         </div>
-                                           <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Is Present</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.isPresent === 1 ? 'Present' : 'Absent'}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Floor Number</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Reviewed Warden	</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.floorNumber}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Created At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.createdTimeStamp}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Room Number</strong>
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated At</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.updatedTimeStamp}
-                                            </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.roomNumber}
                                         </div>
-                                        <div class="row">
-                                            <div class="col-sm-4">
-                                                <strong>Updated By</strong>
-                                            </div>
-                                            <div class="col-sm-8">
-                                                <strong> : </strong>${attendance.updatedWardenFirstName !== null ? attendance.updatedWardenFirstName : '---'} ${attendance.updatedWardenLastName !== null ? attendance.updatedWardenLastName : ''}
-                                            </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Is Present</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.isPresent === 1 ? 'Present' : 'Absent'}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Reviewed By	</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Created At</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.createdTimeStamp}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated At</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.updatedTimeStamp}
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-4">
+                                            <strong>Updated By</strong>
+                                        </div>
+                                        <div class="col-sm-8">
+                                            <strong> : </strong>${attendance.updatedWardenFirstName !== null ? 
+                                            attendance.updatedWardenFirstName : '---'} ${attendance.updatedWardenLastName !== null ?
+                                            attendance.updatedWardenLastName : ''}
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>`;
-                        document.body.insertAdjacentHTML('beforeend', modalHtml)
-                        var modal = new bootstrap.Modal(document.getElementById('attendanceModal'))
-                        modal.show();
-
+                        </div>
+                    </div>`;
+                    document.body.insertAdjacentHTML('beforeend', modalHtml)
+                    var modal = new bootstrap.Modal(document.getElementById('attendanceModal'))
+                    modal.show();
                     })
-                    .catch(error => console.log('error', error))
-            }
+            .catch(error => alert('Something went wrong.Please try later.'))
+    }
             
-            window.addEventListener('load', () => {
-                attendancePage()
-            })
-
-        </script>
+    window.addEventListener('load', () => {
+        attendancePage()
+    })
+    
+</script>

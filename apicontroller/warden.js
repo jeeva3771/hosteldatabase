@@ -5,19 +5,13 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, '..', 'useruploads'))
     },
     filename: function (req, file, cb) {
-        const operation = req.query.operation;
         const wardenId = req.params.wardenId;
-        if (operation === 'update' && wardenId) {
-            cb(null, `${wardenId}.jpg`);
-        } else {
-            cb(null, file.fieldname + '-' + uniqueSuffix)
-        }
+        cb(null, `${wardenId}.jpg`);
     }
 })
 
@@ -146,7 +140,6 @@ async function readWardenById(req, res) {
         }
         res.status(200).send(warden[0])
     } catch (error) {
-        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -162,10 +155,8 @@ function readWardenAvatarById(req, res) {
         const defaultImagePath = path.join(baseDir, 'default.jpg');
 
         const imageToServe = fs.existsSync(imagePath) ? imagePath : defaultImagePath;
-
         res.setHeader('Content-Type', 'image/jpeg');
         fs.createReadStream(imageToServe).pipe(res);
-
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -299,13 +290,13 @@ async function updateWardenById(req, res) {
             res.status(204).send("warden not found or no changes made")
         }
 
-        const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`, [wardenId], mysqlClient)
+        const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`,
+            [wardenId], mysqlClient)
         res.status(200).send({
             status: 'successfull',
             data: getUpdatedWarden[0]
         })
     } catch (error) {
-        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -356,7 +347,6 @@ async function deleteWardenAvatar(req, res) {
 
         await deleteFile(imagePath, fs);
         res.status(200).send('Avatar deleted successfully');
-
     } catch (error) {
         req.log.error(error)
         res.status(500).send('Internal Server Error');
@@ -413,14 +403,13 @@ async function authentication(req, res) {
             [emailId, password],
             mysqlClient)
         if (user.length > 0) {
-            req.session.isLogged = true
             req.session.warden = user[0]
-
+            req.session.isLogged = true
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
             req.session.warden = null
-            res.status(409).send('Invalid emailId or password !')
+            res.status(409).send('Invalid emailId or password.')
         }
     } catch (error) {
         req.log.error(error)
@@ -440,7 +429,7 @@ async function generateOtp(req, res) {
     const currentTime = new Date().getTime();
     const {
         emailId = null
-    } = req.body
+    } = req.body;
 
     try {
         const wardenResult = await mysqlQuery(/*sql*/`SELECT otpTiming FROM warden 
@@ -575,91 +564,95 @@ async function validateInsertItems(body, isUpdate = false, wardenId = null, mysq
         password,
         superAdmin
     } = body
-
     const errors = []
-    if (firstName !== undefined) {
-        if (firstName.length < 2) {
-            errors.push('First Name is invalid')
-        }
-    } else {
-        errors.push('First Name is missing')
-    }
-
-    if (lastName !== undefined) {
-        if (lastName.length < 1) {
-            errors.push('Last Name is invalid')
-        }
-    } else {
-        errors.push('Last Name is missing')
-    }
-
-    if (dob !== undefined) {
-        const date = new Date(dob);
-        if (isNaN(date.getTime())) {
-            errors.push('Dob is invalid');
-        } else {
-            const today = new Date();
-            if (date > today) {
-                errors.push('Dob cannot be in the future');
+    
+    try {
+        if (firstName !== undefined) {
+            if (firstName.length < 2) {
+                errors.push('First Name is invalid')
             }
-        }
-    } else {
-        errors.push('Dob is missing')
-    }
-
-    if (emailId !== undefined) {
-        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-        var emailCheck = emailPattern.test(emailId)
-        if (emailCheck === false) {
-            errors.push('Email Id is invalid');
         } else {
-            let query;
-            let params;
+            errors.push('First Name is missing')
+        }
 
-            if (isUpdate === true) {
-                query = /*sql*/`
-                            SELECT 
-                                COUNT(*) AS count
-                            FROM warden 
-                            WHERE emailId = ?
-                                AND wardenId != ?
-                                AND deletedAt IS NULL`
-                params = [emailId, wardenId];
+        if (lastName !== undefined) {
+            if (lastName.length < 1) {
+                errors.push('Last Name is invalid')
+            }
+        } else {
+            errors.push('Last Name is missing')
+        }
+
+        if (dob !== undefined) {
+            const date = new Date(dob);
+            if (isNaN(date.getTime())) {
+                errors.push('Dob is invalid');
             } else {
-                query = /*sql*/`
-                            SELECT 
-                                COUNT(*) AS count
-                            FROM warden 
-                            WHERE emailId = ? 
-                                AND deletedAt IS NULL`;
-                params = [emailId];
+                const today = new Date();
+                if (date > today) {
+                    errors.push('Dob cannot be in the future');
+                }
             }
+        } else {
+            errors.push('Dob is missing')
+        }
 
-            const validateEmailId = await mysqlQuery(query, params, mysqlClient);
-            if (validateEmailId[0].count > 0) {
-                errors.push("Email Id already exists");
+        if (emailId !== undefined) {
+            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+            var emailCheck = emailPattern.test(emailId)
+            if (emailCheck === false) {
+                errors.push('Email Id is invalid');
+            } else {
+                let query;
+                let params;
+
+                if (isUpdate === true) {
+                    query = /*sql*/`
+                                SELECT 
+                                    COUNT(*) AS count
+                                FROM warden 
+                                WHERE emailId = ?
+                                    AND wardenId != ?
+                                    AND deletedAt IS NULL`
+                    params = [emailId, wardenId];
+                } else {
+                    query = /*sql*/`
+                                SELECT 
+                                    COUNT(*) AS count
+                                FROM warden 
+                                WHERE emailId = ? 
+                                    AND deletedAt IS NULL`;
+                    params = [emailId];
+                }
+
+                const validateEmailId = await mysqlQuery(query, params, mysqlClient);
+                if (validateEmailId[0].count > 0) {
+                    errors.push("Email Id already exists");
+                }
             }
+        } else {
+            errors.push('Email Id is missing');
         }
-    } else {
-        errors.push('Email Id is missing');
-    }
 
-    if (password !== undefined) {
-        if (password.length < 6) {
-            errors.push('Password is invalid')
+        if (password !== undefined) {
+            if (password.length < 6) {
+                errors.push('Password is invalid')
+            }
+        } else {
+            errors.push('Password is missing')
         }
-    } else {
-        errors.push('Password is missing')
-    }
 
-    if (superAdmin !== undefined) {
-        if (![0, 1].includes(parseInt(superAdmin))) {
-            errors.push('SuperAdmin is invalid')
+        if (superAdmin !== undefined) {
+            if (![0, 1].includes(parseInt(superAdmin))) {
+                errors.push('SuperAdmin is invalid')
+            }
+        } else {
+            errors.push('SuperAdmin is missing')
         }
-    } else {
-        errors.push('SuperAdmin is missing')
+        return errors
+    } catch(error) {
+        req.log.error(error)
     }
-    return errors
 }
 
 function getWardenById(wardenId, mysqlClient) {

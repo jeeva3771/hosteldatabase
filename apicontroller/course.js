@@ -240,38 +240,41 @@ async function validateCourseById(courseId, mysqlClient) {
 async function validateInsertItems(body, isUpdate = false, courseId = null, mysqlClient) {
     const { courseName } = body;
 
-    if (courseName !== undefined) {
-        if (courseName.length <= 1) {
-            return "course Name is invalid";
-        } else {
-            let query;
-            let params;
-
-            if (isUpdate === true) {
-                query = /*sql*/`SELECT 
-                            COUNT(*) AS count 
-                        FROM course 
-                        WHERE courseName = ?
-                            AND courseId != ? 
-                            AND deletedAt IS NULL`;
-                params = [courseName, courseId];
+    try {
+        if (courseName !== undefined) {
+            if (courseName.length <= 1) {
+                return "course Name is invalid";
             } else {
-                query = /*sql*/`SELECT 
-                            COUNT(*) AS count
-                        FROM course 
-                        WHERE courseName = ? 
-                            AND deletedAt IS NULL`;
-                params = [courseName];
-            }
+                let query;
+                let params;
 
-            const validCourseName = await mysqlQuery(query, params, mysqlClient);
-            if (validCourseName[0].count > 0) {
-                return "Course Name already exists";
+                if (isUpdate === true) {
+                    query = /*sql*/`SELECT 
+                                COUNT(*) AS count 
+                            FROM course 
+                            WHERE courseName = ?
+                                AND courseId != ? 
+                                AND deletedAt IS NULL`;
+                    params = [courseName, courseId];
+                } else {
+                    query = /*sql*/`SELECT 
+                                COUNT(*) AS count
+                            FROM course 
+                            WHERE courseName = ? 
+                                AND deletedAt IS NULL`;
+                    params = [courseName];
+                }
+
+                const validCourseName = await mysqlQuery(query, params, mysqlClient);
+                if (validCourseName[0].count > 0) {
+                    return "Course Name already exists";
+                }
             }
+        } else {
+            return "Course Name missing";
         }
-
-    } else {
-       return "Course Name missing";
+    } catch {
+        req.log.error(error)
     }
 }
 

@@ -6,10 +6,10 @@ const pinoHttp = require('pino-http');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const FileStore = require('session-file-store')(session);
-const fileStoreOptions = {};
-const { v4: uuidv4 } = require('uuid');
+const FileStoreWarden = require('session-file-store')(session);
+// const FileStoreStudent = require('session-file-store')(session);
 
+const { v4: uuidv4 } = require('uuid');
 
 dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
@@ -22,6 +22,7 @@ const room = require('./apicontroller/room.js');
 const student = require('./apicontroller/student.js');
 const attendance = require('./apicontroller/attendance.js');
 const studentUse = require('./apicontroller/studentuse.js');
+const home = require('./apicontroller/home.js');
 
 
 //uicontroller
@@ -33,115 +34,159 @@ const roomUi = require('./uicontroller/page/roomui.js');
 const wardenUi = require('./uicontroller/page/wardenui.js');
 const studentUi = require('./uicontroller/page/studentui.js');
 const attendanceUi = require('./uicontroller/page/attendanceui.js');
+const studentUseUi = require('./uicontroller/page/studentuseui.js');
+const othersUi = require('./uicontroller/page/othersui.js');
 
-const { getAppUrl } = require('./utilityclient/url.js');
+const { getAppUrl, getStudentAppUrl } = require('./utilityclient/url.js');
 
-const app = express()
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.json())
-app.use(cookieParser());
-app.use(session({
-    store: new FileStore(fileStoreOptions),
-    secret: 'keyboard',
-    resave: true,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: (1000 * 60 * 15)
-    }
-}));
 const logger = pino({
-     level: 'info'
+    level: 'info'
 });
 
-const pageSessionExclude = [
-    '/login',
+function setupApplication(app) {
+    app.use(express.static(path.join(__dirname, 'public')));
+    app.use(express.json())
+    app.use(cookieParser());
+
+    app.use(session({
+        store: new FileStoreWarden({}),
+        secret: process.env.SESSION_SECRET,
+        resave: true,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: (1000 * 60 * 15) // 15 mins
+        }
+    }));
+
+    app.use(
+        pinoHttp({
+            logger,
+            customLogLevel: (res, err) => (res.statusCode >= 500 ? 'error' : 'info'),
+            customSuccessMessage: (req, res) => `Request to ${req.url} processed`,
+            genReqId: (req) => {
+                req.startTime = Date.now();
+                return req.id || uuidv4();
+            },
+            customAttributeKeys: {
+                reqId: 'requestId',
+            },
+        })
+    );
+    
+    // Middleware to log the total process time
+    app.use((req, res, next) => {
+        res.on('finish', () => {
+            const processTime = Date.now() - req.startTime;
+            req.log.info({ processTime }, `Request processed in ${processTime}ms`);
+        });
+        next();
+    });
+    
+    app.set('view engine', 'ejs');
+    app.set('views', path.join(__dirname, '/uicontroller/views'));
+
+    app.mysqlClient = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASSWORD,
+        database: process.env.DB_NAME
+    })    
+}
+
+const studentApp = express()
+const wardenApp = express()
+
+setupApplication(wardenApp)
+setupApplication(studentApp)
+
+const pageWardenSessionExclude = [
     '/login/',
     '/api/login/',
-    '/warden/resetpassword',
     '/warden/resetpassword/',
     '/api/warden/generateotp/',
     '/api/warden/resetpassword/'
 ]
-app.use((req, res, next) => {
-    if (pageSessionExclude.includes(req.originalUrl)) {
+
+const pageStudentSessionExclude = [
+    '/student/login/',
+    '/api/student/generateotp/',
+    '/api/student/verifyotp/authentication/'
+]
+
+// only works for warden
+wardenApp.use((req, res, next) => {
+    if (pageWardenSessionExclude.includes(req.originalUrl)) {
         return next()
     }
-
     if (req.originalUrl !== '/login') {
+        console.log(req.session.isLogged)
         if (req.session.isLogged !== true) {
+            console.log(req.session.isLogged)
             return res.status(401).redirect(getAppUrl('login'))
         }
     }
     return next()
 })
 
-app.use((req, res, next) => {
-    req.startTime = Date.now(); // Set request start time
-    next();
-});
-
-app.use(
-    pinoHttp({
-        logger,
-        customLogLevel: (res, err) => (res.statusCode >= 500 ? 'error' : 'info'),
-        customSuccessMessage: (req, res) => `Request to ${req.url} processed`,
-        genReqId: (req) => {
-            req.startTime = Date.now();
-            // Use UUID for unique request IDs
-            return req.id || uuidv4();
-        },
-        customAttributeKeys: {
-            reqId: 'requestId',
-        },
-    })
-);
-
-// Middleware to log the total process time
-app.use((req, res, next) => {
-    res.on('finish', () => {
-        const processTime = Date.now() - req.startTime;
-        req.log.info({ processTime }, `Request processed in ${processTime}ms`);
-    });
-    next();
-});
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, '/uicontroller/views'));
-
-app.mysqlClient = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-})
-
-app.mysqlClient.connect(function (err) {
+wardenApp.mysqlClient.connect(function (err) {
     if (err) {
         console.error(err)
     } else {
         console.log('mysql connected')
 
-        course(app)
-        block(app)
-        warden(app)
-        blockFloor(app)
-        room(app)
-        student(app)
-        attendance(app)
-        studentUse(app)
+        course(wardenApp)
+        block(wardenApp)
+        warden(wardenApp)
+        blockFloor(wardenApp)
+        room(wardenApp)
+        student(wardenApp)
+        attendance(wardenApp)
+        studentUse(wardenApp)
+        home(wardenApp)
 
-        homeUi(app)
-        courseUi(app)
-        blockUi(app)
-        blockFloorUi(app)
-        roomUi(app)
-        wardenUi(app)
-        studentUi(app)
-        attendanceUi(app)
+        homeUi(wardenApp)
+        courseUi(wardenApp)
+        blockUi(wardenApp)
+        blockFloorUi(wardenApp)
+        roomUi(wardenApp)
+        wardenUi(wardenApp)
+        studentUi(wardenApp)
+        attendanceUi(wardenApp)
+        studentUseUi(wardenApp)
+        othersUi(wardenApp)
 
-        app.listen(process.env.APP_PORT, () => {
+        wardenApp.listen(process.env.APP_PORT, () => {
             logger.info(`listen ${process.env.APP_PORT} port`)
         })
     }
 })
 
+studentApp.use((req, res, next) => {
+    if (pageStudentSessionExclude.includes(req.originalUrl)) {
+        return next()
+    }
+
+    if (req.originalUrl !== '/student/login/') {
+        console.log(req.session.isLoggedStudent)
+        if (req.session.isLoggedStudent !== true ) {
+            console.log(req.originalUrl)
+            console.log(req.session.isLoggedStudent)
+
+            return res.status(401).redirect(getStudentAppUrl('student/login'))
+        }
+    }
+    return next()
+})
+
+studentApp.mysqlClient.connect(function (err) {
+    if (err) {
+        console.error(err)
+    } else {
+        console.log('mysql connected')
+        studentUse(studentApp)
+        studentUseUi(studentApp)
+        studentApp.listen(process.env.STUDENT_APP_PORT, () => {
+            logger.info(`listen ${process.env.STUDENT_APP_PORT} port`)
+        })
+    }
+})

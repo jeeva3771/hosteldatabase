@@ -325,96 +325,100 @@ async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlC
 
     const errors = []
 
-    if (blockFloorId !== undefined) {
-        if (isNaN(blockFloorId) || blockFloorId <= 0) {
-            errors.push('BlockFloorId is invalid')
-        }
-    } else {
-        errors.push('BlockFloorId is missing')
-    }
-
-    if (blockId !== undefined) {
-        if (isNaN(blockId) || blockId <= 0) {
-            errors.push('BlockId is invalid')
-        }
-    } else {
-        errors.push('BlockId is missing')
-    }
-
-    if (roomCapacity !== undefined) {
-        if (isNaN(roomCapacity) || roomCapacity < 0) {
-            errors.push('Room Capacity is invalid')
-        } else if (isUpdate === true) {
-            const validateRoomCapacity = await mysqlQuery(/*sql*/`
-                SELECT 
-                    COUNT(*) AS studentCount
-                FROM student 
-                WHERE roomId = ?
-                    AND deletedAt IS NULL
-                `, [roomId], mysqlClient)
-            if (validateRoomCapacity[0].studentCount > roomCapacity) {
-                errors.push('Transfer a student to another room and attempt to reduce the capacity of this room.')
+    try {
+        if (blockFloorId !== undefined) {
+            if (isNaN(blockFloorId) || blockFloorId <= 0) {
+                errors.push('BlockFloorId is invalid')
             }
-        }
-    } else {
-        errors.push('Room Capacity is missing')
-    }
-
-    if (roomNumber !== undefined) {
-        if (isNaN(roomNumber) || roomNumber <= 0) {
-            errors.push('Room Number is invalid')
         } else {
-            let query;
-            let params;
+            errors.push('BlockFloorId is missing')
+        }
 
-            if (isUpdate === true) {
-                query = /*sql*/`
-                            SELECT 
-                                COUNT(*) AS count 
-                            FROM room 
-                            WHERE blockId = ? 
-                                AND blockFloorId = ?
-                                AND roomNumber = ?
-                                AND roomId != ? 
-                                AND deletedAt IS NULL`;
-                params = [blockId, blockFloorId, roomNumber, roomId];
+        if (blockId !== undefined) {
+            if (isNaN(blockId) || blockId <= 0) {
+                errors.push('BlockId is invalid')
+            }
+        } else {
+            errors.push('BlockId is missing')
+        }
+
+        if (roomCapacity !== undefined) {
+            if (isNaN(roomCapacity) || roomCapacity < 0) {
+                errors.push('Room Capacity is invalid')
+            } else if (isUpdate === true) {
+                const validateRoomCapacity = await mysqlQuery(/*sql*/`
+                    SELECT 
+                        COUNT(*) AS studentCount
+                    FROM student 
+                    WHERE roomId = ?
+                        AND deletedAt IS NULL
+                    `, [roomId], mysqlClient)
+                if (validateRoomCapacity[0].studentCount > roomCapacity) {
+                    errors.push('Transfer a student to another room and attempt to reduce the capacity of this room.')
+                }
+            }
+        } else {
+            errors.push('Room Capacity is missing')
+        }
+
+        if (roomNumber !== undefined) {
+            if (isNaN(roomNumber) || roomNumber <= 0) {
+                errors.push('Room Number is invalid')
             } else {
-                query = /*sql*/`
-                            SELECT 
-                                COUNT(*) AS count
-                            FROM room 
-                            WHERE blockId = ? 
-                                AND blockFloorId = ?
-                                AND roomNumber = ?
-                                AND deletedAt IS NULL`;
-                params = [blockId, blockFloorId, roomNumber];
+                let query;
+                let params;
+
+                if (isUpdate === true) {
+                    query = /*sql*/`
+                                SELECT 
+                                    COUNT(*) AS count 
+                                FROM room 
+                                WHERE blockId = ? 
+                                    AND blockFloorId = ?
+                                    AND roomNumber = ?
+                                    AND roomId != ? 
+                                    AND deletedAt IS NULL`;
+                    params = [blockId, blockFloorId, roomNumber, roomId];
+                } else {
+                    query = /*sql*/`
+                                SELECT 
+                                    COUNT(*) AS count
+                                FROM room 
+                                WHERE blockId = ? 
+                                    AND blockFloorId = ?
+                                    AND roomNumber = ?
+                                    AND deletedAt IS NULL`;
+                    params = [blockId, blockFloorId, roomNumber];
+                }
+
+                const validateRoomNumber = await mysqlQuery(query, params, mysqlClient);
+                if (validateRoomNumber[0].count > 0) {
+                    errors.push("Room Number already exists");
+                }
             }
+        } else {
+            errors.push('Room Number is missing')
+        }
 
-            const validateRoomNumber = await mysqlQuery(query, params, mysqlClient);
-            if (validateRoomNumber[0].count > 0) {
-                errors.push("Room Number already exists");
+        if (isActive !== undefined) {
+            if (![0, 1].includes(isActive)) {
+                errors.push('isActive is invalid')
             }
+        } else {
+            errors.push('isActive is missing')
         }
-    } else {
-        errors.push('Room Number is missing')
-    }
 
-    if (isActive !== undefined) {
-        if (![0, 1].includes(isActive)) {
-            errors.push('isActive is invalid')
+        if (isAirConditioner !== undefined) {
+            if (![0, 1].includes(isAirConditioner)) {
+                errors.push('isAirConditioner is invalid')
+            }
+        } else {
+            errors.push('isAirConditioner is missing')
         }
-    } else {
-        errors.push('isActive is missing')
+        return errors
+    } catch(error) {
+        req.log.error(error)
     }
-
-    if (isAirConditioner !== undefined) {
-        if (![0, 1].includes(isAirConditioner)) {
-            errors.push('isAirConditioner is invalid')
-        }
-    } else {
-        errors.push('isAirConditioner is missing')
-    }
-    return errors
 }
 
 function getStudentCountByRoomId(roomId, mysqlClient) {

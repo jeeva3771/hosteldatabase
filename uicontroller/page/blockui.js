@@ -9,6 +9,7 @@ function blockPageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Structure', link:'#tables-nav'},
             {name:'Block', link:'/block'}
         ]
     });
@@ -23,6 +24,7 @@ function addBlockUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:'/home'},
+            {name:'Structure', link:'#tables-nav'},
             {name:'Block', link:'/block'},
             {name:'Add', link:'/block/add'}
         ]
@@ -39,6 +41,7 @@ function editBlockUi(req, res) {
             user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:'/home'},
+                {name:'Structure', link:'#tables-nav'},
                 {name:'Block', link:'/block'},
                 {name:'Edit', link:'/block/add'}
             ]
