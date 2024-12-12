@@ -109,29 +109,43 @@
 
     function authentication() {
         const adminStatusValue = getSelectedRadioValue('isAdmin');
-        var myHeaders = new Headers();
-        
-        var formData = new FormData();
-        if (imageUploadDom.files.length > 0) {
-            formData.append("image", imageUploadDom.files[0]);
-        }       
-
-        formData.append("firstName", firstNameDom.value);
-        formData.append("lastName", lastNameDom.value);
-        formData.append("dob", dobDom.value);
-        formData.append("emailId", emailIdDom.value);
-        formData.append("password", passwordDom.value);
-        formData.append("superAdmin", adminStatusValue);
-
-        var requestOptions = {
-            method: wardenId ? 'PUT' : 'POST',
-            headers: myHeaders,
-            body: formData,
+        const url = getAppUrl(`api/warden${wardenId ? `/${wardenId}` : ''}`);
+        const method = wardenId ? 'PUT' : 'POST';
+        let requestOptions = {
+            method: method,
+            headers: new Headers(),
             redirect: 'follow'
         };
 
-        let url = getAppUrl(`api/warden${wardenId ? `/${wardenId}` : ''}`);
+        if (imageUploadDom.files.length > 0) {
+            // Use FormData when image upload is present
+            console.log('present')
+            const formData = new FormData();
+            formData.append("image", imageUploadDom.files[0]);
+            formData.append("firstName", firstNameDom.value);
+            formData.append("lastName", lastNameDom.value);
+            formData.append("dob", dobDom.value);
+            formData.append("emailId", emailIdDom.value);
+            formData.append("password", passwordDom.value);
+            formData.append("superAdmin", adminStatusValue);
 
+            requestOptions.body = formData;
+        } else {
+            // Use raw JSON when no image upload is present
+            console.log('absent')
+
+            const raw = {
+                "firstName": firstNameDom.value,
+                "lastName": lastNameDom.value,
+                "dob": dobDom.value,
+                "emailId": emailIdDom.value,
+                "password": passwordDom.value,
+                "superAdmin": adminStatusValue
+            };
+
+            requestOptions.headers.append("Content-Type", "application/json");
+            requestOptions.body = JSON.stringify(raw);
+        }
         fetch(url, requestOptions)
             .then(async (response) => {
                 if ([200, 201].includes(response.status)) {
@@ -139,7 +153,8 @@
                 } else {
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {
-                        alert(responseText[0]);
+                        const errorMessage = responseText.join('\n');
+                        alert(errorMessage);
                     } else {
                         alert(responseText);
                     }

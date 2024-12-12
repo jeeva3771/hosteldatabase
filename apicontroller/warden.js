@@ -177,7 +177,7 @@ async function createWarden(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const isValidInsert = await validateInsertItems(req.body, false, null, mysqlClient);
+        const isValidInsert = await validateInsertItems(req, req.body, req.query, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
             if (req.file.path) {
                 await deleteFile(req.file.path, fs);
@@ -185,6 +185,12 @@ async function createWarden(req, res) {
             return res.status(400).send(isValidInsert);
         }
         await handleFileUpload(req, res, multerMiddleware, multer);
+        // const validateFileType = await handleFileUpload(req, res, multerMiddleware, multer);
+        
+        // if (validateFileType) {
+        //     console.log(validateFileType)
+        //     return res.status(400).send('Invalid file type. Only JPEG files are allowed.')
+        //  }
 
         if (!req.file) {
             uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
@@ -230,7 +236,7 @@ async function createWarden(req, res) {
                 }
         });
     }
-        res.status(201).send('insert successfully')
+    res.status(201).send('insert successfully')
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -261,27 +267,10 @@ async function updateWardenById(req, res) {
             return res.status(404).send("warden not found or already deleted");
         }
 
-        const isValidInsert = await validateInsertItems(req.body, true, wardenId, mysqlClient);
+        const isValidInsert = await validateInsertItems(req, req.body, req.query, true, wardenId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
-
-        await handleFileUpload(req, res, multerMiddleware, multer);
-
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
-        }
-
-        sharp(fs.readFileSync(uploadedFilePath))
-            .resize({
-                width: parseInt(process.env.IMAGE_WIDTH),
-                height: parseInt(process.env.IMAGE_HEIGHT),
-                fit: sharp.fit.cover,
-                position: sharp.strategy.center,
-            })
-            .toFile(uploadedFilePath);
 
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ?
             AND deletedAt IS NULL`,
@@ -297,6 +286,7 @@ async function updateWardenById(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -555,7 +545,7 @@ async function processResetPassword(req, res) {
     }
 }
 
-async function validateInsertItems(body, isUpdate = false, wardenId = null, mysqlClient) {
+async function validateInsertItems(req, body, query, isUpdate = false, wardenId = null, mysqlClient) {
     const {
         firstName,
         lastName,
@@ -564,9 +554,13 @@ async function validateInsertItems(body, isUpdate = false, wardenId = null, mysq
         password,
         superAdmin
     } = body
+    const {
+        update = null
+    } = query
     const errors = []
-    
+
     try {
+        if (update === 'usermaindetails' || Object.entries(query).length === 0) {
         if (firstName !== undefined) {
             if (firstName.length < 2) {
                 errors.push('First Name is invalid')
@@ -633,15 +627,35 @@ async function validateInsertItems(body, isUpdate = false, wardenId = null, mysq
         } else {
             errors.push('Email Id is missing');
         }
+    } 
 
+    if (update === "changepassword" || Object.entries(query).length === 0) {
         if (password !== undefined) {
-            if (password.length < 6) {
+            if (password.length < 6 && !update) {
                 errors.push('Password is invalid')
+            } else if (update === "changepassword") {
+                const oldPassword = body.oldPassword;
+                const getExistsPassword = await mysqlQuery(/*sql*/`
+                    SELECT 
+                        password 
+                    FROM 
+                        warden 
+                    WHERE 
+                        wardenId = ?`,
+                    [wardenId], mysqlClient)
+                
+                if (getExistsPassword[0].password !== oldPassword) {
+                    errors.push('Incorrect current password')
+                } else if (password.length < 6) {
+                    errors.push('New password is invalid')
+                } 
             }
         } else {
             errors.push('Password is missing')
         }
+    }
 
+    if (Object.entries(query).length === 0) {
         if (superAdmin !== undefined) {
             if (![0, 1].includes(parseInt(superAdmin))) {
                 errors.push('SuperAdmin is invalid')
@@ -649,8 +663,10 @@ async function validateInsertItems(body, isUpdate = false, wardenId = null, mysq
         } else {
             errors.push('SuperAdmin is missing')
         }
+    }
         return errors
     } catch(error) {
+        console.log(error)
         req.log.error(error)
     }
 }

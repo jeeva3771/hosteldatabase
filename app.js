@@ -118,10 +118,9 @@ wardenApp.use((req, res, next) => {
     if (pageWardenSessionExclude.includes(req.originalUrl)) {
         return next()
     }
+    
     if (req.originalUrl !== '/login') {
-        console.log(req.session.isLogged)
         if (req.session.isLogged !== true) {
-            console.log(req.session.isLogged)
             return res.status(401).redirect(getAppUrl('login'))
         }
     }
@@ -161,17 +160,14 @@ wardenApp.mysqlClient.connect(function (err) {
     }
 })
 
+// only works for student
 studentApp.use((req, res, next) => {
     if (pageStudentSessionExclude.includes(req.originalUrl)) {
         return next()
     }
 
     if (req.originalUrl !== '/student/login/') {
-        console.log(req.session.isLoggedStudent)
         if (req.session.isLoggedStudent !== true ) {
-            console.log(req.originalUrl)
-            console.log(req.session.isLoggedStudent)
-
             return res.status(401).redirect(getStudentAppUrl('student/login'))
         }
     }

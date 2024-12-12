@@ -33,6 +33,21 @@ async function handleFileUpload(req, res, multerMiddleware, multer) {
     });
 }
 
+// async function handleFileUpload(req, res, multerMiddleware, multer) {
+//     multerMiddleware(req, res, (err) => {
+//         if (err instanceof multer.MulterError) {
+//             res.status(400).send(err.message);
+//             return;
+//         }
+        
+//         if (req.fileValidationError) {
+//             res.status(400).send(req.fileValidationError);
+//             return;
+//         }
+//         return;
+//     });
+// }
+
 function deleteFile(uploadedFilePath, fs) {
     return new Promise((resolve, reject) => {
         console.log(`Does file exist? ${fs.existsSync(uploadedFilePath)}`);

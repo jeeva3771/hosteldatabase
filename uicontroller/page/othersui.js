@@ -14,7 +14,7 @@ function contactUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Pages', link:''},
             {name:'Contact', link:''},
         ]
@@ -28,7 +28,7 @@ function faqUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Pages', link:''},
             {name:'Frequently Asked Questions', link:''},
         ]

@@ -8,9 +8,9 @@ function blockPageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Structure', link:'#tables-nav'},
-            {name:'Block', link:'/block'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
+            {name:'Block', link:getAppUrl('block')}
         ]
     });
 }
@@ -23,10 +23,10 @@ function addBlockUi(req, res) {
         blockId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:'#tables-nav'},
-            {name:'Block', link:'/block'},
-            {name:'Add', link:'/block/add'}
+            {name:'Block', link:getAppUrl('block')},
+            {name:'Add', link:getAppUrl('block/add')}
         ]
     });
 }
@@ -40,10 +40,10 @@ function editBlockUi(req, res) {
             blockId: blockId,
             user: getUserProfile(req.session),
             breadCrumbs: [
-                {name:'Home', link:'/home'},
+                {name:'Home', link:getAppUrl('home')},
                 {name:'Structure', link:'#tables-nav'},
-                {name:'Block', link:'/block'},
-                {name:'Edit', link:'/block/add'}
+                {name:'Block', link:getAppUrl('block')},
+                {name:'Edit', link:getAppUrl('block/add')}
             ]
         });
 }

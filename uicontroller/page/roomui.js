@@ -9,8 +9,8 @@ function roomPageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Room', link:'/room'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Room', link:getAppUrl('room')}
         ]
     });
 }
@@ -23,9 +23,9 @@ function addRoomUi(req, res) {
         roomId: '',
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Room', link:'/room'},
-            {name:'Add', link:'/room/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Room', link:getAppUrl('room')},
+            {name:'Add', link:getAppUrl('room/add')}
         ]
 
     });
@@ -40,11 +40,10 @@ function editRoomUi(req, res) {
         roomId: roomId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Room', link:'/room'},
-            {name:'Edit', link:'/room/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Room', link:getAppUrl('room')},
+            {name:'Edit', link:getAppUrl('room/add')}
         ]
-
     });
 }
 

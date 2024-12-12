@@ -21,28 +21,28 @@
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center" id="blockCodeContainer">
                             <p><strong>Block</strong></p>
-                            <div class="col-5">
+                            <div class="col-7">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="floorNumberContainer">
                             <p><strong>Floor Number</strong></p>
-                            <div class="col-4 mx-auto">
+                            <div class="col-6 mx-auto">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="roomNumberContainer">
                             <p><strong>Room Number</strong></p>
-                            <div class="col-4 mx-auto">
+                            <div class="col-6 mx-auto">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
                                 </div>
                             </div>
@@ -493,7 +493,7 @@
     }
 
     checkInDom.addEventListener('change', () => {
-        if (checkInDom.value > today) {
+        if (!checkInDom.value || checkInDom.value > today) {
             statusDom.style.visibility = 'hidden';
             alert('Date cannot be in the future');
         }

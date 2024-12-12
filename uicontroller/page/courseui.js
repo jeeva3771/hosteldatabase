@@ -8,9 +8,9 @@ function coursePageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
-            {name:'Course', link:'/course'},
+            {name:'Course', link:getAppUrl('course')},
         ]
     });
 }
@@ -23,10 +23,10 @@ function addCourseUi(req, res) {
         courseId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
-            {name:'Course', link:'/course'},
-            {name:'Add', link:'/course/add'}
+            {name:'Course', link:getAppUrl('course')},
+            {name:'Add', link:getAppUrl('course/add')}
         ]
     })
 }
@@ -40,10 +40,10 @@ function editCourseUi(req, res) {
         courseId: courseId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
-            {name:'Course', link:'/course'},
-            {name:'Edit', link:'/course/add'}
+            {name:'Course', link:getAppUrl('course')},
+            {name:'Edit', link:getAppUrl('course/add')}
         ]
     });
 }

@@ -11,8 +11,8 @@ function wardenPageUi(req, res) {
             avatarWardenId: avatarWardenId,
             user: getUserProfile(req.session),
             breadCrumbs: [
-                {name:'Home', link:'/home'},
-                {name:'Warden', link:'/warden'},
+                {name:'Home', link:getAppUrl('home')},
+                {name:'Warden', link:getAppUrl('warden')},
             ]
         });
     }
@@ -26,9 +26,9 @@ function addWardenUi(req, res) {
         wardenId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Warden', link:'/warden'},
-            {name:'Add', link:'/warden/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Warden', link:getAppUrl('warden')},
+            {name:'Add', link:getAppUrl('warden/add')}
         ]
     });
 }
@@ -42,9 +42,9 @@ function editWardenUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Warden', link:'/warden'},
-            {name:'Edit', link:'/warden/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Warden', link:getAppUrl('warden')},
+            {name:'Edit', link:getAppUrl('warden/add')}
         ]
     });
 }
@@ -62,9 +62,9 @@ function wardenDetailsUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
+            {name:'Home', link:getAppUrl('home')},
             {name:'User', link:''},
-            {name:'UserDetails', link:'/warden/details'}
+            {name:'UserDetails', link:getAppUrl('warden/details')}
         ]
     })
 }
