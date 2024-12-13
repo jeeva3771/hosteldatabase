@@ -119,7 +119,6 @@
 
         if (imageUploadDom.files.length > 0) {
             // Use FormData when image upload is present
-            console.log('present')
             const formData = new FormData();
             formData.append("image", imageUploadDom.files[0]);
             formData.append("firstName", firstNameDom.value);
@@ -132,8 +131,6 @@
             requestOptions.body = formData;
         } else {
             // Use raw JSON when no image upload is present
-            console.log('absent')
-
             const raw = {
                 "firstName": firstNameDom.value,
                 "lastName": lastNameDom.value,

@@ -195,9 +195,10 @@
     };
 
     fetch(getAppUrl(`api/warden/${wardenId}/editavatar`), requestOptions)
-    .then((response) => {
+    .then(async (response) => {
       if (response.status === 400) {
-        alert('Invalid file type. Only JPEG files are allowed.')
+
+        alert(await response.text())
       }
       setTimeout(() => {
         wardenImage();
@@ -220,7 +221,6 @@
       .then(() => {
         setTimeout(() => {
           wardenImage();
-          resetAvatarInput();
           spinnerDom.style.display = "none"; // Hide spinner
         }, 1000);
       })
@@ -296,13 +296,6 @@
           }
       })
       .catch(error => alert('Something went wrong.Please try later.'));
-  }
-
-  function resetAvatarInput() {
-    const fileInput = document.querySelector('input[type="file"]'); 
-    if (fileInput) {
-        fileInput.value = ""; 
-    }
   }
 
   function togglePersonalDetailsButton() {

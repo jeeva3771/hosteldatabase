@@ -22,6 +22,7 @@
 <script src="<%=appURL%>assets/vendor/simple-datatables/simple-datatables.js"></script>
 <script src="<%=appURL%>assets/vendor/tinymce/tinymce.min.js"></script>
 <script src="<%=appURL%>assets/vendor/php-email-form/validate.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <!-- Template Main JS File -->
 <script src="<%=appURL%>assets/js/main.js"></script>
@@ -57,17 +58,17 @@
     }
   }
 
-  const currentPath = window.location.pathname;
-  const links = Array.from(document.querySelectorAll('a'));
+  // const currentPath = window.location.pathname;
+  // const links = Array.from(document.querySelectorAll('a'));
   
-  links.forEach(link => {
-    console.log(link.getAttribute("href").split('5').pop())
-    const hrefPath = link.getAttribute("href").split('5').pop();
-    if (hrefPath === currentPath) {
-      link.classList.add("active");
-      link.classList.remove("collapsed");
-    }
-  });
+  // links.forEach(link => {
+  //   console.log(link.getAttribute("href").split('5').pop())
+  //   const hrefPath = link.getAttribute("href").split('5').pop();
+  //   if (hrefPath === currentPath) {
+  //     link.classList.add("active");
+  //     link.classList.remove("collapsed");
+  //   }
+  // });
 
   window.addEventListener('load', () => {
     wardenImage()

@@ -1,4 +1,4 @@
-const { mysqlQuery, handleFileUpload, deleteFile } = require('../utilityclient/query');
+const { mysqlQuery, deleteFile } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 const multer = require('multer');
@@ -177,20 +177,10 @@ async function createWarden(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const isValidInsert = await validateInsertItems(req, req.body, req.query, false, null, mysqlClient);
+        const isValidInsert = await validatePayload(req, req.body, req.query, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
-            if (req.file.path) {
-                await deleteFile(req.file.path, fs);
-            }
             return res.status(400).send(isValidInsert);
         }
-        await handleFileUpload(req, res, multerMiddleware, multer);
-        // const validateFileType = await handleFileUpload(req, res, multerMiddleware, multer);
-        
-        // if (validateFileType) {
-        //     console.log(validateFileType)
-        //     return res.status(400).send('Invalid file type. Only JPEG files are allowed.')
-        //  }
 
         if (!req.file) {
             uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
@@ -267,7 +257,7 @@ async function updateWardenById(req, res) {
             return res.status(404).send("warden not found or already deleted");
         }
 
-        const isValidInsert = await validateInsertItems(req, req.body, req.query, true, wardenId, mysqlClient);
+        const isValidInsert = await validatePayload(req, req.body, req.query, true, wardenId, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert)
         }
@@ -301,7 +291,9 @@ async function updateWardenAvatar(req, res) {
     }
 
     try {
-        await handleFileUpload(req, res, multerMiddleware, multer);
+        if (req.fileValidationError) {
+           return res.status(400).send(req.fileValidationError);
+        }
 
         if (!req.file) {
             uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
@@ -545,7 +537,7 @@ async function processResetPassword(req, res) {
     }
 }
 
-async function validateInsertItems(req, body, query, isUpdate = false, wardenId = null, mysqlClient) {
+async function validatePayload(req, body, query, isUpdate = false, wardenId = null, mysqlClient) {
     const {
         firstName,
         lastName,
@@ -559,75 +551,75 @@ async function validateInsertItems(req, body, query, isUpdate = false, wardenId 
     } = query
     const errors = []
 
-    try {
+    try {    
         if (update === 'usermaindetails' || Object.entries(query).length === 0) {
-        if (firstName !== undefined) {
-            if (firstName.length < 2) {
-                errors.push('First Name is invalid')
-            }
-        } else {
-            errors.push('First Name is missing')
-        }
-
-        if (lastName !== undefined) {
-            if (lastName.length < 1) {
-                errors.push('Last Name is invalid')
-            }
-        } else {
-            errors.push('Last Name is missing')
-        }
-
-        if (dob !== undefined) {
-            const date = new Date(dob);
-            if (isNaN(date.getTime())) {
-                errors.push('Dob is invalid');
-            } else {
-                const today = new Date();
-                if (date > today) {
-                    errors.push('Dob cannot be in the future');
+            if (firstName !== undefined) {
+                if (firstName.length < 2) {
+                    errors.push('First Name is invalid')
                 }
-            }
-        } else {
-            errors.push('Dob is missing')
-        }
-
-        if (emailId !== undefined) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-            var emailCheck = emailPattern.test(emailId)
-            if (emailCheck === false) {
-                errors.push('Email Id is invalid');
             } else {
-                let query;
-                let params;
+                errors.push('First Name is missing')
+            }
 
-                if (isUpdate === true) {
-                    query = /*sql*/`
-                                SELECT 
-                                    COUNT(*) AS count
-                                FROM warden 
-                                WHERE emailId = ?
-                                    AND wardenId != ?
-                                    AND deletedAt IS NULL`
-                    params = [emailId, wardenId];
+            if (lastName !== undefined) {
+                if (lastName.length < 1) {
+                    errors.push('Last Name is invalid')
+                }
+            } else {
+                errors.push('Last Name is missing')
+            }
+
+            if (dob !== undefined) {
+                const date = new Date(dob);
+                if (isNaN(date.getTime())) {
+                    errors.push('Dob is invalid');
                 } else {
-                    query = /*sql*/`
-                                SELECT 
-                                    COUNT(*) AS count
-                                FROM warden 
-                                WHERE emailId = ? 
-                                    AND deletedAt IS NULL`;
-                    params = [emailId];
+                    const today = new Date();
+                    if (date > today) {
+                        errors.push('Dob cannot be in the future');
+                    }
                 }
-
-                const validateEmailId = await mysqlQuery(query, params, mysqlClient);
-                if (validateEmailId[0].count > 0) {
-                    errors.push("Email Id already exists");
-                }
+            } else {
+                errors.push('Dob is missing')
             }
-        } else {
-            errors.push('Email Id is missing');
-        }
-    } 
+
+            if (emailId !== undefined) {
+                const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                var emailCheck = emailPattern.test(emailId)
+                if (emailCheck === false) {
+                    errors.push('Email Id is invalid');
+                } else {
+                    let query;
+                    let params;
+
+                    if (isUpdate === true) {
+                        query = /*sql*/`
+                                    SELECT 
+                                        COUNT(*) AS count
+                                    FROM warden 
+                                    WHERE emailId = ?
+                                        AND wardenId != ?
+                                        AND deletedAt IS NULL`
+                        params = [emailId, wardenId];
+                    } else {
+                        query = /*sql*/`
+                                    SELECT 
+                                        COUNT(*) AS count
+                                    FROM warden 
+                                    WHERE emailId = ? 
+                                        AND deletedAt IS NULL`;
+                        params = [emailId];
+                    }
+
+                    const validateEmailId = await mysqlQuery(query, params, mysqlClient);
+                    if (validateEmailId[0].count > 0) {
+                        errors.push("Email Id already exists");
+                    }
+                }
+            } else {
+                errors.push('Email Id is missing');
+            }
+        } 
 
     if (update === "changepassword" || Object.entries(query).length === 0) {
         if (password !== undefined) {
@@ -656,6 +648,10 @@ async function validateInsertItems(req, body, query, isUpdate = false, wardenId 
     }
 
     if (Object.entries(query).length === 0) {
+        if (req.fileValidationError) {
+            errors.push(req.fileValidationError)
+        }
+
         if (superAdmin !== undefined) {
             if (![0, 1].includes(parseInt(superAdmin))) {
                 errors.push('SuperAdmin is invalid')

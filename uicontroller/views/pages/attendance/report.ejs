@@ -42,7 +42,7 @@
                         </table>
                     </div>
                     <div class="col-lg-3" style="display: none;" id="count">
-                        <div class="border border-dark-subtle p-3 rounded">
+                        <div class="border border-dark-subtle p-3 rounded mb-3">
                             <p class="mb-2">Present: <span class="text-dark small fw-bold" 
                                 id="greenCount"></span></p>
                             <p class="mb-2">Absent: <span class="text-dark small fw-bold" 
@@ -52,6 +52,8 @@
                             <p class="mb-0">Total Days: <span class="text-dark small fw-bold" 
                                 id="totalDays"></span></p>
                         </div>
+                        <button type="button" class="btn btn-primary" onClick="downloadReport()" 
+                         id="download" style="display: none;">Download Report</button>
                     </div>
                 </div>
                 <div class="d-flex flex-row align-items-center justify-content-center mb-3 d-none" 
@@ -82,9 +84,11 @@
     const redCountDom= document.getElementById('redCount');
     const notMarkedCountDom = document.getElementById('notMarkedCount');
     const totalDaysDom = document.getElementById('totalDays');
+    const downloadDom = document.getElementById('download');
     const currentTime = new Date();
     const currentYear = currentTime.getFullYear();
     const yearRange = 20;
+    let reportData;
 
     window.addEventListener('load', async () => {
         try {
@@ -173,6 +177,10 @@
             renderDayHeaders();
             const data = await response.json();
             const attendanceData = Object.entries(data).map(([key, value]) => ({ date: key, status: value }));
+            reportData = Object.entries(data).map(([key, value]) => ({ 
+                date: key, 
+                status: value === 1 ? 'Present' : 'Absent'
+            }))
             let greenCount = 0;
             let redCount = 0;
 
@@ -222,12 +230,14 @@
             notMarkedCount.innerText = lastDate - (greenCount + redCount);
             totalDaysDom.innerText = lastDate;
             countDom.style.display = 'block';
+            downloadDom.style.display = 'block';
         } catch (error) {
             alert('Something went wrong.Please try later.')
         }
     }
 
     function renderDefaultCalendar(firstDay, lastDate) {
+        downloadDom.style.display = 'none';
         let date = 1;
         dayHeadersDom.innerHTML = '';
         dateLabelDom.innerHTML = '';
@@ -262,6 +272,21 @@
 
     function toggleAttendanceStatusDisplay(show) {
         attendanceStatus.classList.toggle('d-none', !show);
+    }
+
+    function downloadReport() {
+        const tableData = [
+                ["Date", "Status"],
+                ...reportData.map(item => [item.date, item.status])
+            ];
+
+        // Convert the data to a worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(tableData);
+        // Create a new workbook and append the worksheet
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, `Attendance Report - ${selectedStudentDom.value}`);
+        // Generate a binary Excel file and trigger download
+        XLSX.writeFile(workbook, "Attendance_Report.xlsx");
     }
 
 </script>

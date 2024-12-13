@@ -155,6 +155,7 @@
     const updateImageDom = document.getElementById('updateImage');
     const studentImageDom = document.getElementById('studentImage');
     const removeImageDom = document.getElementById('removeImage');
+    const fileInputDom = document.querySelector('input[type="file"]'); 
     const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
 
@@ -192,7 +193,7 @@
         fetch(url, requestOptions)
             .then(async (response) => {
                 if ([200, 201].includes(response.status)) {
-                    window.location = getAppUrl('api/student');
+                    window.location = getAppUrl('student');
                 } else {
                     const responseText = await response.json();
 
@@ -433,7 +434,11 @@
         };
 
         fetch(getAppUrl(`api/student/${studentId}/editimage`), requestOptions)
-            .then(() => {
+            .then(async(response) => {
+                if (response.status === 400) {
+                    resetStudentImageInput()
+                    return alert(await response.text())
+                }
                 setTimeout(getStudentImage, 1000)
             })
             .catch(error => alert('Edit student image something went wrong.Please try later'));
@@ -448,10 +453,16 @@
         };
 
         fetch(getAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
-            .then(() => {
+            .then(()=> {
                 setTimeout(getStudentImage, 1000)
                 updateImageDom.value = ''
             })
             .catch(error => alert('Delete Student image something went wrong.Please try later.'));
+    }
+
+    function resetStudentImageInput() {
+        if (fileInputDom) {
+            fileInputDom.value = ""; 
+        }
     }
 </script>

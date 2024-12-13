@@ -1,4 +1,4 @@
-const { mysqlQuery, handleFileUpload, deleteFile } = require('../utilityclient/query')
+const { mysqlQuery, deleteFile } = require('../utilityclient/query')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -285,10 +285,12 @@ async function updateStudentImage(req, res) {
 
     try {
         if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
-            return res.status(409).send('Warden is not valid to edit')
+            return res.status(409).send('Warden is not valid to edit');
         }
 
-        await handleFileUpload(req, res, multerMiddleware, multer);
+        if (req.fileValidationError) {
+            return res.status(400).send(req.fileValidationError);
+        }
 
         if (!req.file) {
             uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');

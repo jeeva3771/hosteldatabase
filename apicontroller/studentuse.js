@@ -1,4 +1,4 @@
-const { mysqlQuery, attendanceReport } = require('../utilityclient/query');
+const { mysqlQuery } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 
@@ -131,9 +131,6 @@ async function verifyOtpStudentAuthentication(req, res) {
                     name: studentName,
                     regNo: studentRegNo
                 }
-                console.log(req.session.studentInfo.name)
-                console.log(req.session.studentInfo.regNo)
-
                 req.session.isLoggedStudent = true
             }
             return res.status(200).send('success');
@@ -176,7 +173,67 @@ async function verifyOtpStudentAuthentication(req, res) {
 }
 
 async function studentAttendanceReport(req, res) {
-    return await attendanceReport(req, res)
+    const mysqlClient = req.app.mysqlClient;
+    const {
+        month,
+        year,
+        studentName,
+        registerNumber
+    } = req.query;
+    var errors = []
+    let queryParameters = [month, year, studentName, registerNumber];
+
+    if (isNaN(month)) {
+        errors.push('month')
+    }
+
+    if (isNaN(year)) {
+        errors.push('year')
+    }
+
+    if (errors.length > 0) {
+        let errorMessage;
+
+        if (errors.length === 1) {
+            errorMessage = `Please select a ${errors[0]} before generating the report.`
+        } else {
+            errorMessage = `Please select a ${errors.join(", ")} before generating the report.`
+        }
+
+        return res.status(400).send(errorMessage)
+    }
+
+    try {
+        let sqlQuery = /*sql*/`
+        SELECT 
+            DATE_FORMAT(a.checkInDate, "%Y-%m-%d") AS checkIn,
+            a.isPresent
+        FROM 
+            attendance AS a
+        INNER JOIN 
+            student AS s ON s.studentId = a.studentId
+        WHERE 
+            MONTH(a.checkInDate) = ?
+            AND YEAR(a.checkInDate) = ?
+            AND s.name = ?
+            AND s.registerNumber = ?`;
+        
+        const studentReport = await mysqlQuery(sqlQuery, queryParameters, mysqlClient)
+
+        if (studentReport.length === 0) {
+            return res.status(404).send('Student attendance report not found for the selected month and year.')
+        }
+
+        const formattedReport = studentReport.reduce((acc, { checkIn, isPresent }) => {
+            acc[checkIn] = isPresent;
+            return acc;
+        }, {});
+
+        return res.status(200).send(formattedReport);
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
 }
 
 function studentLogOut(req, res) {
@@ -189,6 +246,6 @@ function studentLogOut(req, res) {
 module.exports = (app) => {
     app.post('/api/student/generateotp', generateOtp)
     app.put('/api/student/verifyotp/authentication', verifyOtpStudentAuthentication)
+    app.get('/api/student/attendancereport', studentAttendanceReport)
     app.get('/api/student/logout', studentLogOut)
-    app.get('/api/attendance/studentattendancereport', studentAttendanceReport)
 }
