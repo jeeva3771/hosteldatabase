@@ -52,7 +52,7 @@
                             <p class="mb-0">Total Days: <span class="text-dark small fw-bold" 
                                 id="totalDays"></span></p>
                         </div>
-                        <button type="button" class="btn btn-primary" onClick="downloadReport()" 
+                        <button type="button" class="btn btn-primary btn-sm" onClick="downloadReport()" 
                          id="download" style="display: none;">Download Report</button>
                     </div>
                 </div>
@@ -275,18 +275,22 @@
     }
 
     function downloadReport() {
+        downloadDom.disabled = true;
         const tableData = [
-                ["Date", "Status"],
-                ...reportData.map(item => [item.date, item.status])
-            ];
+            ["Date", "Status"],
+            ...reportData.map(item => [item.date, item.status])
+        ];
 
         // Convert the data to a worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(tableData);
         // Create a new workbook and append the worksheet
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, `Attendance Report - ${selectedStudentDom.value}`);
+        XLSX.utils.book_append_sheet(workbook, worksheet, `${selectedStudentDom.value}-Report`);
         // Generate a binary Excel file and trigger download
-        XLSX.writeFile(workbook, "Attendance_Report.xlsx");
+        XLSX.writeFile(workbook, `Attendance_Report.xlsx`);
+        setInterval(() =>{
+            downloadDom.disabled = false;
+        }, 1000)
     }
 
 </script>

@@ -12,7 +12,7 @@ function wardenPageUi(req, res) {
             user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:getAppUrl('home')},
-                {name:'Warden', link:getAppUrl('warden')},
+                {name:'Warden', link:''},
             ]
         });
     }
@@ -20,33 +20,41 @@ function wardenPageUi(req, res) {
 
 function addWardenUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
-    res.render('pages/warden/wardenform.ejs', {
-        appURL: getAppUrl(),
-        avatarWardenId: avatarWardenId,
-        wardenId: '',
-        user: getUserProfile(req.session),
-        breadCrumbs: [
-            {name:'Home', link:getAppUrl('home')},
-            {name:'Warden', link:getAppUrl('warden')},
-            {name:'Add', link:getAppUrl('warden/add')}
-        ]
-    });
+    if (!req.session || !req.session.warden || req.session.warden.superAdmin !== 1) {
+        return res.status(403).redirect('/error')
+    } else {
+        res.render('pages/warden/wardenform.ejs', {
+            appURL: getAppUrl(),
+            avatarWardenId: avatarWardenId,
+            wardenId: '',
+            user: getUserProfile(req.session),
+            breadCrumbs: [
+                {name:'Home', link:getAppUrl('home')},
+                {name:'Warden', link:getAppUrl('warden')},
+                {name:'Add', link:''}
+            ]
+        });
+    }
 }
 
 function editWardenUi(req, res) {
     const avatarWardenId = req.session.warden.wardenId;
     const wardenId = req.params.wardenId;
-    res.render('pages/warden/wardenform.ejs', {
-        appURL: getAppUrl(),
-        wardenId: wardenId,
-        avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
-        breadCrumbs: [
-            {name:'Home', link:getAppUrl('home')},
-            {name:'Warden', link:getAppUrl('warden')},
-            {name:'Edit', link:getAppUrl('warden/add')}
-        ]
-    });
+    if (!req.session || !req.session.warden || req.session.warden.superAdmin !== 1) {
+        return res.status(403).redirect('/error')
+    } else {
+        res.render('pages/warden/wardenform.ejs', {
+            appURL: getAppUrl(),
+            wardenId: wardenId,
+            avatarWardenId: avatarWardenId,
+            user: getUserProfile(req.session),
+            breadCrumbs: [
+                {name:'Home', link:getAppUrl('home')},
+                {name:'Warden', link:getAppUrl('warden')},
+                {name:'Edit', link:''}
+            ]
+        });
+    }
 }
 
 function resetPasswordUi(req, res) {
@@ -63,8 +71,8 @@ function wardenDetailsUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
-            {name:'User', link:''},
-            {name:'UserDetails', link:getAppUrl('warden/details')}
+            {name:'User', link:getAppUrl('warden/details')},
+            {name:'UserDetails', link:''}
         ]
     })
 }

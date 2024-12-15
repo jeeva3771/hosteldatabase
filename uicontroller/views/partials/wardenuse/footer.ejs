@@ -32,6 +32,9 @@
   const userImageDom = document.getElementById('userImage');
   const imageDom = document.getElementById('image');
   const editProfileDom = document.getElementById('editProfile');
+  const currentPath = window.location.pathname;
+  const sidebarDom = document.querySelector("aside.sidebar");
+  const linksDom = sidebarDom.querySelectorAll("a");
 
   function getSelectedRadioValue(radioName) {
     let selectedValue = null;
@@ -58,21 +61,30 @@
     }
   }
 
-  // const currentPath = window.location.pathname;
-  // const links = Array.from(document.querySelectorAll('a'));
-  
-  // links.forEach(link => {
-  //   console.log(link.getAttribute("href").split('5').pop())
-  //   const hrefPath = link.getAttribute("href").split('5').pop();
-  //   if (hrefPath === currentPath) {
-  //     link.classList.add("active");
-  //     link.classList.remove("collapsed");
-  //   }
-  // });
+  function activateSidebarLink() {
+    linksDom.forEach(link => {
+      const hrefPath = new URL(link.href).pathname;
 
-  window.addEventListener('load', () => {
-    wardenImage()
-  })
+      if (currentPath === hrefPath) {
+        link.classList.add("active");
+        link.classList.remove("collapsed");
 
+        const parentNavContent = link.closest(".nav-content");
+        if (parentNavContent) {
+          parentNavContent.classList.add("show");
+
+          const parentToggleLink = parentNavContent.previousElementSibling;
+          if (parentToggleLink) {
+            parentToggleLink.classList.remove("collapsed");
+          }
+        }
+      }
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    wardenImage();
+    activateSidebarLink(); 
+  });
 </script>
 </html>

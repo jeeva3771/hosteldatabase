@@ -9,7 +9,7 @@ function studentPageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
-            {name:'Student', link:getAppUrl('student')}
+            {name:'Student', link:''}
         ]
     });
 }
@@ -24,7 +24,7 @@ function addStudentUi(req, res) {
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Student', link:getAppUrl('student')},
-            {name:'Add', link:getAppUrl('student/add')}
+            {name:'Add', link:''}
         ]
     });
 }
@@ -40,7 +40,7 @@ function editStudentUi(req, res) {
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Student', link:getAppUrl('student')},
-            {name:'Edit', link:getAppUrl('student/add')}
+            {name:'Edit', link:''}
         ]
     });
 }

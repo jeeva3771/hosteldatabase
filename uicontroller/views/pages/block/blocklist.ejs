@@ -124,8 +124,8 @@
     var tableDataDom = document.getElementById("blocksData");
     var limitDom = document.getElementById("limit");
     var paginationDom = document.getElementById("pagination");
-    var orderIconDom = document.querySelectorAll('.sortIcon');
     var searchDom = document.getElementById("searchInput");
+    var orderIconDom = document.querySelectorAll('.sortIcon');
     var columnSortOrders = {
         blockCode: 'ASC',
         blockLocation: 'ASC',
@@ -134,10 +134,6 @@
     };
     var currentColumn = 'createdAt';
     var url = `&orderby=bk.${currentColumn}&sort=DESC`;
-
-    orderIconDom.forEach((icon) => {
-        icon.classList.add('light');
-    })
 
     function changeLimit() {
         blockPage();
@@ -152,13 +148,15 @@
         currentColumn = column;
         url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
 
-        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-        activeIcons.forEach(icon => {
-        icon.classList.remove('light');
-        icon.classList.add('dark');
-    });
+        orderIconDom.forEach(icon => {
+            icon.classList.remove('dark');
+        });
+
+        const clickedIcon = event.currentTarget;
+        clickedIcon.classList.add('dark');
         blockPage();
     }
+
 
     function blockPage(pageNo = 1) {
         var fetchUrl = `${getAppUrl('api/block')}?limit=${limitDom.value}&page=${pageNo}${url}`;
@@ -214,23 +212,57 @@
 
         if (totalPages > 1) {
             paginationHtml += `
-            <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
-            </li>`;
-
-            for (let i = 1; i <= totalPages; i++) {
-                paginationHtml += `
-                <li class="page-item${i === pageNo ? ' active' : ''}">
-                    <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                    <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
                 </li>`;
-            }
 
+            if (totalPages <= 3) {
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `
+                        <li class="page-item${pageNo === i ? ' active' : ''}">
+                            <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                        </li>`;
+                }
+            } else {
+                paginationHtml += `
+                    <li class="page-item${pageNo === 1 ? ' active' : ''}">
+                        <a class="page-link" onclick="blockPage(1)">1</a>
+                    </li>`;
+
+                if (pageNo > 2) {
+                    paginationHtml += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>`;
+                }
+
+                const startPage = Math.max(2, pageNo - 1); 
+                const endPage = Math.min(totalPages - 1, pageNo + 1);
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHtml += `
+                        <li class="page-item${pageNo === i ? ' active' : ''}">
+                            <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                        </li>`;
+                }
+
+                if (pageNo < totalPages - 1) {
+                    paginationHtml += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>`;
+                }
+
+                paginationHtml += `
+                    <li class="page-item${pageNo === totalPages ? ' active' : ''}">
+                        <a class="page-link" onclick="blockPage(${totalPages})">${totalPages}</a>
+                    </li>`;
+            }
             paginationHtml += `
-            <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
-            </li>`;
+                <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                    <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
+                </li>`;
         }
-            paginationDom.innerHTML = paginationHtml;
+        paginationDom.innerHTML = paginationHtml;
         })
         .catch((error) => alert('Something went wrong.Please try later.'));
     }

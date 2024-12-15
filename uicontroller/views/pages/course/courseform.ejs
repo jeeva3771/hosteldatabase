@@ -38,6 +38,7 @@
     var courseId = <%= courseId || 'null' %>;
 
     function saveOrUpdateCourse() {
+        submitButtonDom.disabled = true;
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -59,15 +60,19 @@
                     window.location = getAppUrl('course');
                 } else {
                     const responseText = await response.json();
-                    console.log(responseText)
                     if (Array.isArray(responseText)) {
                         alert(responseText[0]);
+                        submitButtonDom.disabled = false;
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
+                        submitButtonDom.disabled = false;
                     }
                 }
             })
-            .catch(error => alert('Internal Server Error'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
 
     if (courseId) {

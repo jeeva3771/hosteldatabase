@@ -9,7 +9,8 @@ function blockFloorPageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
-            {name:'Blockfloor', link:getAppUrl('blockfloor')}
+            {name:'Structure', link:''},
+            {name:'Blockfloor', link:''}
         ]
     });
 }
@@ -23,8 +24,9 @@ function addBlockFloorUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
             {name:'Blockfloor', link:getAppUrl('blockfloor')},
-            {name:'Add', link:getAppUrl('blockfloor/add')}
+            {name:'Add', link:''}
         ]
     });
 }
@@ -39,8 +41,9 @@ function editBlockFloorUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
             {name:'Blockfloor', link:getAppUrl('blockfloor')},
-            {name:'Edit', link:getAppUrl('blockfloor/add')}
+            {name:'Edit', link:''}
         ]
     });
 }

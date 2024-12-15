@@ -171,7 +171,7 @@ async function createRoom(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const validateInsert = await validateInsertItems(req.body, false, roomId = null, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, false, roomId = null, mysqlClient);
         console.log(validateInsert)
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
@@ -184,7 +184,7 @@ async function createRoom(req, res) {
             mysqlClient
         )
         if (newRoom.affectedRows === 0) {
-            res.status(400).send("No insert was made")
+            res.status(400).send({error:"No insert was made"})
         } else {
             res.status(201).send("Insert Successfully")
         }
@@ -216,15 +216,15 @@ async function updateRoomById(req, res) {
     try {
         const room = await validateRoomById(roomId, mysqlClient)
         if (!room) {
-            return res.status(404).send("Room not found or already deleted");
+            return res.status(404).send({error:"Room not found or already deleted"});
         }
 
         const isValid = await validateUpdateRoom(roomId, mysqlClient, req.body)
         if (!isValid) {
-            return res.status(409).send("students in room shift to another room than try");
+            return res.status(409).send({error:"Students in room shift to another room and try again"});
         }
 
-        const validateInsert = await validateInsertItems(req.body, true, roomId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, roomId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
@@ -232,7 +232,7 @@ async function updateRoomById(req, res) {
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Room not found or no changes made")
+            res.status(204).send({error:"Room not found or no changes made"})
         }
 
         const getUpdatedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
@@ -313,7 +313,7 @@ async function validateRoomById(roomId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, roomId = null, mysqlClient) {
     const {
         blockFloorId,
         blockId,

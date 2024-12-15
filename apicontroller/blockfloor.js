@@ -153,7 +153,7 @@ async function createBlockFloor(req, res) {
     } = req.body
     const createdBy = req.session.warden.wardenId;
 
-    const validateInsert = await validateInsertItems(req.body, false, null, mysqlClient);
+    const validateInsert = await validatePayload(req, req.body, false, null, mysqlClient);
     if (validateInsert.length > 0) {
         return res.status(400).send(validateInsert);
     }
@@ -165,7 +165,7 @@ async function createBlockFloor(req, res) {
             mysqlClient
         )
         if (newBlockFloor.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+            res.status(400).send({error:"No insert was made"})
         } else {
             res.status(201).send('insert successfully')
         }
@@ -197,15 +197,15 @@ async function updateBlockFloorById(req, res) {
     try {
         const blockFloor = await validateBlockFloorById(blockFloorId, mysqlClient);
         if (!blockFloor) {
-            return res.status(404).send("Block not found or already deleted");
+            return res.status(404).send({error:"Block not found or already deleted"});
         }
 
         const isValid = await validateUpdateBlockFloor(blockFloorId, mysqlClient, req.body)
         if (!isValid) {
-            return res.status(409).send("students in blockfloor shift to another blockfloor");
+            return res.status(409).send({error:"Students in blockfloor shift to another blockfloor and try again"});
         }
 
-        const validateInsert = await validateInsertItems(req.body, true, blockFloorId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, blockFloorId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
         }
@@ -215,7 +215,7 @@ async function updateBlockFloorById(req, res) {
             mysqlClient
         )
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Blockfloor not found or no changes made")
+            res.status(204).send({error:"Blockfloor not found or no changes made"})
         }
 
         const getUpdatedBlockFloor = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`,
@@ -278,7 +278,7 @@ async function deleteBlockFloorById(req, res) {
     }
 }
 
-async function validateInsertItems(body, isUpdate = false, blockFloorId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, blockFloorId = null, mysqlClient) {
     const {
         blockId,
         floorNumber,
@@ -345,7 +345,8 @@ async function validateInsertItems(body, isUpdate = false, blockFloorId = null, 
 
 function getBlockFloorById(blockFloorId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM blockfloor WHERE blockfloorId = ?`, [blockFloorId], (err, blockFloor) => {
+        mysqlClient.query(/*sql*/`SELECT COUNT(*) AS count FROM blockfloor WHERE blockfloorId = ?`, 
+        [blockFloorId], (err, blockFloor) => {
             if (err) {
                 return reject(err)
             }
@@ -364,7 +365,8 @@ async function validateBlockFloorById(blockFloorId, mysqlClient) {
 
 function getRoomCountByBlockFloorId(blockFloorId, mysqlClient) {
     return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM room WHERE blockfloorId = ? AND deletedAt IS NULL`,
+        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM room WHERE blockfloorId = ? 
+            AND deletedAt IS NULL`,
             [blockFloorId],
             (err, blockFloorIdCount) => {
                 if (err) {

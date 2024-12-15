@@ -213,7 +213,7 @@ async function createWarden(req, res) {
             } else {
                 await deleteFile(uploadedFilePath, fs)
             }
-            return res.status(400).send("No insert was made")
+            return res.status(400).send({error:"No insert was made"})
         }
 
         if (!uploadedFilePath.includes('default.jpg')) {
@@ -222,7 +222,7 @@ async function createWarden(req, res) {
 
             fs.rename(uploadedFilePath, newFilePath, (err) => {
                 if (err) {
-                    return res.status(400).send('Error renaming file');
+                    return res.status(400).send({error:'Error renaming file'});
                 }
         });
     }
@@ -254,7 +254,7 @@ async function updateWardenById(req, res) {
     try {
         const warden = await validateWardenById(wardenId, mysqlClient)
         if (!warden) {
-            return res.status(404).send("warden not found or already deleted");
+            return res.status(404).send({error:"warden not found or already deleted"});
         }
 
         const isValidInsert = await validatePayload(req, req.body, req.query, true, wardenId, mysqlClient);
@@ -266,7 +266,7 @@ async function updateWardenById(req, res) {
             AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("warden not found or no changes made")
+            res.status(204).send({error:"No changes made"})
         }
 
         const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`,
@@ -276,7 +276,6 @@ async function updateWardenById(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
-        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -309,10 +308,10 @@ async function updateWardenAvatar(req, res) {
                 position: sharp.strategy.center,
             })
             .toFile(uploadedFilePath);
-        return res.status(200).json('Warden Image updated successfully');
+        return res.status(200).send('Warden Image updated successfully');
     } catch (error) {
         req.log.error(error)
-        return res.status(500).json('Internal server error');
+        return res.status(500).send(error.message);
     }
 }
 
@@ -662,7 +661,6 @@ async function validatePayload(req, body, query, isUpdate = false, wardenId = nu
     }
         return errors
     } catch(error) {
-        console.log(error)
         req.log.error(error)
     }
 }

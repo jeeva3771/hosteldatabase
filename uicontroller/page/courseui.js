@@ -10,7 +10,7 @@ function coursePageUi(req, res) {
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
-            {name:'Course', link:getAppUrl('course')},
+            {name:'Course', link:''},
         ]
     });
 }
@@ -26,7 +26,7 @@ function addCourseUi(req, res) {
             {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
             {name:'Course', link:getAppUrl('course')},
-            {name:'Add', link:getAppUrl('course/add')}
+            {name:'Add', link:''}
         ]
     })
 }
@@ -43,7 +43,7 @@ function editCourseUi(req, res) {
             {name:'Home', link:getAppUrl('home')},
             {name:'Others', link:''},
             {name:'Course', link:getAppUrl('course')},
-            {name:'Edit', link:getAppUrl('course/add')}
+            {name:'Edit', link:''}
         ]
     });
 }

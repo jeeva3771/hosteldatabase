@@ -9,7 +9,7 @@ function attendancePageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
-            {name:'Attendance', link:getAppUrl('attendance')}
+            {name:'Attendance', link:''}
         ]
         });
 }
@@ -22,7 +22,7 @@ function addOrEditAttendanceUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
-            {name:'Attendance', link:getAppUrl('attendance')},
+            {name:'Attendance', link:''},
         ]
     });
 }
@@ -36,7 +36,7 @@ function getAttendanceStudentReportUi(req, res) {
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
             {name:'Attendance', link:getAppUrl('attendance')},
-            {name:'Report', link:getAppUrl('attendance/report')}
+            {name:'Report', link:''}
         ]
     })
 }

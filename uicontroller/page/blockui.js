@@ -10,7 +10,7 @@ function blockPageUi(req, res) {
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:''},
-            {name:'Block', link:getAppUrl('block')}
+            {name:'Block', link:''}
         ]
     });
 }
@@ -24,9 +24,9 @@ function addBlockUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
-            {name:'Structure', link:'#tables-nav'},
+            {name:'Structure', link:''},
             {name:'Block', link:getAppUrl('block')},
-            {name:'Add', link:getAppUrl('block/add')}
+            {name:'Add', link:''}
         ]
     });
 }
@@ -41,9 +41,9 @@ function editBlockUi(req, res) {
             user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:getAppUrl('home')},
-                {name:'Structure', link:'#tables-nav'},
+                {name:'Structure', link:''},
                 {name:'Block', link:getAppUrl('block')},
-                {name:'Edit', link:getAppUrl('block/add')}
+                {name:'Edit', link:''}
             ]
         });
 }

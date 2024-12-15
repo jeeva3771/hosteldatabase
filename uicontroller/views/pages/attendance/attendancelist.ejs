@@ -128,8 +128,8 @@
     const limitDom = document.getElementById("limit");
     const paginationDom = document.getElementById("pagination");
     const existingModalDom = document.getElementById('attendanceModal');
-    const orderIconDom = document.querySelectorAll('.sortIcon');
     const searchDom = document.getElementById("searchInput");
+    const orderIconDom = document.querySelectorAll('.sortIcon');
     const columnSortOrders = {
         name: 'ASC',
         registerNumber: 'ASC',
@@ -139,10 +139,6 @@
 
     var currentColumn = 'createdAt';
     var url = `&orderby=a.${currentColumn}&sort=DESC`;
-
-    orderIconDom.forEach((icon) => {
-        icon.classList.add('light');
-    })
 
     function changeLimit() {
         attendancePage()
@@ -164,13 +160,15 @@
             url = `&orderby=a.${currentColumn}&sort=${sortOrder}`;
         }
 
-        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-        activeIcons.forEach(icon => {
-            icon.classList.remove('light');
-            icon.classList.add('dark');
+        orderIconDom.forEach(icon => {
+            icon.classList.remove('dark');
         });
+
+        const clickedIcon = event.currentTarget;
+        clickedIcon.classList.add('dark');
         attendancePage();
     }
+
 
     function attendancePage(pageNo = 1) {
         var fetchUrl = `${getAppUrl('api/attendance')}?limit=${limitDom.value}&page=${pageNo}${url}`;
@@ -219,31 +217,66 @@
                 tableDataDom.innerHTML = trHtml
                 var totalPages = Math.ceil(responseData.attendanceCount / limitDom.value)
                 var paginationHtml = ''
+                
                 if (totalPages === 0) {
                     paginationHtml = '<h6>No results found.</h6>'
                 } 
 
                 if (totalPages > 1) {
                     paginationHtml += `
-                    <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                        <a class="page-link" onclick="attendancePage(${pageNo - 1})">Previous</a>
-                    </li>`;
-
-                    for (let i = 1; i <= totalPages; i++) {
-                        paginationHtml += `
-                        <li class="page-item${i === pageNo ? ' active' : ''}">
-                        <a class="page-link" onclick="attendancePage(${i})">${i}</a>
+                        <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                            <a class="page-link" onclick="attendancePage(${pageNo - 1})">Previous</a>
                         </li>`;
-                    }
 
+                    if (totalPages <= 3) {
+                        for (let i = 1; i <= totalPages; i++) {
+                            paginationHtml += `
+                                <li class="page-item${pageNo === i ? ' active' : ''}">
+                                    <a class="page-link" onclick="attendancePage(${i})">${i}</a>
+                                </li>`;
+                        }
+                    } else {
+                        paginationHtml += `
+                            <li class="page-item${pageNo === 1 ? ' active' : ''}">
+                                <a class="page-link" onclick="attendancePage(1)">1</a>
+                            </li>`;
+
+                        if (pageNo > 2) {
+                            paginationHtml += `
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>`;
+                        }
+
+                        const startPage = Math.max(2, pageNo - 1); 
+                        const endPage = Math.min(totalPages - 1, pageNo + 1);
+                        for (let i = startPage; i <= endPage; i++) {
+                            paginationHtml += `
+                                <li class="page-item${pageNo === i ? ' active' : ''}">
+                                    <a class="page-link" onclick="attendancePage(${i})">${i}</a>
+                                </li>`;
+                        }
+
+                        if (pageNo < totalPages - 1) {
+                            paginationHtml += `
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>`;
+                        }
+
+                        paginationHtml += `
+                            <li class="page-item${pageNo === totalPages ? ' active' : ''}">
+                                <a class="page-link" onclick="attendancePage(${totalPages})">${totalPages}</a>
+                            </li>`;
+                    }
                     paginationHtml += `
-                    <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                        <a class="page-link" onclick="attendancePage(${pageNo + 1})">Next</a>
-                    </li>`;
+                        <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                            <a class="page-link" onclick="attendancePage(${pageNo + 1})">Next</a>
+                        </li>`;
                 }
                 paginationDom.innerHTML = paginationHtml;
             })
-        .catch((error) => alert('Something went wrong.Please try later.'));
+            .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     function readAttendanceById(attendanceId) {

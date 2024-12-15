@@ -254,7 +254,7 @@ async function createStudent(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const validateInsert = await validateInsertItems(req.body, false, studentId = null, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, false, studentId = null, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
         }
@@ -270,7 +270,7 @@ async function createStudent(req, res) {
             mysqlClient)
 
         if (newStudent.affectedRows === 0) {
-            res.status(400).send("No insert was made")
+            res.status(400).send({error:"No insert was made"})
         }
         res.status(201).send('Insert successfully')
     } catch (error) {
@@ -334,10 +334,10 @@ async function updateStudentById(req, res) {
     try {
         const student = await validateStudentById(studentId, mysqlClient);
         if (!student) {
-            return res.status(404).send("Student not found or already deleted");
+            return res.status(404).send({error:"Student not found or already deleted"});
         }
 
-        const validateInsert = await validateInsertItems(req.body, true, studentId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, studentId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
@@ -350,7 +350,7 @@ async function updateStudentById(req, res) {
                 AND deletedAt IS NULL`,
             values, mysqlClient)
         if (updateStudent.affectedRows === 0) {
-            res.status(204).send("Student not found or no changes made")
+            res.status(204).send({error:"Student not found or no changes made"})
         }
 
         const getUpdatedStudent = await mysqlQuery(/*sql*/`
@@ -455,7 +455,7 @@ async function validateStudentById(studentId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body, isUpdate = false, studentId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, studentId = null, mysqlClient) {
     const {
         roomId,
         blockFloorId,

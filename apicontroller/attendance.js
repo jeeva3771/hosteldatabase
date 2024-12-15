@@ -285,7 +285,7 @@ async function addOrEditAttendance(req, res) {
     const wardenId = req.session.warden.wardenId;
 
     try {
-        const errors = await validateInsertItems(req.params, mysqlClient);
+        const errors = await validatePayload(req, req.params, mysqlClient);
         if (errors.length > 0) {
             console.log(errors)
             return res.status(400).send(errors);
@@ -385,7 +385,7 @@ async function studentAttendanceReport(req, res) {
     }
 }
 
-async function validateInsertItems(params, mysqlClient) {
+async function validatePayload(req, params, mysqlClient) {
     const {
         roomId,
         blockFloorId,

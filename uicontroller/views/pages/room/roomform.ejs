@@ -105,6 +105,7 @@
     var roomId = <%= roomId || 'null' %>;
 
     function saveOrUpdateRoom() {
+        submitButtonDom.disabled = true;
         const selectedStatusValue = getSelectedRadioValue('status');
         const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
         var myHeaders = new Headers();
@@ -135,12 +136,18 @@
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {
                         alert(responseText[0]);
+                        submitButtonDom.disabled = false;
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
+                        submitButtonDom.disabled = false;
+
                     }
                 }
         })
-            .catch(error => alert('Something went wrong.Please try later.'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
 
     function toggleSubmitButton() {
@@ -222,32 +229,14 @@
                 return;
             }
 
-            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
+            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}`);
             const blockFloors = await response.json();
-
-            const activeOptions = [];
-            const disabledOptions = [];
-
             floorNumberDom.innerHTML = '<option selected>Select a Floor</option>';
 
             blockFloors.forEach(blockFloor => {
                 const option = document.createElement('option');
                 option.value = blockFloor.blockFloorId;
-                option.textContent = `${blockFloor.floorNumber} (Rooms Count : ${blockFloor.roomCount})`;
-
-                if (blockFloor.roomCount === 0) {
-                    option.disabled = true;
-                    disabledOptions.push(option);
-                } else {
-                    activeOptions.push(option);
-                }
-            });
-
-            activeOptions.forEach(option => {
-                floorNumberDom.appendChild(option);
-            });
-
-            disabledOptions.forEach(option => {
+                option.textContent = blockFloor.floorNumber;
                 floorNumberDom.appendChild(option);
             });
 

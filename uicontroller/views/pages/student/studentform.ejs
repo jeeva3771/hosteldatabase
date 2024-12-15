@@ -201,7 +201,7 @@
                         const errorMessage = responseText.join('\n');
                         alert(errorMessage);
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
                     }
                 }
             })
@@ -247,8 +247,8 @@
         fatherNameDom.addEventListener('input', toggleSubmitButton);
         fatherNumDom.addEventListener('input', toggleSubmitButton);
         addressDom.addEventListener('input', toggleSubmitButton);
-        blockCodeDom.addEventListener('change', populateFloorNumber);
-        floorNumberDom.addEventListener('change', populateRoomNumber);
+        blockCodeDom.addEventListener('change', populateFloorNumber, toggleSubmitButton);
+        floorNumberDom.addEventListener('change', populateRoomNumber, toggleSubmitButton);
         roomNumberDom.addEventListener('change', toggleSubmitButton);
         joinedDateDom.addEventListener('input', toggleSubmitButton);
         updateImageDom.addEventListener('change', toggleSubmitButton);
@@ -310,7 +310,9 @@
             const blockId = blockCode.value;
 
             if (blockId === 'Select a Block' || blockId === '') {
-                floorNumber.innerHTML = '';
+                floorNumberDom.innerHTML = '';
+                roomNumberDom.innerHTML = '';
+                toggleSubmitButton();
                 return;
             }
 
@@ -352,7 +354,8 @@
             const blockFloorId = floorNumber.value;
 
             if (blockFloorId === 'Select a Floor' || blockFloorId === '') {
-                roomNumber.innerHTML = '';
+                roomNumberDom.innerHTML = '';
+                toggleSubmitButton();
                 return;
             }
 

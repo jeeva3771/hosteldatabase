@@ -28,7 +28,7 @@ module.exports = (app) => {
                 user: getUserProfile(req.session),
                 breadCrumbs: [
                     { name: 'Home', link: getAppUrl('home') },
-                    { name: 'Dashboard', link: getAppUrl('home') }
+                    { name: 'Dashboard', link: '' }
                 ]
             })
         }

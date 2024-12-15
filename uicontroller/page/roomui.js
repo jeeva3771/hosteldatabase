@@ -10,7 +10,8 @@ function roomPageUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
-            {name:'Room', link:getAppUrl('room')}
+            {name:'Structure', link:''},
+            {name:'Room', link:''}
         ]
     });
 }
@@ -24,8 +25,9 @@ function addRoomUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:'#tables-nav'},
             {name:'Room', link:getAppUrl('room')},
-            {name:'Add', link:getAppUrl('room/add')}
+            {name:'Add', link:''}
         ]
 
     });
@@ -41,8 +43,9 @@ function editRoomUi(req, res) {
         user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:'#tables-nav'},
             {name:'Room', link:getAppUrl('room')},
-            {name:'Edit', link:getAppUrl('room/add')}
+            {name:'Edit', link:''}
         ]
     });
 }
