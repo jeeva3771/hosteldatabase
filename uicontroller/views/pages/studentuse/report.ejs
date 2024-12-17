@@ -27,32 +27,47 @@
                     </div>
                 </div>
             </div>
-            <div class="row justify-content-center">
-                <table class="table table-bordered w-25 mb-4 border border-dark-subtle">
-                    <thead>
-                        <tr id="dayHeaders"></tr>
-                    </thead>
-                    <tbody id="dateLabel"></tbody>
-                </table>
-                <div class="d-flex flex-row mb-3 align-items-center justify-content-center d-none" id="attendanceStatus">
-                    <div class="p-2 smallBox mt-0 clr1"></div>
-                    <span class="ms-2">Present</span>
-
-                    <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
-                    <span class="ms-2">Absent</span>
-
-                    <div class="p-2 smallBox mt-0 ms-3 border border-dark-subtle"></div>
-                    <span class="ms-2">Not Marked</span>
+            <div class="row align-items-center">
+                <!-- Centered Calendar Table -->
+                <div class="col-lg-9 d-flex justify-content-center alignCal">
+                    <table class="table table-bordered w-50 mb-4 border border-dark-subtle">
+                        <thead>
+                            <tr id="dayHeaders"></tr>
+                        </thead>
+                        <tbody id="dateLabel"></tbody>
+                    </table>
                 </div>
+                <div class="col-lg-3" style="display: none;" id="count">
+                    <div class="border border-dark-subtle p-3 rounded mb-3">
+                        <p class="mb-2">Present: <span class="text-dark small fw-bold" 
+                            id="greenCount"></span></p>
+                        <p class="mb-2">Absent: <span class="text-dark small fw-bold" 
+                            id="redCount"></span></p>
+                        <p class="mb-2">Not Marked: <span class="text-dark small fw-bold" 
+                            id="notMarkedCount"></span></p>
+                        <p class="mb-0">Total Days: <span class="text-dark small fw-bold" 
+                            id="totalDays"></span></p>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-sm" onClick="downloadReport()" 
+                     id="download" style="display: none;">Download Report</button>
+                </div>
+            </div>
+            <div class="d-flex flex-row mb-3 align-items-center justify-content-center d-none" id="attendanceStatus">
+                <div class="p-2 smallBox mt-0 clr1"></div>
+                <span class="ms-2">Present</span>
+
+                <div class="p-2 smallBox mt-0 clr2 ms-3"></div>
+                <span class="ms-2">Absent</span>
+
+                <div class="p-2 smallBox mt-0 ms-3 border border-dark-subtle"></div>
+                <span class="ms-2">Not Marked</span>
             </div>
         </div>
     </div>
 </div>
-</div>
 </section>
 </main>
 <%- include('../../partials/studentuse/footer.ejs') %>
-
 
 <script>
     const studentDom = document.getElementById('student');
@@ -60,12 +75,19 @@
     const selectedYearDom = document.getElementById('year');
     const dateLabelDom = document.getElementById('dateLabel');
     const dayHeadersDom = document.getElementById('dayHeaders');
+    const countDom = document.getElementById('count');
+    const greenCountDom = document.getElementById('greenCount');
+    const redCountDom= document.getElementById('redCount');
+    const notMarkedCountDom = document.getElementById('notMarkedCount');
+    const totalDaysDom = document.getElementById('totalDays');
+    const downloadDom = document.getElementById('download');
     const currentTime = new Date();
     const currentYear = currentTime.getFullYear();
     const yearRange = 20;
     const studentName = "<%=studentName%>";
     const studentRegNo = "<%=studentRegNo%>";
     studentDom.value = studentName;
+    let reportData;
     const reportUrl = getStudentAppUrl('api/student/attendancereport');
 
     window.addEventListener('load', async () => {
@@ -135,8 +157,18 @@
             }
             renderDayHeaders();
             const data = await response.json();
-            const attendanceData = Object.entries(data).map(([key, value]) => 
-                ({ date: key, status: value }));
+            const attendanceData = Object.entries(data).map(([key, value]) => ({
+                date: key,
+                status: value 
+            }));
+
+            reportData = Object.entries(data).map(([key, value]) => ({ 
+                date: key, 
+                status: value === 1 ? 'Present' : 'Absent'
+            }))
+
+            let greenCount = 0;
+            let redCount = 0;
 
             if (attendanceData.length === 0) {
                 renderDefaultCalendar(firstDay, lastDate);
@@ -156,11 +188,19 @@
                             cell.textContent = '';
                         } else {
                             cell.textContent = date;
-                            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                            const attendanceRecord = attendanceData.find(record => record.date === formattedDate);
+                            const formattedDate = 
+                                `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                            const attendanceRecord = attendanceData.find(record => 
+                                            record.date === formattedDate);
 
                             if (attendanceRecord) {
-                                cell.style.backgroundColor = attendanceRecord.status === 1 ? 'green' : 'red';
+                                if (attendanceRecord.status === 1) {
+                                    cell.style.backgroundColor = 'green';
+                                    greenCount++; // Increment green count
+                                } else {
+                                    cell.style.backgroundColor = 'red';
+                                    redCount++; // Increment red count
+                                }
                                 cell.classList.add('text-white');
                             }
                             date++;
@@ -171,7 +211,15 @@
                     if (date > lastDate) break;
                 }
             }
+            // Display the counts
+            greenCountDom.innerText = greenCount;
+            redCountDom.innerText = redCount;
+            notMarkedCount.innerText = lastDate - (greenCount + redCount);
+            totalDaysDom.innerText = lastDate;
+            countDom.style.display = 'block';
+            downloadDom.style.display = 'block';
         } catch (error) {
+            console.log(error)
             alert('Something went wrong.Please try later.')
         }
     }
@@ -201,6 +249,34 @@
             dateLabelDom.appendChild(row);
             if (date > lastDate) break;
         }
+        // Display the counts
+        greenCountDom.innerText = 0;
+        redCountDom.innerText = 0;
+        notMarkedCount.innerText = lastDate;
+        totalDaysDom.innerText = lastDate;
+        countDom.style.display = 'block';
+    }
+
+    function downloadReport() {
+        downloadDom.disabled = true;
+        const tableData = [
+            ["Date", "Status"],
+            ...reportData.map(item => [item.date, item.status])
+        ];
+
+        // Convert the data to a worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(tableData);
+
+        // Create a new workbook and append the worksheet
+        const workbook = XLSX.utils.book_new();
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, `${studentDom.value}-Report`);
+
+        // Generate a binary Excel file and trigger download
+        XLSX.writeFile(workbook, `Attendance_Report.xlsx`);
+        setInterval(() =>{
+            downloadDom.disabled = false;
+        }, 1000)
     }
 
     function toggleAttendanceStatusDisplay(show) {

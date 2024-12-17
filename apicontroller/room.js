@@ -131,7 +131,7 @@ async function readRoomNumberByBlockFloorId(req, res) {
     try {
         const roomNumberByBlockFloorId = await mysqlQuery(/*sql*/`
             SELECT 
-                roomId, roomNumber, roomCapacity,
+                roomId, roomNumber, roomCapacity, isAirConditioner,
                 (SELECT COUNT(*)
                  FROM student AS s
                  WHERE s.roomId = r.roomId

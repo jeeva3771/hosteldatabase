@@ -117,7 +117,7 @@
                         </div>
                         
                         <div class="text-center">
-                          <button type="submit" class="btn btn-primary" onclick="editUserData('userDetails')"
+                          <button type="submit" class="btn btn-primary" onclick="editUserData()"
                             id="saveChange" disabled>Save Changes</button>
                         </div>
                       </div>                        
@@ -150,7 +150,7 @@
                         </div>
 
                         <div class="text-center">
-                          <button type="button" class="btn btn-primary" onclick="editUserData('changePassword')"
+                          <button type="button" class="btn btn-primary" onclick="changePassword()"
                            id="resetPassword" disabled>Change Password</button>
                         </div>
                       </div><!-- End Change Password Form -->
@@ -244,32 +244,21 @@
                     
         firstNameDom.value = warden.firstName;
         lastNameDom.value = warden.lastName;
-        dobDom.value = warden.dob.split('T')[0];
+        dobDom.value = convertToDateInputFormat(warden.dob);
         emailDom.value = warden.emailId;
       })
       .catch(error => alert('Something went wrong.Please try later.'))
   }
 
-  function editUserData(action) {
-    var myHeaders = new Headers(); 
+  function changePassword() {
+    resetPasswordDom.disabled = true;
+    var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
-    let raw;
 
-    if (action === 'userDetails') {
-        raw = JSON.stringify({
-            "firstName": firstNameDom.value,
-            "lastName": lastNameDom.value,
-            "dob": dobDom.value,
-            "emailId": emailDom.value,
-        });
-    } else if (action === 'changePassword') {
-        raw = JSON.stringify({
-            "oldPassword": currentPasswordDom.value,
-            "password": newPasswordDom.value
-        });
-    }
-
-    const queryParam = action === 'userDetails' ? 'usermaindetails' : 'changepassword';
+    var raw = JSON.stringify({
+      "oldPassword": currentPasswordDom.value,
+      "newPassword": newPasswordDom.value
+    });
 
     var requestOptions = {
       method: 'PUT',
@@ -278,24 +267,68 @@
       redirect: 'follow'
     };
 
-    fetch(`${getAppUrl(`api/warden/${wardenId}`)}?update=${queryParam}`, requestOptions)
-      .then(async (response) => {
-          if (response.status === 200) {
-            setTimeout(() => {
+    fetch(getAppUrl(`api/warden/changepassword/${wardenId}`), requestOptions)
+      .then(async(response) => {
+        if (response.status === 200) {
+          setTimeout(() => {
               readWardenById();
             }, 1000);
-            alert('Successfully changed')
-          } else {
-            const responseText = await response.json();
-              if (Array.isArray(responseText)) {
-                const errorMessage = responseText.join('\n');
-                alert(errorMessage);
-              } else {
-                alert(responseText);
-              }
-          }
+            alert('Successfully changed');
+            resetPasswordDom.disabled = false;
+        } else {
+          alert(await response.text())
+          resetPasswordDom.disabled = false;
+        }
       })
-      .catch(error => alert('Something went wrong.Please try later.'));
+      .catch(error => {
+        alert('Something went wrong.Please try later.');
+        resetPasswordDom.disabled = false;
+      });
+  }
+
+  function editUserData() {
+    saveChangeDom.disabled = true;
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      "firstName": firstNameDom.value,
+      "lastName": lastNameDom.value,
+      "dob": dobDom.value,
+      "emailId": emailDom.value
+    });
+
+    var requestOptions = {
+      method: 'PUT',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(getAppUrl(`api/warden/edituserwarden/${wardenId}`), requestOptions)
+      .then(async(response) => {
+        if (response.status === 200) {
+          setTimeout(() => {
+              readWardenById();
+            }, 1000);
+            alert('Successfully changed');
+            saveChangeDom.disabled = false;
+        } else {
+          const responseText = await response.json();
+          if (Array.isArray(responseText)) {
+              const errorMessage = responseText.join('\n');
+              alert(errorMessage);
+              saveChangeDom.disabled = false;
+          } else {
+            alert(responseText.error || responseText);
+            saveChangeDom.disabled = false;
+          }
+        }
+      })
+      .catch(error => {
+        alert('Something went wrong.Please try later.');
+        saveChangeDom.disabled = false;
+      });
   }
 
   function togglePersonalDetailsButton() {

@@ -88,13 +88,14 @@
     const currentTime = new Date();
     const currentYear = currentTime.getFullYear();
     const yearRange = 20;
+    const reportUrl = getAppUrl('api/attendance/studentattendancereport');
     let reportData;
 
     window.addEventListener('load', async () => {
         try {
             await Promise.all([populateDropDownStudents(), populateDropDownMonthAndYear()]);
         } catch (error) {
-            alert('Something went wrong.Please try later1.')
+            alert('Something went wrong.Please try later.')
         }
     });
 
@@ -162,8 +163,8 @@
         dateLabelDom.innerHTML = '';
 
         try {
-            const response = await fetch(getAppUrl('api/attendance/studentattendancereport') + 
-                `?month=${month + 1}&year=${year}&studentName=${selectedStudentDom.value}`);
+            const response = await fetch(
+                `${reportUrl}?month=${month + 1}&year=${year}&studentName=${selectedStudentDom.value}`);
 
             if (!response.ok) {
                 if (response.status === 404) {
@@ -176,11 +177,16 @@
             }
             renderDayHeaders();
             const data = await response.json();
-            const attendanceData = Object.entries(data).map(([key, value]) => ({ date: key, status: value }));
+            const attendanceData = Object.entries(data).map(([key, value]) => ({ 
+                date: key,
+                status: value 
+            }));
+
             reportData = Object.entries(data).map(([key, value]) => ({ 
                 date: key, 
                 status: value === 1 ? 'Present' : 'Absent'
             }))
+
             let greenCount = 0;
             let redCount = 0;
 
@@ -202,20 +208,22 @@
                             cell.textContent = '';
                         } else {
                             cell.textContent = date;
-                            const formattedDate = `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
-                            const attendanceRecord = attendanceData.find(record => record.date === formattedDate);
+                            const formattedDate = 
+                                `${year}-${String(month + 1).padStart(2, '0')}-${String(date).padStart(2, '0')}`;
+                            const attendanceRecord = attendanceData.find(record => 
+                                record.date === formattedDate);
 
                             if (attendanceRecord) {
-                            if (attendanceRecord.status === 1) {
-                                cell.style.backgroundColor = 'green';
-                                greenCount++; // Increment green count
-                            } else {
-                                cell.style.backgroundColor = 'red';
-                                redCount++; // Increment red count
+                                if (attendanceRecord.status === 1) {
+                                    cell.style.backgroundColor = 'green';
+                                    greenCount++; // Increment green count
+                                } else {
+                                    cell.style.backgroundColor = 'red';
+                                    redCount++; // Increment red count
+                                }
+                                cell.classList.add('text-white');
                             }
-                            cell.classList.add('text-white');
-                        }
-                        date++;
+                            date++;
                         }
                         row.appendChild(cell);
                     }
@@ -223,7 +231,6 @@
                     if (date > lastDate) break;
                 }
             }
-
             // Display the counts
             greenCountDom.innerText = greenCount;
             redCountDom.innerText = redCount;
@@ -262,16 +269,12 @@
             dateLabelDom.appendChild(row);
             if (date > lastDate) break;
         }
-            // Display the counts
-            greenCountDom.innerText = 0;
-            redCountDom.innerText = 0;
-            notMarkedCount.innerText = lastDate;
-            totalDaysDom.innerText = lastDate;
-            countDom.style.display = 'block';
-    }
-
-    function toggleAttendanceStatusDisplay(show) {
-        attendanceStatus.classList.toggle('d-none', !show);
+        // Display the counts
+        greenCountDom.innerText = 0;
+        redCountDom.innerText = 0;
+        notMarkedCount.innerText = lastDate;
+        totalDaysDom.innerText = lastDate;
+        countDom.style.display = 'block';
     }
 
     function downloadReport() {
@@ -283,14 +286,21 @@
 
         // Convert the data to a worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(tableData);
+
         // Create a new workbook and append the worksheet
         const workbook = XLSX.utils.book_new();
+
         XLSX.utils.book_append_sheet(workbook, worksheet, `${selectedStudentDom.value}-Report`);
+
         // Generate a binary Excel file and trigger download
         XLSX.writeFile(workbook, `Attendance_Report.xlsx`);
         setInterval(() =>{
             downloadDom.disabled = false;
         }, 1000)
+    }
+
+    function toggleAttendanceStatusDisplay(show) {
+        attendanceStatus.classList.toggle('d-none', !show);
     }
 
 </script>

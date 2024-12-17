@@ -488,10 +488,10 @@ async function validatePayload(req, body, isUpdate = false, studentId = null, my
                         COUNT(*) AS count
                     FROM student
                     WHERE ${isUpdate === true ? `studentId != ? AND` : ''}
-                        (   phoneNumber = ? 
-                            OR fatherNumber = ? 
-                            OR emailId = ? 
-                            OR registerNumber = ?  )
+                        (phoneNumber = ? 
+                        OR fatherNumber = ? 
+                        OR emailId = ? 
+                        OR registerNumber = ?)
                         AND deletedAt IS NULL`;
 
             const params = isUpdate
@@ -628,7 +628,6 @@ async function validatePayload(req, body, isUpdate = false, studentId = null, my
         req.log.error(error)
     }
 }
-
 
 module.exports = (app) => {
     app.get('/api/student/:studentId/image', readStudentImageById)

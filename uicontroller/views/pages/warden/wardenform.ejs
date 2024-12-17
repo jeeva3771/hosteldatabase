@@ -178,21 +178,21 @@
 
         fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
             .then(async (response) => {
-                    const warden = await response.json();
-                    firstNameDom.value = warden.firstName;
-                    lastNameDom.value = warden.lastName;
-                    dobDom.value = warden.dob.split('T')[0];
-                    emailIdDom.value = warden.emailId;
+                const warden = await response.json();
+                firstNameDom.value = warden.firstName;
+                lastNameDom.value = warden.lastName;
+                dobDom.value = convertToDateInputFormat(warden.dob);
+                emailIdDom.value = warden.emailId;
 
-                    if (warden.superAdmin) {
-                        isAdminDom.checked = true;
-                    } else {
-                        notAdminDom.checked = true;
-                    }
+                if (warden.superAdmin) {
+                    isAdminDom.checked = true;
+                } else {
+                    notAdminDom.checked = true;
+                }
 
-                    passwordDom.value = warden.password;
-                    conformDom.value = warden.password;
-                })
+                passwordDom.value = warden.password;
+                conformDom.value = warden.password;
+            })
             .catch((error) => alert('Something went wrong.Please try later.'));
     }
 

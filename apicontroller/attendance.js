@@ -318,7 +318,6 @@ async function studentAttendanceReport(req, res) {
         month,
         year,
         studentName,
-        registerNumber
     } = req.query;
     var errors = []
     let queryParameters = [month, year, studentName];
@@ -361,12 +360,6 @@ async function studentAttendanceReport(req, res) {
             AND YEAR(a.checkInDate) = ?
             AND s.name = ?`;
         
-        if (registerNumber) {
-            sqlQuery += ' AND s.registerNumber = ?'
-            queryParameters.push(registerNumber)
-        }
-        console.log(month, year,studentName, registerNumber )
-
         const studentReport = await mysqlQuery(sqlQuery, queryParameters, mysqlClient)
 
         if (studentReport.length === 0) {

@@ -210,8 +210,8 @@
             }
 
             const myParam = urlParamsDom.get('blockId');
-            const url = myParam ? getAppUrl('api/attendance/block') + `?blockId=${myParam}` :
-                getAppUrl('api/attendance/block') + `?date=${checkInDom.value}`;
+            const url = myParam ? `${getAppUrl('api/attendance/block')}?blockId=${myParam}` :
+                `${getAppUrl('api/attendance/block')}?date=${checkInDom.value}`;
 
             if (myParam) {
                 blockCodeDom.value = myParam;
@@ -293,8 +293,9 @@
             }
 
             const myParam = urlParamsDom.get('blockFloorId');
-            const url = myParam ? getAppUrl('api/attendance/blockfloor') + `?date=${checkInDom.value}&blockId=${myParam}` :
-                getAppUrl('api/attendance/blockfloor') + `?date=${checkInDom.value}&blockId=${blockId}`;
+            const url = myParam ? 
+            `${getAppUrl('api/attendance/blockfloor')}?date=${checkInDom.value}&blockId=${myParam}` :
+                `${getAppUrl('api/attendance/blockfloor')}?date=${checkInDom.value}&blockId=${blockId}`;
 
             if (myParam) {
                 floorNumberDom.value = myParam;
@@ -378,8 +379,9 @@
             }
 
             const myParam = urlParamsDom.get('roomId'); 
-            const url = myParam ? getAppUrl('api/attendance/room') + `?date=${checkInDom.value}&blockFloorId=${myParam}` :
-                getAppUrl('api/attendance/room') + `?date=${checkInDom.value}&blockFloorId=${blockFloorId}`;
+            const url = myParam ? 
+            `${getAppUrl('api/attendance/room')}?date=${checkInDom.value}&blockFloorId=${myParam}` :
+                `${getAppUrl('api/attendance/room')}?date=${checkInDom.value}&blockFloorId=${blockFloorId}`;
 
             if (myParam) {
                 roomNumberDom.value = myParam;
@@ -473,8 +475,8 @@
         statusDom.style.visibility = 'hidden';
 
         try {
-            const response = await fetch(getAppUrl(`api/attendance/student/${roomId}`) + 
-                `?checkIn=${checkInDom.value}`);
+            const response = await fetch(
+                `${getAppUrl(`api/attendance/student/${roomId}`)}?checkIn=${checkInDom.value}`);
             const students = await response.json();
 
             const table = document.createElement('table');

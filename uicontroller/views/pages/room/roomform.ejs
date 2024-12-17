@@ -181,7 +181,6 @@
     initializeForm();
 
     async function populateBlockCode() {
-
         try {
             const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
             const blocks = await response.json();

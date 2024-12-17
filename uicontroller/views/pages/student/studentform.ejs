@@ -372,23 +372,23 @@
             roomNumber.innerHTML = '<option selected>Select a Room</option>';
 
             rooms.forEach(item => {
-            const room = item.room;
-            const option = document.createElement('option');
-            option.value = room.roomId;
-            option.textContent = room.roomNumber;
+                const room = item.room;
+                const option = document.createElement('option');
+                option.value = room.roomId;
+                option.textContent = `${room.roomNumber}${room.isAirConditioner === 1 ? ' - a/c' : ''}`;
 
-            if (room.roomCapacity === 0) {
-                option.disabled = true;
-                option.textContent += ' (Unavailable)';
-                disabledOptions.push(option); 
-            } else if (item.isFull === true) {
-                option.disabled = true;
-                option.textContent += ' (Room Filled)';
-                disabledOptions.push(option);
-            } else {
-                activeOptions.push(option); 
-            }
-        })
+                if (room.roomCapacity === 0) {
+                    option.disabled = true;
+                    option.textContent += ' (Unavailable)';
+                    disabledOptions.push(option); 
+                } else if (item.isFull === true) {
+                    option.disabled = true;
+                    option.textContent += ' (Room Filled)';
+                    disabledOptions.push(option);
+                } else {
+                    activeOptions.push(option); 
+                }
+            })
         activeOptions.forEach(option => roomNumber.appendChild(option));
         disabledOptions.forEach(option => roomNumber.appendChild(option));
         } catch (error) {
@@ -404,21 +404,21 @@
         try {
             const response = await fetch(getAppUrl(`api/student/${studentId}`));
             const student = await response.json();
-            studentNameDom.value = student.name
-            registerNumDom.value = student.registerNumber
-            dobDom.value = student.dob.split('T')[0]
-            courseDom.value = student.courseId
-            emailIdDom.value = student.emailId
-            studNumDom.value = student.phoneNumber
-            fatherNameDom.value = student.fatherName
-            fatherNumDom.value = student.fatherNumber
-            addressDom.value = student.address
-            blockCodeDom.value = student.blockId
+            studentNameDom.value = student.name;
+            registerNumDom.value = student.registerNumber;
+            dobDom.value = convertToDateInputFormat(student.dob);
+            courseDom.value = student.courseId;
+            emailIdDom.value = student.emailId;
+            studNumDom.value = student.phoneNumber;
+            fatherNameDom.value = student.fatherName;
+            fatherNumDom.value = student.fatherNumber;
+            addressDom.value = student.address;
+            blockCodeDom.value = student.blockId;
             await populateFloorNumber();
             floorNumberDom.value = student.blockFloorId;
             await populateRoomNumber();
             roomNumberDom.value = student.roomId;
-            joinedDateDom.value = student.joinedDate.split('T')[0]
+            joinedDateDom.value = convertToDateInputFormat(student.joinedDate);
         } catch (error) {
             alert('Something went wrong.Please try later.')
         }
