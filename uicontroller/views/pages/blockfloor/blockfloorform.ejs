@@ -48,7 +48,7 @@
                                 </div>
                         </fieldset>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateBlockFloor()"
                                 class="btn btn-primary" id="submitButton" disabled>Submit</button>
                         </div>
@@ -66,6 +66,7 @@
     var floorNumberDom = document.getElementById('floorNumber');
     var isActiveDom = document.getElementById('isActive');
     var inActiveDom = document.getElementById('inActive');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var blockFloorId = <%= blockFloorId || 'null' %>;
 
@@ -124,6 +125,7 @@
 
         if (blockFloorId) {
             await getBlockFloorById(blockFloorId);
+            resetDom.style.display = 'none';
         }
 
         blockCodeDom.addEventListener('input', toggleSubmitButton);

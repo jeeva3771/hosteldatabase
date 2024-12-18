@@ -79,7 +79,7 @@
                             </div>
                         </fieldset>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateRoom()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -101,6 +101,7 @@
     var inActiveDom = document.getElementById('inActive');
     var isAirDom = document.getElementById('isAir');
     var notAirDom = document.getElementById('notAir');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var roomId = <%= roomId || 'null' %>;
 
@@ -169,6 +170,7 @@
 
         if (roomId) {
             await getRoomById(roomId);
+            resetDom.style.display = 'none';
         }
 
         blockCodeDom.addEventListener('input', populateFloorNumber);

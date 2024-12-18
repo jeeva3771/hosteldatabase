@@ -125,7 +125,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateStudent()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -156,11 +156,10 @@
     const studentImageDom = document.getElementById('studentImage');
     const removeImageDom = document.getElementById('removeImage');
     const fileInputDom = document.querySelector('input[type="file"]'); 
+    var resetDom = document.getElementById('reset');
     const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
-
     const today = new Date().toISOString().split('T')[0];
-    joinedDateDom.value = today;
 
     function saveOrUpdateStudent() {
         var myHeaders = new Headers();
@@ -234,8 +233,10 @@
 
         if (studentId) {
             await getStudentById(studentId);
+            resetDom.style.display = 'none';
         } else if (!studentId) {
             uploadFileSectionDom.style.display = 'none';
+            joinedDateDom.value = today;
         }
 
         studentNameDom.addEventListener('input', toggleSubmitButton);

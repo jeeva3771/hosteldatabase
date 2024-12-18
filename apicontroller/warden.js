@@ -1,12 +1,10 @@
-const { mysqlQuery, deleteFile } = require('../utilityclient/query');
+const { mysqlQuery, deleteFile, hashPassword, isPasswordValid } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const bcrypt = require('bcrypt');
-const saltRounds = 10;
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, path.join(__dirname, '..', 'useruploads'))
@@ -34,7 +32,6 @@ const ALLOWED_UPDATE_KEYS = [
     "lastName",
     "dob",
     "emailId",
-    "password",
     "superAdmin"
 ]
 const OTP_LIMIT_NUMBER = 6;
@@ -185,15 +182,8 @@ async function createWarden(req, res) {
             return res.status(400).send(isValidInsert);
         }
 
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
+        if (req.file !== undefined){
             uploadedFilePath = req.file.path;
-        }
-
-        if (uploadedFilePath.includes('default.jpg')) {
-            console.log('Skipping sharp resizing for default image.');
-        } else {
             await sharp(fs.readFileSync(uploadedFilePath))
                 .resize({
                     width: parseInt(process.env.IMAGE_WIDTH),
@@ -213,15 +203,11 @@ async function createWarden(req, res) {
         )
 
         if (newWarden.affectedRows === 0) {
-            if (uploadedFilePath.includes('default.jpg')) {
-                console.log('Skip image deletion operation')
-            } else {
-                await deleteFile(uploadedFilePath, fs)
-            }
+            await deleteFile(uploadedFilePath, fs)
             return res.status(400).send({error:"No insert was made"})
         }
-
-        if (!uploadedFilePath.includes('default.jpg')) {
+        
+        if (uploadedFilePath) {
             const originalDir = path.dirname(uploadedFilePath);
             const newFilePath = path.join(originalDir, `${newWarden.insertId}.jpg`);
 
@@ -229,9 +215,9 @@ async function createWarden(req, res) {
                 if (err) {
                     return res.status(400).send({error:'Error renaming file'});
                 }
-        });
-    }
-    res.status(201).send('insert successfully')
+            });
+        }
+        res.status(201).send('Insert successfully')
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -305,12 +291,7 @@ async function updateWardenAvatar(req, res) {
            return res.status(400).send(req.fileValidationError);
         }
 
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
-        }
-
+        uploadedFilePath = req.file.path;
         sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),
@@ -390,23 +371,29 @@ async function authentication(req, res) {
     } = req.body
 
     try {
-        const hashGenerator = await hashPassword(password)
+        const [warden] = await mysqlQuery(/*sql*/`
+            SELECT * FROM warden 
+            WHERE emailId = ? 
+            AND deletedAt IS NULL`,
+            [emailId]
+        , mysqlClient)
+        
+        if (!warden) {
+            req.session.isLogged = false
+            req.session.warden = null
+            return res.status(400).send('Invalid Email.')
+        }
 
-        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ? 
-        AND deletedAt IS NULL`,
-            [emailId, hashGenerator],
-            mysqlClient)
-            console.log(user)
-        const validatePassword = await verifyPassword(hashGenerator, user[0].password);
+        const isValid = await isPasswordValid(password, warden.password);
 
-        if (validatePassword.length === 0) {
-            req.session.warden = user[0]
+        if (isValid) {
+            req.session.warden = warden
             req.session.isLogged = true
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
             req.session.warden = null
-            res.status(409).send('Invalid emailId or password.')
+            res.status(400).send('Invalid Password.')
         }
     } catch (error) {
         req.log.error(error)
@@ -481,19 +468,18 @@ async function changePassword(req, res) {
                 wardenId = ?
                 AND deletedAt IS NULL`,
             [wardenId], mysqlClient)
-
-        const validatePassword = await verifyPassword(oldPassword, getExistsPassword[0].password);
-
-        if (validatePassword.length > 0) {
-            return res.status(400).send(validatePassword)
+        
+        if (getExistsPassword.length > 0) {
+            const validatePassword = await isPasswordValid(oldPassword, getExistsPassword[0].password);
+            if (validatePassword === false) {
+                return res.status(400).send("Current password Invalid.")
+            }
+        } else {
+            return res.status(404).send('User is Invalid.')
         }
 
-        // if (getExistsPassword[0].password !== oldHashPassword) {
-        //     return res.status(400).send('Incorrect current password')
-        // } 
-
         if (newPassword.length < 6) {
-            return res.status(400).send('New password is invalid')
+            return res.status(400).send('New password is Invalid.')
         } 
 
         const newHashGenerator = await hashPassword(newPassword)
@@ -631,8 +617,10 @@ async function processResetPassword(req, res) {
                 )
             } 
             
-            const resetPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ?, otp = null, otpAttempt = null
-            WHERE emailId = ? AND deletedAt IS NULL`, [password, emailId], mysqlClient)
+            const hashGenerator = await hashPassword(password)
+            const resetPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ?, otp = null,
+                otpAttempt = null WHERE emailId = ? AND deletedAt IS NULL`,
+                [hashGenerator, emailId], mysqlClient)
 
             if (resetPassword.affectedRows === 0) {
                 return res.status(404).send('Oops! Something went wrong. Please contact admin.')
@@ -673,17 +661,19 @@ async function validatePayload(req, body, isUpdate = false, wardenId = null, mys
     
     const errors = []
 
-   const validateMainDetails = await validateMainPayload(body, isUpdate = false, wardenId, mysqlClient)
+   const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
     if (validateMainDetails.length > 0) {
         errors.push(...validateMainDetails)
     }
-    
-    if (password !== undefined) {
-        if (password.length < 6) {
-            errors.push('Password is invalid')
-        } 
-    } else {
-        errors.push('Password is missing')
+
+    if (isUpdate === false) {
+        if (password !== undefined) {
+            if (password.length < 6) {
+                errors.push('Password is invalid')
+            } 
+        } else {
+            errors.push('Password is missing')
+        }
     }
     
     if (req.fileValidationError) {
@@ -766,9 +756,8 @@ async function validateMainPayload(body, isUpdate = false, wardenId, mysqlClient
                             AND deletedAt IS NULL`;
                 params = [emailId];
             }
-
+            
             const validateEmailId = await mysqlQuery(query, params, mysqlClient);
-
             if (validateEmailId[0].count > 0) {
                 errors.push("Email Id already exists");
             }
@@ -798,28 +787,6 @@ async function validateWardenById(wardenId, mysqlClient) {
     }
     return false
 }
-
-const hashPassword = async (password) => {
-    try {
-        const hashedPassword = await bcrypt.hash(password, saltRounds);
-        return hashedPassword;
-    } catch (err) {
-        throw new Error('Failed to hash the password');
-    }
-};
-
-const verifyPassword = async (enteredPassword, storedHashedPassword) => {
-    try {
-        const isMatch = await bcrypt.compare(enteredPassword, storedHashedPassword);
-        if (isMatch) {
-            console.log('Current password is correct');
-        } else {
-            return 'Incorrect current password';
-        }
-    } catch (err) {
-        throw new Error('Error comparing password');
-    }
-};
 
 module.exports = (app) => {
     app.post('/api/warden/generateotp', generateOtp)

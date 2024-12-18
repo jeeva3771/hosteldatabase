@@ -1,93 +1,62 @@
+<% const mainMenuPath = [
+  { name: 'Dashboard', url: 'home/', icon: 'bi bi-grid' },
+  { name: 'Attendance', url: 'attendance/', icon: 'bi bi-card-checklist' },
+  { name: 'Student', url: 'student/', icon: 'bi bi-people' },
+  { name: 'Warden', url: 'warden/', icon: 'bi bi-person-fill' },
+  {
+    name: 'Structure',
+    icon: 'bi bi-layout-text-window-reverse',
+    children: [
+      { name: 'Block', url: 'block/' },
+      { name: 'Block floor', url: 'blockfloor/' },
+      { name: 'Room', url: 'room/' },
+    ],
+  },
+  {
+    name: 'Others',
+    icon: 'bi bi-grid-3x3-gap',
+    children: [
+      { name: 'Course', url: 'course/' },
+    ],
+  },
+  { name: 'User', url: 'warden/details/', icon: 'bi bi-person' },
+  { name: 'F.A.Q', url: 'faq/', icon: 'bi bi-question-circle' },
+  { name: 'Contact', url: 'contact/', icon: 'bi bi-envelope' },
+] %>
+
+
 <aside id="sidebar" class="sidebar">
-    <ul class="sidebar-nav" id="sidebar-nav">
-
+  <ul class="sidebar-nav" id="sidebar-nav">
+    <% mainMenuPath.forEach(item => { %>
+      <% if (item.name === 'User') { %>
+        <li class="nav-heading">Pages</li>
+      <% } %>
       <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>home/">
-          <i class="bi bi-grid"></i>
-          <span>Dashboard</span>
-        </a>
+        <% if (item.children) { %>
+          <a class="nav-link collapsed" data-bs-target="#<%= item.name.toLowerCase().replace(/\s+/g, '-') %>-nav"
+            data-bs-toggle="collapse" href="javascript:void(0)">
+            <i class="<%= item.icon %>"></i>
+            <span><%= item.name %></span>
+            <i class="bi bi-chevron-down ms-auto"></i>
+          </a>
+          <ul id="<%= item.name.toLowerCase().replace(/\s+/g, '-') %>-nav" class="nav-content collapse" 
+            data-bs-parent="#sidebar-nav">
+            <% item.children.forEach(child => { %>
+              <li>
+                <a href="<%= appURL + child.url %>">
+                  <i class="bi bi-circle"></i>
+                  <span><%= child.name %></span>
+                </a>
+              </li>
+            <% }) %>
+          </ul>
+        <% } else { %>
+          <a class="nav-link collapsed" href="<%= appURL + item.url %>">
+            <i class="<%= item.icon %>"></i>
+            <span><%= item.name %></span>
+          </a>
+        <% } %>
       </li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>attendance/">
-          <i class="bi bi-card-checklist"></i>
-          <span>Attendance</span>
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>student/">
-          <i class="bi bi-people"></i>
-          <span>Student</span>
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>warden/">
-          <i class="bi bi-person-fill"></i>
-          <span>Warden</span>
-        </a>
-      </li>
-      
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#tables-nav" data-bs-toggle="collapse" href="javascript:void(0)">
-          <i class="bi bi-layout-text-window-reverse"></i><span>Structure</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="tables-nav" class="nav-content collapse" data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="<%=appURL%>block/">
-              <i class="bi bi-circle"></i><span>Block</span>
-            </a>
-          </li>
-          <li>
-            <a href="<%=appURL%>blockfloor/">
-              <i class="bi bi-circle"></i><span>Block floor</span>
-            </a>
-          </li>
-          <li>
-            <a href="<%=appURL%>room/">
-              <i class="bi bi-circle"></i><span>Room</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Tables Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" data-bs-target="#tables-structure" data-bs-toggle="collapse" href="javascript:void(0)">
-          <i class="bi bi-grid-3x3-gap"></i>
-          <span>Others</span><i class="bi bi-chevron-down ms-auto"></i>
-        </a>
-        <ul id="tables-structure" class="nav-content collapse " data-bs-parent="#sidebar-nav">
-          <li>
-            <a href="<%=appURL%>course/">
-              <i class="bi bi-circle"></i><span>Course</span>
-            </a>
-          </li>
-        </ul>
-      </li><!-- End Tables Nav -->
-
-      <li class="nav-heading">Pages</li>
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>warden/details/">
-          <i class="bi bi-person"></i>
-          <span>User</span>
-        </a>
-      </li>
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>faq/">
-          <i class="bi bi-question-circle"></i>
-          <span>F.A.Q</span>
-        </a>
-      </li><!-- End F.A.Q Page Nav -->
-
-      <li class="nav-item">
-        <a class="nav-link collapsed" href="<%=appURL%>contact/">
-          <i class="bi bi-envelope"></i>
-          <span>Contact</span>
-        </a>
-      </li><!-- End Contact Page Nav -->
-
-    </ul>
-  </aside>
-  
+    <% }) %>
+  </ul>
+</aside>

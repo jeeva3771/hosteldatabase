@@ -19,7 +19,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateCourse()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -34,6 +34,7 @@
 
 <script>
     var courseNameDom = document.getElementById('courseName');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var courseId = <%= courseId || 'null' %>;
 
@@ -76,7 +77,8 @@
     }
 
     if (courseId) {
-        getCourse(courseId)
+        getCourse(courseId);
+        resetDom.style.display = 'none';
     }
 
     function getCourse(courseId) {
@@ -89,7 +91,7 @@
                 const course = await response.json()
                 courseNameDom.value = course.courseName
             })
-            .catch((error) => console.error(error));
+            .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     function toggleSubmitButton() {

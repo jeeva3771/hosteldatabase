@@ -1,3 +1,5 @@
+const bcrypt = require('bcrypt');
+
 function mysqlQuery(sql, options, mysqlClient) {
     return new Promise((resolve, reject) => {
         try {
@@ -38,10 +40,20 @@ function deleteFile(uploadedFilePath, fs) {
     });
 }
 
+function hashPassword(password) {
+    return bcrypt.hash(password, parseInt(process.env.HASH_SALTROUNDS))
+}
+
+function isPasswordValid(enteredPassword, storedHashedPassword) {
+    return bcrypt.compare(enteredPassword, storedHashedPassword)
+}
+
 module.exports = {
     mysqlQuery,
     getUserProfile,
-    deleteFile
+    deleteFile,
+    hashPassword,
+    isPasswordValid
 }
 
 

@@ -41,7 +41,7 @@
                             </div>
                         </fieldset>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -59,6 +59,7 @@
     var blockLocationDom = document.getElementById('blockLocation');
     var isActiveDom = document.getElementById('isActive');
     var inActiveDom = document.getElementById('inActive');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var blockId = <%= blockId || 'null' %>;
 
@@ -106,6 +107,7 @@
 
     if (blockId) {
         getBlock(blockId)
+        resetDom.style.display = 'none'
     }
 
     function getBlock(blockId) {

@@ -59,18 +59,20 @@
                               <input type="email" class="form-control" id="emailId">
                             </div>
                         </div>
-                        <div class="row mb-3">
-                            <label for="password" class="col-sm-2 col-form-label">
-                                Password<span class="text-danger">*</span></label>
-                            <div class="col-sm-10">
-                              <input type="password" class="form-control" id="password">
+                        <div id="passwordSection">
+                            <div class="row mb-3">
+                                <label for="password" class="col-sm-2 col-form-label">
+                                    Password<span class="text-danger">*</span></label>
+                                <div class="col-sm-10">
+                                <input type="password" class="form-control" id="password">
+                                </div>
                             </div>
-                        </div>
-                        <div class="row mb-3">
-                            <label for="conform" class="col-sm-2 col-form-label">
-                                Confirm Password<span class="text-danger">*</span></label>
-                            <div class="col-sm-10">
-                              <input type="password" class="form-control" id="conform">
+                            <div class="row mb-3">
+                                <label for="conform" class="col-sm-2 col-form-label">
+                                    Confirm Password<span class="text-danger">*</span></label>
+                                <div class="col-sm-10">
+                                <input type="password" class="form-control" id="conform">
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3" id="fileUploadSection">
@@ -81,7 +83,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="authentication()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -102,6 +104,8 @@
     const emailIdDom = document.getElementById('emailId');
     const passwordDom = document.getElementById('password');
     const conformDom = document.getElementById('conform');
+    const resetDom = document.getElementById('reset');
+    const passwordSectionDom = document.getElementById('passwordSection');
     const fileUploadSectionDom = document.getElementById('fileUploadSection');
     const imageUploadDom = document.getElementById('imageUpload');
     var wardenId = <%= wardenId || 'null' %>;
@@ -126,8 +130,11 @@
             formData.append("lastName", lastNameDom.value);
             formData.append("dob", dobDom.value);
             formData.append("emailId", emailIdDom.value);
-            formData.append("password", passwordDom.value);
             formData.append("superAdmin", adminStatusValue);
+
+            if (method === 'POST') { 
+                formData.append("password", passwordDom.value);
+            }
 
             requestOptions.body = formData;
         } else {
@@ -137,10 +144,12 @@
                 "lastName": lastNameDom.value,
                 "dob": dobDom.value,
                 "emailId": emailIdDom.value,
-                "password": passwordDom.value,
                 "superAdmin": adminStatusValue
             };
 
+            if (method === 'POST') { 
+                raw.password = passwordDom.value;
+            }
             requestOptions.headers.append("Content-Type", "application/json");
             requestOptions.body = JSON.stringify(raw);
         }
@@ -168,7 +177,9 @@
                 
     if (wardenId) {
         getWardenById(wardenId);
+        passwordSectionDom.style.display = 'none';
         fileUploadSectionDom.style.display = 'none';
+        resetDom.style.display = 'none';
     }
 
     function getWardenById(wardenId) {
@@ -189,15 +200,13 @@
                 } else {
                     notAdminDom.checked = true;
                 }
-
-                passwordDom.value = warden.password;
-                conformDom.value = warden.password;
             })
             .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     function toggleSubmitButton() {
         const adminOrNot = getSelectedRadioValue('isAdmin');
+        if (!wardenId) {
             submitDom.disabled = !(
                 firstNameDom.value.length > 0 &&
                 lastNameDom.value.length > 0 &&
@@ -207,6 +216,14 @@
                 passwordDom.value.length > 0 &&
                 conformDom.value.length > 0 &&
                 passwordDom.value === conformDom.value);
+        } else {
+            submitDom.disabled = !(
+                firstNameDom.value.length > 0 &&
+                lastNameDom.value.length > 0 &&
+                dobDom.value.length > 0 &&
+                emailIdDom.value.length > 0 &&
+                adminOrNot !== null);
+        }
     }
 
     firstNameDom.addEventListener('input', toggleSubmitButton);
@@ -215,7 +232,10 @@
     emailIdDom.addEventListener('input', toggleSubmitButton);
     document.querySelectorAll('input[name="isAdmin"]').forEach(radio => 
         radio.addEventListener('change', toggleSubmitButton));
-    passwordDom.addEventListener('input', toggleSubmitButton);
-    conformDom.addEventListener('input', toggleSubmitButton);
+        
+    if (!wardenId) {
+        passwordDom.addEventListener('input', toggleSubmitButton);
+        conformDom.addEventListener('input', toggleSubmitButton);
+    }
 
 </script>
