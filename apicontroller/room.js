@@ -253,23 +253,27 @@ async function deleteRoomById(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const checkStudentInRoom = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
-        WHERE roomId = ?
-        AND deletedAt IS NULL`, [roomId], mysqlClient)
+        const [checkStudentInRoom] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM student 
+            WHERE roomId = ?
+            AND deletedAt IS NULL`, 
+            [roomId]
+        , mysqlClient)
 
 
-        if (checkStudentInRoom[0].count > 0) {
+        if (checkStudentInRoom.count > 0) {
             return res.status(409).send('Students in a room shift to another room and then try to delete.')
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room 
-            SET roomNumber = CONCAT(IFNULL(roomNumber, ''), '-', NOW()), 
+        const deletedRoom = await mysqlQuery(/*sql*/`
+            UPDATE room SET 
+                roomNumber = CONCAT(IFNULL(roomNumber, ''), '-', NOW()), 
                 deletedAt = NOW(), 
                 deletedBy = ? 
             WHERE roomId = ? 
             AND deletedAt IS NULL`,
-            [deletedBy, roomId],
-            mysqlClient
+            [deletedBy, roomId]
+        , mysqlClient
         )
 
         if (deletedRoom.affectedRows === 0) {

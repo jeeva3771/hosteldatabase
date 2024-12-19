@@ -292,13 +292,8 @@ async function updateStudentImage(req, res) {
             return res.status(400).send(req.fileValidationError);
         }
 
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
-        }
-
-        sharp(fs.readFileSync(uploadedFilePath))
+        uploadedFilePath = req.file.path;
+        await sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),
                 height: parseInt(process.env.IMAGE_HEIGHT),
@@ -306,6 +301,7 @@ async function updateStudentImage(req, res) {
                 position: sharp.strategy.center,
             })
             .toFile(uploadedFilePath);
+            
         return res.status(200).json('Student image updated successfully');
     } catch (error) {
         req.log.error(error)

@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Warden form' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Warden form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'warden'}) %>
 
 <section class="section">
     <div class="row">
@@ -213,8 +213,8 @@
                 dobDom.value.length > 0 &&
                 emailIdDom.value.length > 0 &&
                 adminOrNot !== null &&
-                passwordDom.value.length > 0 &&
-                conformDom.value.length > 0 &&
+                passwordDom.value.length > 5 &&
+                conformDom.value.length > 5 &&
                 passwordDom.value === conformDom.value);
         } else {
             submitDom.disabled = !(

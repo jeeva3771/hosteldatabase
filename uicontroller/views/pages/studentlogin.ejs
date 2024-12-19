@@ -133,7 +133,7 @@
 
     function toggleButton() {
         sendOtpDom.disabled = !(emailDom.value.length > 0)
-        submitDom.disabled = !(otpDom.value.length > 0)
+        submitDom.disabled = !(otpDom.value.length > 5)
     }
 
     function hideError(input, errorElement) {

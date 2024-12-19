@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'User Details' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'User Details' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'warden/details' }) %>
 
 <section class="section profile">
     <div class="row">
@@ -274,7 +274,10 @@
               readWardenById();
             }, 1000);
             alert('Successfully changed');
-            resetPasswordDom.disabled = false;
+            currentPasswordDom.value = '';
+            newPasswordDom.value = '';
+            renewPasswordDom.value = '';
+            resetPasswordDom.disabled = true;
         } else {
           alert(await response.text())
           resetPasswordDom.disabled = false;
@@ -312,7 +315,7 @@
               readWardenById();
             }, 1000);
             alert('Successfully changed');
-            saveChangeDom.disabled = false;
+            saveChangeDom.disabled = true;
         } else {
           const responseText = await response.json();
           if (Array.isArray(responseText)) {
@@ -341,9 +344,9 @@
 
   function togglePasswordButton() {
     resetPasswordDom.disabled = !(
-      currentPasswordDom.value.length > 0 &&
-      newPasswordDom.value.length > 0 &&
-      renewPasswordDom.value.length > 0 &&
+      currentPasswordDom.value.length > 5 &&
+      newPasswordDom.value.length > 5 &&
+      renewPasswordDom.value.length > 5 &&
       renewPasswordDom.value === newPasswordDom.value);
   }
 

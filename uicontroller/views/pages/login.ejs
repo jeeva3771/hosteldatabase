@@ -1,4 +1,5 @@
-<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, studentAppURL: studentAppURL, title: 'Login' }) %>
+<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, studentAppURL: studentAppURL,
+   title: 'Login' }) %>
 
   <main>
     <div class="container">
@@ -111,7 +112,7 @@
     }
 
     function toggleLoginButton() {
-      loginButton.disabled = !(email.value.length > 0 && password.value.length > 0)
+      loginButton.disabled = !(email.value.length > 0 && password.value.length > 5)
     }
 
   </script>

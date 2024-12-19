@@ -239,29 +239,49 @@ async function deleteBlockFloorById(req, res) {
             return res.status(404).send("blockFloorId is not defined")
         }
 
-        const checkStudentInBlockFloor = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
-        WHERE blockFloorId = ?
-        AND deletedAt IS NULL`, [blockFloorId], mysqlClient)
+        const [checkStudentInBlockFloor] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM student 
+            WHERE blockFloorId = ?
+            AND deletedAt IS NULL`, 
+            [blockFloorId]
+        , mysqlClient)
 
 
-        if (checkStudentInBlockFloor[0].count > 0) {
+        if (checkStudentInBlockFloor.count > 0) {
             return res.status(409).send('Students in a blockfloor shift to another blockfloor and then try to delete.')
         }
 
-        const deletedBlockFloor = await mysqlQuery(/*sql*/`UPDATE blockfloor SET 
-        floorNumber = CONCAT(IFNULL(floorNumber, ''), '-', NOW()),
-        deletedAt = NOW(), deletedBy = ? WHERE blockfloorId = ? AND deletedAt IS NULL`,
-            [deletedBy, blockFloorId],
-            mysqlClient
-        )
+        const [checkRoomInFloor] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM room
+            WHERE blockFloorId = ? 
+            AND deletedAt IS NULL`, 
+            [blockFloorId]
+        , mysqlClient)
+
+        if (checkRoomInFloor.count > 0) {
+            return res.status(409).send('Blockfloor is referenced by a Room and cannot be deleted.')
+        }
+
+        const deletedBlockFloor = await mysqlQuery(/*sql*/`
+            UPDATE blockfloor SET 
+                floorNumber = CONCAT(IFNULL(floorNumber, ''), '-', NOW()),
+                deletedAt = NOW(),
+                deletedBy = ? 
+            WHERE blockfloorId = ? 
+            AND deletedAt IS NULL`,
+            [deletedBy, blockFloorId]
+        , mysqlClient)
+
         if (deletedBlockFloor.affectedRows === 0) {
             return res.status(404).send("Blockfloor not found or already deleted")
         }
 
-        const getDeletedBlockFloor = await mysqlQuery(/*sql*/`SELECT * FROM blockfloor WHERE blockfloorId = ?`,
-            [blockFloorId],
-            mysqlClient
-        )
+        const getDeletedBlockFloor = await mysqlQuery(/*sql*/`
+            SELECT * FROM blockfloor 
+            WHERE blockfloorId = ?`,
+            [blockFloorId]
+        , mysqlClient)
+
         res.status(200).send({
             status: 'deleted',
             data: getDeletedBlockFloor[0]

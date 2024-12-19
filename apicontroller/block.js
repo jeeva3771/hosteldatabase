@@ -254,23 +254,39 @@ async function deleteBlockById(req, res) {
             return res.status(404).send("BlockId is not defined")
         }
 
-        const checkStudentInBlock = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
-        WHERE blockId = ?
-        AND deletedAt IS NULL`, [blockId], mysqlClient )
+        const [checkStudentInBlock] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM student 
+            WHERE blockId = ? 
+            AND deletedAt IS NULL`,
+            [blockId]
+        , mysqlClient )
 
 
-        if (checkStudentInBlock[0].count > 0) {
+        if (checkStudentInBlock.count > 0) {
             return res.status(409).send('Students in a block shift to another block and then try to delete.')
         }
 
-        const deletedBlock = await mysqlQuery(/*sql*/`UPDATE block 
-            SET blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
+        const [checkFloorInBlock] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM blockfloor
+            WHERE blockId = ? 
+            AND deletedAt IS NULL`, 
+            [blockId]
+        , mysqlClient)
+
+        if (checkFloorInBlock.count > 0) {
+            return res.status(409).send('Block is referenced by a floor and cannot be deleted.')
+        }
+
+        const deletedBlock = await mysqlQuery(/*sql*/`
+            UPDATE block SET 
+                blockCode = CONCAT(IFNULL(blockCode, ''), '-', NOW()), 
                 deletedAt = NOW(), 
                 deletedBy = ? 
             WHERE blockId = ? 
             AND deletedAt IS NULL`,
-            [deletedBy, blockId],
-            mysqlClient)
+            [deletedBy, blockId]
+        , mysqlClient)
+        
         if (deletedBlock.affectedRows === 0) {
             return res.status(404).send("Block not found or already deleted")
         }
