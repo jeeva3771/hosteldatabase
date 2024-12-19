@@ -105,7 +105,7 @@ async function createCourse(req, res) {
     const createdBy = req.session.warden.wardenId
 
     try {
-        const validateInsert = await validateInsertItems(req.body, false, courseId = null, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, false, courseId = null, mysqlClient);
         if (validateInsert) {
             return res.status(400).send([validateInsert]);
         }
@@ -113,7 +113,7 @@ async function createCourse(req, res) {
         const newCourse = await mysqlQuery(/*sql*/`INSERT INTO course(courseName, createdBy) VALUES(?,?)`,
             [courseName, createdBy], mysqlClient)
         if (newCourse.affectedRows === 0) {
-            res.status(400).send("no insert was made")
+            res.status(400).send({error:"No insert was made"})
         } else {
             res.status(201).send("insert successfull")
         }
@@ -144,10 +144,10 @@ async function updateCourseById(req, res) {
     try {
         const course = await validateCourseById(courseId, mysqlClient);
         if (!course) {
-            return res.status(404).send("course not found or already deleted");
+            return res.status(404).send({error:"Course not found or already deleted"});
         }
 
-        const validateInsert = await validateInsertItems(req.body, true, courseId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, courseId, mysqlClient);
         if (validateInsert) {
             return res.status(400).send([validateInsert]);
         }
@@ -155,7 +155,7 @@ async function updateCourseById(req, res) {
         const isUpdate = await mysqlQuery(/*sql*/`UPDATE course SET ${updates.join(', ')} WHERE courseId = ? AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
-            return res.status(204).send("course not found or no changes made")
+            return res.status(204).send({error:"No changes made"})
         }
 
         const getUpdatedCourse = await mysqlQuery(/*sql*/`SELECT * FROM course WHERE courseId = ?`,
@@ -237,7 +237,7 @@ async function validateCourseById(courseId, mysqlClient) {
     return false;
 }
 
-async function validateInsertItems(body, isUpdate = false, courseId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, courseId = null, mysqlClient) {
     const { courseName } = body;
 
     try {

@@ -1,7 +1,7 @@
 <%- include('../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Home' }) %>
 <%- include('../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Dashboard' }) %>
 <%- include('../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../partials/wardenuse/aside.ejs') %>
+<%- include('../partials/wardenuse/aside.ejs', { activeMenu: 'home' }) %>
 
     <section class="section dashboard">
       <div class="row">
@@ -15,7 +15,7 @@
               <div class="card info-card sales-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -32,9 +32,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="ri-bank-line"></i>
                     </div>
-                    <div class="ps-3" id="block">
+                    <div class="ps-3">
                       <h6>Block</h6>
-
+                      <span class="text-success small pt-1 fw-bold" id="block">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Block(s)</span>
                     </div>
                   </div>
                 </div>
@@ -46,7 +49,7 @@
               <div class="card info-card revenue-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -62,9 +65,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="ri-building-4-line"></i>
                     </div>
-                    <div class="ps-3" id="blockfloor">
+                    <div class="ps-3">
                       <h6>Block Floor</h6>
-
+                      <span class="text-success small pt-1 fw-bold" id="blockfloor">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Block Floor(s)</span>
                     </div>
                   </div>
                 </div>
@@ -78,7 +84,7 @@
               <div class="card info-card customers-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -94,8 +100,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-house-fill"></i>
                     </div>
-                    <div class="ps-3" id="room">
+                    <div class="ps-3">
                       <h6>Room</h6>
+                      <span class="text-success small pt-1 fw-bold" id="room">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Room(s)</span>
                     </div>
                   </div>
 
@@ -109,7 +119,7 @@
               <div class="card info-card customers-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -125,8 +135,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-people"></i>
                     </div>
-                    <div class="ps-3" id="student">
+                    <div class="ps-3">
                       <h6>Student</h6>
+                      <span class="text-success small pt-1 fw-bold" id="student">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Student(s)</span>
                     </div>
                   </div>
 
@@ -140,7 +154,7 @@
               <div class="card info-card customers-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -156,8 +170,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-person-fill"></i>
                     </div>
-                    <div class="ps-3" id="warden">
+                    <div class="ps-3">
                       <h6>Warden</h6>
+                      <span class="text-success small pt-1 fw-bold" id="warden">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Warden(s)</span>
                     </div>
                   </div>
 
@@ -171,7 +189,7 @@
               <div class="card info-card customers-card">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Option</h6>
@@ -187,8 +205,12 @@
                     <div class="card-icon rounded-circle d-flex align-items-center justify-content-center">
                       <i class="bi bi-mortarboard"></i>
                     </div>
-                    <div class="ps-3" id="course">
+                    <div class="ps-3">
                       <h6>Course</h6>
+                      <span class="text-success small pt-1 fw-bold" id="course">
+                        <span class="spinner-border text-secondary spinner1"></span>
+                      </span> 
+                      <span class="text-muted small pt-2 ps-1">Course(s)</span>
                     </div>
                   </div>
 
@@ -203,7 +225,7 @@
               <div class="card recent-sales overflow-auto">
 
                 <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
+                  <a class="icon" href="" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
                   <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
                     <li class="dropdown-header text-start">
                       <h6>Filter</h6>
@@ -230,9 +252,9 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <th scope="row"><a href="#">#2457</a></th>
+                        <th scope="row"><a href="">#2457</a></th>
                         <td>Brandon Jacob</td>
-                        <td><a href="#" class="text-primary">At praesentium minu</a></td>
+                        <td><a href="" class="text-primary">At praesentium minu</a></td>
                         <td>$64</td>
                         <td><span class="badge bg-success">Approved</span></td>
                       </tr>
@@ -659,10 +681,8 @@
     fetch(getAppUrl('api/block/blockcount/block'), requestOptions)
       .then(async(response) => {
         const block = await response.json()
-        blockDom.innerHTML += `
-          <span class="text-success small pt-1 fw-bold">${block.totalBlockCount}</span> 
-          <span class="text-muted small pt-2 ps-1">${block.totalBlockCount === 1 || 0 ? 'Block' : 'Blocks'}</span>`
-  })
+        blockDom.innerText = block.totalBlockCount
+    })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
 
@@ -677,9 +697,7 @@
     fetch(getAppUrl('api/blockfloor/blockfloorcount/floor'), requestOptions)
       .then(async(response) => {
         const floor = await response.json()
-        blockfloorDom.innerHTML += `
-        <span class="text-success small pt-1 fw-bold">${floor.totalFloorCount}</span> 
-        <span class="text-muted small pt-2 ps-1">${floor.totalFloorCount === 1 || 0 ? 'Block Floor' : 'Block Floors'}</span>`
+        blockfloorDom.innerText = floor.totalFloorCount
     })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
@@ -695,9 +713,7 @@
     fetch(getAppUrl('api/room/roomcount/room'), requestOptions)
       .then(async(response) => {
         const room = await response.json()
-        roomDom.innerHTML += `
-          <span class="text-success small pt-1 fw-bold">${room.totalRoomCount}</span> 
-          <span class="text-muted small pt-2 ps-1">${room.totalRoomCount === 1 || 0 ? 'Room' : 'Rooms' }</span>`
+        roomDom.innerText = room.totalRoomCount
     })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
@@ -713,9 +729,7 @@
     fetch(getAppUrl('api/student/studentcount/student'), requestOptions)
       .then(async(response) => {
         const student= await response.json()
-        studentDom.innerHTML += `
-          <span class="text-success small pt-1 fw-bold">${student.totalStudentCount}</span> 
-          <span class="text-muted small pt-2 ps-1">${student.totalStudentCount === 1 || 0 ? 'Student' : 'Students' }</span>`
+        studentDom.innerText = student.totalStudentCount
     })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
@@ -731,9 +745,7 @@
     fetch(getAppUrl('api/warden/wardencount/warden'), requestOptions)
       .then(async(response) => {
         const warden= await response.json()
-        wardenDom.innerHTML += `
-          <span class="text-success small pt-1 fw-bold">${warden.totalWardenCount}</span> 
-          <span class="text-muted small pt-2 ps-1">${warden.totalWardenCount === 1 || 0 ? 'Warden' : 'wardens' }</span>`
+        wardenDom.innerText = warden.totalWardenCount
     })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
@@ -749,26 +761,24 @@
     fetch(getAppUrl('api/course/coursecount/course'), requestOptions)
       .then(async(response) => {
         const course= await response.json()
-        courseDom.innerHTML += `
-          <span class="text-success small pt-1 fw-bold">${course.totalCourseCount}</span> 
-          <span class="text-muted small pt-2 ps-1">${course.totalCourseCount === 1 || 0 ? 'Course' : 'Courses' }</span>`
+        courseDom.innerText = course.totalCourseCount
     })
       .catch(error => alert('Something went wrong.Please try later.'));
   }
 
   window.addEventListener('load', async () => {
-        try {
-            await Promise.all([
-              readBlockCount(),
-              readFloorCount(),
-              readRoomCount(),
-              readStudentCount(),
-              readWardenCount(),
-              readCourseCount(),
-            ]);
-        } catch (error) {
-            alert('Something went wrong.Please try later.')
-        }
-    });
+    try {
+      await Promise.all([
+        readBlockCount(),
+        readFloorCount(),
+        readRoomCount(),
+        readStudentCount(),
+        readWardenCount(),
+        readCourseCount(),
+      ]);
+      } catch (error) {
+        alert('Something went wrong.Please try later.')
+      }
+  });
 
 </script>

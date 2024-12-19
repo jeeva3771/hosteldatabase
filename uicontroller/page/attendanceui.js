@@ -8,8 +8,8 @@ function attendancePageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Attendance', link:'/attendance'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Attendance', link:''}
         ]
         });
 }
@@ -21,8 +21,8 @@ function addOrEditAttendanceUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Attendance', link:'/attendance'},
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Attendance', link:''},
         ]
     });
 }
@@ -34,9 +34,9 @@ function getAttendanceStudentReportUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs : [ 
-            {name:'Home', link:'/home'},
-            {name:'Attendance', link:'/attendance'},
-            {name:'Report', link:'/attendance/report'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Attendance', link:getAppUrl('attendance')},
+            {name:'Report', link:''}
         ]
     })
 }

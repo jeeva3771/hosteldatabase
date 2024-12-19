@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Block list' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Block list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'block'}) %>
 
 <section class="section">
     <div class="row">
@@ -41,60 +41,68 @@
                         <th scope="col">Sno</th>
                         <th scope="col">Block Code
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'DESC')">
                                 <path fill-rule="evenodd"
-                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 
+                                0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                             </svg>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('blockCode', 'ASC')">
                                 <path fill-rule="evenodd"
-                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 
+                                0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                             </svg>
                         </th>
                         <th scope="col">Location
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon cursor"
                                 viewBox="0 0 16 16"
                                 onclick="sortByColumn('blockLocation', 'DESC')">
                                 <path fill-rule="evenodd"
-                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 
+                                3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                             </svg>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon cursor"
                                 viewBox="0 0 16 16"
                                 onclick="sortByColumn('blockLocation', 'ASC')">
                                 <path fill-rule="evenodd"
-                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 
+                                0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                             </svg>
                         </th>
                         <th scope="col">Status
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'DESC')">
                                 <path fill-rule="evenodd"
-                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 
+                                0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                             </svg>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('isActive', 'ASC')">
                                 <path fill-rule="evenodd"
-                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 
+                                0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                             </svg>
                         </th>
                         <th scope="col">Created By
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-down-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-down-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'DESC')">
                                 <path fill-rule="evenodd"
-                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
+                                d="M8 4a.5.5 0 0 1 .5.5v5.793l2.146-2.147a.5.5 0 0 1 .708.708l-3 3a.5.5 
+                                0 0 1-.708 0l-3-3a.5.5 0 1 1 .708-.708L7.5 10.293V4.5A.5.5 0 0 1 8 4" />
                             </svg>
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                fill="currentColor" class="bi bi-arrow-up-short sortIcon"
+                                fill="currentColor" class="bi bi-arrow-up-short sortIcon cursor"
                                 viewBox="0 0 16 16" onclick="sortByColumn('createdBy', 'ASC')">
                                 <path fill-rule="evenodd"
-                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
+                                d="M8 12a.5.5 0 0 0 .5-.5V5.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 
+                                0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 5.707V11.5a.5.5 0 0 0 .5.5" />
                             </svg>
                         </th>
                         <th scope="col">Action</th>
@@ -124,8 +132,8 @@
     var tableDataDom = document.getElementById("blocksData");
     var limitDom = document.getElementById("limit");
     var paginationDom = document.getElementById("pagination");
-    var orderIconDom = document.querySelectorAll('.sortIcon');
     var searchDom = document.getElementById("searchInput");
+    var orderIconDom = document.querySelectorAll('.sortIcon');
     var columnSortOrders = {
         blockCode: 'ASC',
         blockLocation: 'ASC',
@@ -134,10 +142,6 @@
     };
     var currentColumn = 'createdAt';
     var url = `&orderby=bk.${currentColumn}&sort=DESC`;
-
-    orderIconDom.forEach((icon) => {
-        icon.classList.add('light');
-    })
 
     function changeLimit() {
         blockPage();
@@ -152,11 +156,12 @@
         currentColumn = column;
         url = `&orderby=bk.${currentColumn}&sort=${sortOrder}`;
 
-        const activeIcons = document.querySelectorAll(`[onclick*="${column}"]`);
-        activeIcons.forEach(icon => {
-        icon.classList.remove('light');
-        icon.classList.add('dark');
-    });
+        orderIconDom.forEach(icon => {
+            icon.classList.remove('dark');
+        });
+
+        const clickedIcon = event.currentTarget;
+        clickedIcon.classList.add('dark');
         blockPage();
     }
 
@@ -214,23 +219,57 @@
 
         if (totalPages > 1) {
             paginationHtml += `
-            <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
-                <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
-            </li>`;
-
-            for (let i = 1; i <= totalPages; i++) {
-                paginationHtml += `
-                <li class="page-item${i === pageNo ? ' active' : ''}">
-                    <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                <li class="page-item${pageNo === 1 ? ' disabled' : ''}">
+                    <a class="page-link" onclick="blockPage(${pageNo - 1})">Previous</a>
                 </li>`;
-            }
 
+            if (totalPages <= 3) {
+                for (let i = 1; i <= totalPages; i++) {
+                    paginationHtml += `
+                        <li class="page-item${pageNo === i ? ' active' : ''}">
+                            <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                        </li>`;
+                }
+            } else {
+                paginationHtml += `
+                    <li class="page-item${pageNo === 1 ? ' active' : ''}">
+                        <a class="page-link" onclick="blockPage(1)">1</a>
+                    </li>`;
+
+                if (pageNo > 2) {
+                    paginationHtml += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>`;
+                }
+
+                const startPage = Math.max(2, pageNo - 1); 
+                const endPage = Math.min(totalPages - 1, pageNo + 1);
+                for (let i = startPage; i <= endPage; i++) {
+                    paginationHtml += `
+                        <li class="page-item${pageNo === i ? ' active' : ''}">
+                            <a class="page-link" onclick="blockPage(${i})">${i}</a>
+                        </li>`;
+                }
+
+                if (pageNo < totalPages - 1) {
+                    paginationHtml += `
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>`;
+                }
+
+                paginationHtml += `
+                    <li class="page-item${pageNo === totalPages ? ' active' : ''}">
+                        <a class="page-link" onclick="blockPage(${totalPages})">${totalPages}</a>
+                    </li>`;
+            }
             paginationHtml += `
-            <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
-                <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
-            </li>`;
+                <li class="page-item${pageNo === totalPages ? ' disabled' : ''}">
+                    <a class="page-link" onclick="blockPage(${pageNo + 1})">Next</a>
+                </li>`;
         }
-            paginationDom.innerHTML = paginationHtml;
+        paginationDom.innerHTML = paginationHtml;
         })
         .catch((error) => alert('Something went wrong.Please try later.'));
     }
@@ -242,7 +281,7 @@
             headers: myHeaders
         };
 
-        fetch(`${appURL}api/block/` + blockId, requestOptions)
+        fetch(`${appURL}api/block/${blockId}`, requestOptions)
             .then(async (response) => {
                 var block = await response.json()
                 const existingModal = document.getElementById('blockModal');

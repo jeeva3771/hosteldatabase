@@ -9,7 +9,7 @@ function studentGenerateOtp(req, res) {
 function getStudentReportUi(req, res) {
     const studentName = req.session.studentInfo.name;
     const studentRegNo = req.session.studentInfo.regNo;
-    console.log(req.session.isLoggedStudent)
+
     if (req.session.isLoggedStudent === true) {
         res.render('pages/studentuse/report.ejs', {
             studentAppURL: getStudentAppUrl(),

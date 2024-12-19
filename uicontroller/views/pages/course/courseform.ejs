@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Course form' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Course form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'course'}) %>
 
 <section class="section">
     <div class="row">
@@ -19,7 +19,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateCourse()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -34,10 +34,12 @@
 
 <script>
     var courseNameDom = document.getElementById('courseName');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var courseId = <%= courseId || 'null' %>;
 
     function saveOrUpdateCourse() {
+        submitButtonDom.disabled = true;
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -59,19 +61,24 @@
                     window.location = getAppUrl('course');
                 } else {
                     const responseText = await response.json();
-                    console.log(responseText)
                     if (Array.isArray(responseText)) {
                         alert(responseText[0]);
+                        submitButtonDom.disabled = false;
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
+                        submitButtonDom.disabled = false;
                     }
                 }
             })
-            .catch(error => alert('Internal Server Error'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
 
     if (courseId) {
-        getCourse(courseId)
+        getCourse(courseId);
+        resetDom.style.display = 'none';
     }
 
     function getCourse(courseId) {
@@ -84,7 +91,7 @@
                 const course = await response.json()
                 courseNameDom.value = course.courseName
             })
-            .catch((error) => console.error(error));
+            .catch((error) => alert('Something went wrong.Please try later.'));
     }
 
     function toggleSubmitButton() {

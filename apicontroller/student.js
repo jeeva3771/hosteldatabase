@@ -1,4 +1,4 @@
-const { mysqlQuery, handleFileUpload, deleteFile } = require('../utilityclient/query')
+const { mysqlQuery, deleteFile } = require('../utilityclient/query')
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -254,7 +254,7 @@ async function createStudent(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const validateInsert = await validateInsertItems(req.body, false, studentId = null, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, false, studentId = null, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
         }
@@ -270,7 +270,7 @@ async function createStudent(req, res) {
             mysqlClient)
 
         if (newStudent.affectedRows === 0) {
-            res.status(400).send("No insert was made")
+            res.status(400).send({error:"No insert was made"})
         }
         res.status(201).send('Insert successfully')
     } catch (error) {
@@ -285,18 +285,15 @@ async function updateStudentImage(req, res) {
 
     try {
         if (wardenId !== req.session.warden.wardenId && req.session.warden.superAdmin !== 1) {
-            return res.status(409).send('Warden is not valid to edit')
+            return res.status(409).send('Warden is not valid to edit');
         }
 
-        await handleFileUpload(req, res, multerMiddleware, multer);
-
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'studentuploads', 'studentdefault.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
+        if (req.fileValidationError) {
+            return res.status(400).send(req.fileValidationError);
         }
 
-        sharp(fs.readFileSync(uploadedFilePath))
+        uploadedFilePath = req.file.path;
+        await sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),
                 height: parseInt(process.env.IMAGE_HEIGHT),
@@ -304,6 +301,7 @@ async function updateStudentImage(req, res) {
                 position: sharp.strategy.center,
             })
             .toFile(uploadedFilePath);
+            
         return res.status(200).json('Student image updated successfully');
     } catch (error) {
         req.log.error(error)
@@ -332,10 +330,10 @@ async function updateStudentById(req, res) {
     try {
         const student = await validateStudentById(studentId, mysqlClient);
         if (!student) {
-            return res.status(404).send("Student not found or already deleted");
+            return res.status(404).send({error:"Student not found or already deleted"});
         }
 
-        const validateInsert = await validateInsertItems(req.body, true, studentId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, studentId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
@@ -348,7 +346,7 @@ async function updateStudentById(req, res) {
                 AND deletedAt IS NULL`,
             values, mysqlClient)
         if (updateStudent.affectedRows === 0) {
-            res.status(204).send("Student not found or no changes made")
+            res.status(204).send({error:"Student not found or no changes made"})
         }
 
         const getUpdatedStudent = await mysqlQuery(/*sql*/`
@@ -453,7 +451,7 @@ async function validateStudentById(studentId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body, isUpdate = false, studentId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, studentId = null, mysqlClient) {
     const {
         roomId,
         blockFloorId,
@@ -486,10 +484,10 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
                         COUNT(*) AS count
                     FROM student
                     WHERE ${isUpdate === true ? `studentId != ? AND` : ''}
-                        (   phoneNumber = ? 
-                            OR fatherNumber = ? 
-                            OR emailId = ? 
-                            OR registerNumber = ?  )
+                        (phoneNumber = ? 
+                        OR fatherNumber = ? 
+                        OR emailId = ? 
+                        OR registerNumber = ?)
                         AND deletedAt IS NULL`;
 
             const params = isUpdate
@@ -626,7 +624,6 @@ async function validateInsertItems(body, isUpdate = false, studentId = null, mys
         req.log.error(error)
     }
 }
-
 
 module.exports = (app) => {
     app.get('/api/student/:studentId/image', readStudentImageById)

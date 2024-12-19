@@ -8,8 +8,8 @@ function studentPageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Student', link:'/student'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Student', link:''}
         ]
     });
 }
@@ -22,9 +22,9 @@ function addStudentUi(req, res) {
         studentId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Student', link:'/student'},
-            {name:'Add', link:'/student/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Student', link:getAppUrl('student')},
+            {name:'Add', link:''}
         ]
     });
 }
@@ -38,9 +38,9 @@ function editStudentUi(req, res) {
         studentId: studentId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Student', link:'/student'},
-            {name:'Edit', link:'/student/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Student', link:getAppUrl('student')},
+            {name:'Edit', link:''}
         ]
     });
 }

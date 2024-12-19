@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Block form' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Block form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'block'}) %>
 
 <section class="section">
     <div class="row">
@@ -9,7 +9,6 @@
             <div class="card">
                 <div class="card-body">
                     <h5 class="card-title"></h5>
-                            <!-- Horizontal Form -->
                     <form>
                         <div class="row mb-3">
                             <label for="blockCode" class="col-sm-2 col-form-label">
@@ -42,11 +41,11 @@
                             </div>
                         </fieldset>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateBlock()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
-                    </form><!-- End Horizontal Form -->
+                    </form>
                 </div>
             </div>
         </div>
@@ -58,10 +57,14 @@
 <script>
     var blockCodeDom = document.getElementById('blockCode');
     var blockLocationDom = document.getElementById('blockLocation');
+    var isActiveDom = document.getElementById('isActive');
+    var inActiveDom = document.getElementById('inActive');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var blockId = <%= blockId || 'null' %>;
 
     function saveOrUpdateBlock() {
+        submitButtonDom.disabled = true;
         const selectedStatusValue = getSelectedRadioValue('status');
 
         var myHeaders = new Headers();
@@ -89,16 +92,22 @@
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {
                         alert(responseText[0]);
+                        submitButtonDom.disabled = false;
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
+                        submitButtonDom.disabled = false;
                     }
                 }        
             })
-            .catch(error =>  alert('Something went wrong.Please try later.'));
+            .catch(error =>  {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
 
     if (blockId) {
         getBlock(blockId)
+        resetDom.style.display = 'none'
     }
 
     function getBlock(blockId) {
@@ -113,9 +122,9 @@
                 blockLocationDom.value = block.blockLocation
             
                 if (block.isActive) {
-                    document.getElementById('isActive').checked = true;
+                    isActiveDom.checked = true;
                 } else {
-                    document.getElementById('inActive').checked = true;
+                    inActiveDom.checked = true;
                 }
             })
             .catch((error) =>  alert('Something went wrong.Please try later.'));

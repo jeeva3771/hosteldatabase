@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Room form' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Room form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'room'}) %>
 
 <section class="section">
     <div class="row">
@@ -79,7 +79,7 @@
                             </div>
                         </fieldset>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateRoom()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -101,10 +101,12 @@
     var inActiveDom = document.getElementById('inActive');
     var isAirDom = document.getElementById('isAir');
     var notAirDom = document.getElementById('notAir');
+    var resetDom = document.getElementById('reset');
     var submitButtonDom = document.getElementById('submitButton');
     var roomId = <%= roomId || 'null' %>;
 
     function saveOrUpdateRoom() {
+        submitButtonDom.disabled = true;
         const selectedStatusValue = getSelectedRadioValue('status');
         const selectedAirConditionerValue = getSelectedRadioValue('isAirConditioner');
         var myHeaders = new Headers();
@@ -135,12 +137,18 @@
                     const responseText = await response.json();
                     if (Array.isArray(responseText)) {
                         alert(responseText[0]);
+                        submitButtonDom.disabled = false;
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
+                        submitButtonDom.disabled = false;
+
                     }
                 }
         })
-            .catch(error => alert('Something went wrong.Please try later.'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
 
     function toggleSubmitButton() {
@@ -162,6 +170,7 @@
 
         if (roomId) {
             await getRoomById(roomId);
+            resetDom.style.display = 'none';
         }
 
         blockCodeDom.addEventListener('input', populateFloorNumber);
@@ -174,7 +183,6 @@
     initializeForm();
 
     async function populateBlockCode() {
-
         try {
             const response = await fetch(getAppUrl('api/block/blockfloor/blockcodecount'));
             const blocks = await response.json();
@@ -222,32 +230,14 @@
                 return;
             }
 
-            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
+            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}`);
             const blockFloors = await response.json();
-
-            const activeOptions = [];
-            const disabledOptions = [];
-
             floorNumberDom.innerHTML = '<option selected>Select a Floor</option>';
 
             blockFloors.forEach(blockFloor => {
                 const option = document.createElement('option');
                 option.value = blockFloor.blockFloorId;
-                option.textContent = `${blockFloor.floorNumber} (Rooms Count : ${blockFloor.roomCount})`;
-
-                if (blockFloor.roomCount === 0) {
-                    option.disabled = true;
-                    disabledOptions.push(option);
-                } else {
-                    activeOptions.push(option);
-                }
-            });
-
-            activeOptions.forEach(option => {
-                floorNumberDom.appendChild(option);
-            });
-
-            disabledOptions.forEach(option => {
+                option.textContent = blockFloor.floorNumber;
                 floorNumberDom.appendChild(option);
             });
 

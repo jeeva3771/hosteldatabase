@@ -1,4 +1,4 @@
-const { mysqlQuery, handleFileUpload, deleteFile } = require('../utilityclient/query');
+const { mysqlQuery, deleteFile, hashPassword, isPasswordValid } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 const multer = require('multer');
@@ -32,7 +32,6 @@ const ALLOWED_UPDATE_KEYS = [
     "lastName",
     "dob",
     "emailId",
-    "password",
     "superAdmin"
 ]
 const OTP_LIMIT_NUMBER = 6;
@@ -138,6 +137,7 @@ async function readWardenById(req, res) {
         if (warden.length === 0) {
             return res.status(404).send("wardenId not valid");
         }
+
         res.status(200).send(warden[0])
     } catch (error) {
         req.log.error(error)
@@ -177,24 +177,13 @@ async function createWarden(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const isValidInsert = await validateInsertItems(req.body, false, null, mysqlClient);
+        const isValidInsert = await validatePayload(req, req.body, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
-            if (req.file.path) {
-                await deleteFile(req.file.path, fs);
-            }
             return res.status(400).send(isValidInsert);
         }
-        await handleFileUpload(req, res, multerMiddleware, multer);
 
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
+        if (req.file !== undefined){
             uploadedFilePath = req.file.path;
-        }
-
-        if (uploadedFilePath.includes('default.jpg')) {
-            console.log('Skipping sharp resizing for default image.');
-        } else {
             await sharp(fs.readFileSync(uploadedFilePath))
                 .resize({
                     width: parseInt(process.env.IMAGE_WIDTH),
@@ -205,32 +194,30 @@ async function createWarden(req, res) {
                 .toFile(uploadedFilePath);
         }
 
+        const hashGenerator = await hashPassword(password)
         const newWarden = await mysqlQuery(/*sql*/`INSERT INTO 
             warden (firstName,lastName,dob,emailId,password,superAdmin,createdBy)
             VALUES(?,?,?,?,?,?,?)`,
-            [firstName, lastName, dob, emailId, password, superAdmin, createdBy],
+            [firstName, lastName, dob, emailId, hashGenerator, superAdmin, createdBy],
             mysqlClient
         )
-        if (newWarden.affectedRows === 0) {
-            if (uploadedFilePath.includes('default.jpg')) {
-                console.log('Skip image deletion operation')
-            } else {
-                await deleteFile(uploadedFilePath, fs)
-            }
-            return res.status(400).send("No insert was made")
-        }
 
-        if (!uploadedFilePath.includes('default.jpg')) {
+        if (newWarden.affectedRows === 0) {
+            await deleteFile(uploadedFilePath, fs)
+            return res.status(400).send({error:"No insert was made"})
+        }
+        
+        if (uploadedFilePath) {
             const originalDir = path.dirname(uploadedFilePath);
             const newFilePath = path.join(originalDir, `${newWarden.insertId}.jpg`);
 
             fs.rename(uploadedFilePath, newFilePath, (err) => {
                 if (err) {
-                    return res.status(400).send('Error renaming file');
+                    return res.status(400).send({error:'Error renaming file'});
                 }
-        });
-    }
-        res.status(201).send('insert successfully')
+            });
+        }
+        res.status(201).send('Insert successfully')
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -241,8 +228,8 @@ async function updateWardenById(req, res) {
     const wardenId = req.params.wardenId;
     const mysqlClient = req.app.mysqlClient;
     const updatedBy = req.session.warden.wardenId;
-    const values = []
-    const updates = []
+    const values = [];
+    const updates = [];
 
     ALLOWED_UPDATE_KEYS.forEach((key) => {
         keyValue = req.body[key]
@@ -252,42 +239,31 @@ async function updateWardenById(req, res) {
         }
     })
 
-    updates.push(`updatedBy = ?`)
+    updates.push('updatedBy = ?')
     values.push(updatedBy, wardenId)
 
     try {
         const warden = await validateWardenById(wardenId, mysqlClient)
         if (!warden) {
-            return res.status(404).send("warden not found or already deleted");
+            return res.status(404).send({error:"Warden not found or already deleted"});
         }
 
-        const isValidInsert = await validateInsertItems(req.body, true, wardenId, mysqlClient);
-        if (isValidInsert.length > 0) {
-            return res.status(400).send(isValidInsert)
+        const isValidUpdate = await validatePayload(req, req.body, true, wardenId, mysqlClient);
+        if (isValidUpdate.length > 0) {
+            return res.status(400).send(isValidUpdate)
+        }
+         
+        const passwordIndex = ALLOWED_UPDATE_KEYS.indexOf("password");
+        if (passwordIndex >= 0 && req.body.password) {
+            const hashedPassword = md5(req.body.password);
+            values[passwordIndex] = hashedPassword;
         }
 
-        await handleFileUpload(req, res, multerMiddleware, multer);
-
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
-        }
-
-        sharp(fs.readFileSync(uploadedFilePath))
-            .resize({
-                width: parseInt(process.env.IMAGE_WIDTH),
-                height: parseInt(process.env.IMAGE_HEIGHT),
-                fit: sharp.fit.cover,
-                position: sharp.strategy.center,
-            })
-            .toFile(uploadedFilePath);
-
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ?
+        const updateWarden = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ?
             AND deletedAt IS NULL`,
             values, mysqlClient)
-        if (isUpdate.affectedRows === 0) {
-            res.status(204).send("warden not found or no changes made")
+        if (updateWarden.affectedRows === 0) {
+            res.status(204).send({error:"No changes made"})
         }
 
         const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`,
@@ -311,14 +287,11 @@ async function updateWardenAvatar(req, res) {
     }
 
     try {
-        await handleFileUpload(req, res, multerMiddleware, multer);
-
-        if (!req.file) {
-            uploadedFilePath = path.join(__dirname, '..', 'useruploads', 'default.jpg');
-        } else {
-            uploadedFilePath = req.file.path;
+        if (req.fileValidationError) {
+           return res.status(400).send(req.fileValidationError);
         }
 
+        uploadedFilePath = req.file.path;
         sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),
@@ -327,10 +300,10 @@ async function updateWardenAvatar(req, res) {
                 position: sharp.strategy.center,
             })
             .toFile(uploadedFilePath);
-        return res.status(200).json('Warden Image updated successfully');
+        return res.status(200).send('Warden Image updated successfully');
     } catch (error) {
         req.log.error(error)
-        return res.status(500).json('Internal server error');
+        return res.status(500).send(error.message);
     }
 }
 
@@ -398,19 +371,136 @@ async function authentication(req, res) {
     } = req.body
 
     try {
-        const user = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE emailId = ? AND password = ? 
-        AND deletedAt IS NULL`,
-            [emailId, password],
-            mysqlClient)
-        if (user.length > 0) {
-            req.session.warden = user[0]
+        const [warden] = await mysqlQuery(/*sql*/`
+            SELECT * FROM warden 
+            WHERE emailId = ? 
+            AND deletedAt IS NULL`,
+            [emailId]
+        , mysqlClient)
+        
+        if (!warden) {
+            req.session.isLogged = false
+            req.session.warden = null
+            return res.status(400).send('Invalid Email.')
+        }
+
+        const isValid = await isPasswordValid(password, warden.password);
+
+        if (isValid) {
+            req.session.warden = warden
             req.session.isLogged = true
             res.status(200).send('success')
         } else {
             req.session.isLogged = false
             req.session.warden = null
-            res.status(409).send('Invalid emailId or password.')
+            res.status(400).send('Invalid Password.')
         }
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
+}
+
+async function editUserWarden(req, res) {
+    const wardenId = req.params.wardenId;
+    const mysqlClient = req.app.mysqlClient;
+    const updatedBy = req.session.warden.wardenId;
+    const values = [];
+    const updates = [];
+
+    ALLOWED_UPDATE_KEYS.forEach((key) => {
+        keyValue = req.body[key]
+        if (keyValue !== undefined) {
+            values.push(keyValue)
+            updates.push(` ${key} = ?`)
+        }
+    })
+
+    updates.push('updatedBy = ?')
+    values.push(updatedBy, wardenId)
+
+    try {
+        const warden = await validateWardenById(wardenId, mysqlClient)
+        if (!warden) {
+            return res.status(404).send({error:"Warden not found or already deleted"});
+        }
+
+        const isValidUpdate = await validateMainPayload(req.body, true, wardenId, mysqlClient);
+        if (isValidUpdate.length > 0) {
+            return res.status(400).send(isValidUpdate)
+        }
+
+        const updateWarden = await mysqlQuery(/*sql*/`UPDATE warden SET ${updates.join(', ')} WHERE wardenId = ?
+            AND deletedAt IS NULL`,
+            values, mysqlClient)
+        if (updateWarden.affectedRows === 0) {
+            res.status(204).send({error:"No changes made"})
+        }
+
+        const getUpdatedWarden = await mysqlQuery(/*sql*/`SELECT * FROM warden WHERE wardenId = ?`,
+            [wardenId], mysqlClient)
+        res.status(200).send({
+            status: 'successfull',
+            data: getUpdatedWarden[0]
+        })
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
+}
+
+async function changePassword(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const wardenId = req.params.wardenId;
+    const updatedBy = req.session.warden.wardenId;
+    const {
+        oldPassword,
+        newPassword
+    } = req.body
+
+    try {
+        const getExistsPassword = await mysqlQuery(/*sql*/`
+            SELECT 
+                password 
+            FROM 
+                warden 
+            WHERE 
+                wardenId = ?
+                AND deletedAt IS NULL`,
+            [wardenId], mysqlClient)
+        
+        if (getExistsPassword.length > 0) {
+            const validatePassword = await isPasswordValid(oldPassword, getExistsPassword[0].password);
+            if (validatePassword === false) {
+                return res.status(400).send("Current password Invalid.")
+            }
+        } else {
+            return res.status(404).send('User is Invalid.')
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).send('New password is Invalid.')
+        } 
+
+        const newHashGenerator = await hashPassword(newPassword)
+
+        const updatePassword = await mysqlQuery(/*sql*/`
+            UPDATE 
+                warden 
+            SET 
+                password = ?,
+                updatedBy = ?
+            WHERE 
+                wardenId = ? 
+                AND deletedAt IS NULL`,
+            [newHashGenerator, updatedBy, wardenId],
+            mysqlClient)
+
+        if (updatePassword.affectedRows === 0) {
+            return res.status(204).send("No changes made")
+        }
+
+        res.status(200).send('Success')
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -521,8 +611,16 @@ async function processResetPassword(req, res) {
         }
 
         if (otp === userOtp) {
-            const resetPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ?, otp = null, otpAttempt = null
-            WHERE emailId = ? AND deletedAt IS NULL`, [password, emailId], mysqlClient)
+            if (password.length < 6) {
+                return res.status(400).send(
+                    {errorType:'password', message:'Password must be at least 6 characters long.'}
+                )
+            } 
+            
+            const hashGenerator = await hashPassword(password)
+            const resetPassword = await mysqlQuery(/*sql*/`UPDATE warden SET password = ?, otp = null,
+                otpAttempt = null WHERE emailId = ? AND deletedAt IS NULL`,
+                [hashGenerator, emailId], mysqlClient)
 
             if (resetPassword.affectedRows === 0) {
                 return res.status(404).send('Oops! Something went wrong. Please contact admin.')
@@ -546,7 +644,7 @@ async function processResetPassword(req, res) {
                 if (updateOtpAttempt.affectedRows === 0) {
                     return res.status(404).send('Oops! Something went wrong. Please contact admin.')
                 }
-                return res.status(400).send({ errorType: 'OTP', message: 'Invalid OTP. Please try again.' })
+                return res.status(400).send({ errorType: 'OTP', message: 'Invalid OTP.' })
             }
         }
     } catch (error) {
@@ -555,104 +653,119 @@ async function processResetPassword(req, res) {
     }
 }
 
-async function validateInsertItems(body, isUpdate = false, wardenId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, wardenId = null, mysqlClient) {
+    const {
+        password,
+        superAdmin
+    } = body
+    
+    const errors = []
+
+   const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
+    if (validateMainDetails.length > 0) {
+        errors.push(...validateMainDetails)
+    }
+
+    if (isUpdate === false) {
+        if (password !== undefined) {
+            if (password.length < 6) {
+                errors.push('Password is invalid')
+            } 
+        } else {
+            errors.push('Password is missing')
+        }
+    }
+    
+    if (req.fileValidationError) {
+        errors.push(req.fileValidationError)
+    }
+
+    if (superAdmin !== undefined) {
+        if (![0, 1].includes(parseInt(superAdmin))) {
+            errors.push('SuperAdmin is invalid')
+        }
+    } else {
+        errors.push('SuperAdmin is missing')
+    }
+    return errors
+}
+
+async function validateMainPayload(body, isUpdate = false, wardenId, mysqlClient) {
     const {
         firstName,
         lastName,
         dob,
-        emailId,
-        password,
-        superAdmin
+        emailId
     } = body
     const errors = []
-    
-    try {
-        if (firstName !== undefined) {
-            if (firstName.length < 2) {
-                errors.push('First Name is invalid')
-            }
-        } else {
-            errors.push('First Name is missing')
+
+    if (firstName !== undefined) {
+        if (firstName.length < 2) {
+            errors.push('First Name is invalid')
         }
-
-        if (lastName !== undefined) {
-            if (lastName.length < 1) {
-                errors.push('Last Name is invalid')
-            }
-        } else {
-            errors.push('Last Name is missing')
-        }
-
-        if (dob !== undefined) {
-            const date = new Date(dob);
-            if (isNaN(date.getTime())) {
-                errors.push('Dob is invalid');
-            } else {
-                const today = new Date();
-                if (date > today) {
-                    errors.push('Dob cannot be in the future');
-                }
-            }
-        } else {
-            errors.push('Dob is missing')
-        }
-
-        if (emailId !== undefined) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-            var emailCheck = emailPattern.test(emailId)
-            if (emailCheck === false) {
-                errors.push('Email Id is invalid');
-            } else {
-                let query;
-                let params;
-
-                if (isUpdate === true) {
-                    query = /*sql*/`
-                                SELECT 
-                                    COUNT(*) AS count
-                                FROM warden 
-                                WHERE emailId = ?
-                                    AND wardenId != ?
-                                    AND deletedAt IS NULL`
-                    params = [emailId, wardenId];
-                } else {
-                    query = /*sql*/`
-                                SELECT 
-                                    COUNT(*) AS count
-                                FROM warden 
-                                WHERE emailId = ? 
-                                    AND deletedAt IS NULL`;
-                    params = [emailId];
-                }
-
-                const validateEmailId = await mysqlQuery(query, params, mysqlClient);
-                if (validateEmailId[0].count > 0) {
-                    errors.push("Email Id already exists");
-                }
-            }
-        } else {
-            errors.push('Email Id is missing');
-        }
-
-        if (password !== undefined) {
-            if (password.length < 6) {
-                errors.push('Password is invalid')
-            }
-        } else {
-            errors.push('Password is missing')
-        }
-
-        if (superAdmin !== undefined) {
-            if (![0, 1].includes(parseInt(superAdmin))) {
-                errors.push('SuperAdmin is invalid')
-            }
-        } else {
-            errors.push('SuperAdmin is missing')
-        }
-        return errors
-    } catch(error) {
-        req.log.error(error)
+    } else {
+        errors.push('First Name is missing')
     }
+
+    if (lastName !== undefined) {
+        if (lastName.length < 1) {
+            errors.push('Last Name is invalid')
+        }
+    } else {
+        errors.push('Last Name is missing')
+    }
+
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('Dob is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('Dob cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('Dob is missing')
+    }
+
+    if (emailId !== undefined) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        var emailCheck = emailPattern.test(emailId)
+        if (emailCheck === false) {
+            errors.push('Email Id is invalid');
+        } else {
+            let query;
+            let params;
+
+            if (isUpdate === true) {
+                query = /*sql*/`
+                        SELECT 
+                            COUNT(*) AS count
+                        FROM warden 
+                        WHERE emailId = ?
+                            AND wardenId != ?
+                            AND deletedAt IS NULL`
+                params = [emailId, wardenId];
+            } else {
+                query = /*sql*/`
+                        SELECT 
+                            COUNT(*) AS count
+                        FROM warden 
+                        WHERE emailId = ? 
+                            AND deletedAt IS NULL`;
+                params = [emailId];
+            }
+            
+            const validateEmailId = await mysqlQuery(query, params, mysqlClient);
+            if (validateEmailId[0].count > 0) {
+                errors.push("Email Id already exists");
+            }
+        }
+    } else {
+        errors.push('Email Id is missing');
+    }
+    return errors
 }
 
 function getWardenById(wardenId, mysqlClient) {
@@ -678,6 +791,8 @@ async function validateWardenById(wardenId, mysqlClient) {
 module.exports = (app) => {
     app.post('/api/warden/generateotp', generateOtp)
     app.put('/api/warden/resetpassword', processResetPassword)
+    app.put('/api/warden/edituserwarden/:wardenId', editUserWarden)
+    app.put('/api/warden/changepassword/:wardenId', changePassword)
     app.get('/api/warden/:wardenId/avatar', readWardenAvatarById)
     app.put('/api/warden/:wardenId/editavatar', multerMiddleware, updateWardenAvatar)
     app.delete('/api/warden/:wardenId/deleteavatar', deleteWardenAvatar)

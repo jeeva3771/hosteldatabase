@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'User Details' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'User Details' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'warden/details' }) %>
 
 <section class="section profile">
     <div class="row">
@@ -42,36 +42,48 @@
 
                   </ul>
                   <div class="tab-content pt-2">
-
                     <div class="tab-pane fade show active profile-overview" id="profile-overview">
-                      
                       <h5 class="card-title">User Details</h5>
+                      <div class="row">
+                        <div class="col-lg-3 col-md-4 label">Full Name</div>
+                        <div class="col-lg-9 col-md-8" id="currentUserName"></div>
+                      </div>
 
-                     
+                      <div class="row">
+                        <div class="col-lg-3 col-md-4 label">DOB</div>
+                        <div class="col-lg-9 col-md-8" id="currentDob"></div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-lg-3 col-md-4 label">Status</div>
+                        <div class="col-lg-9 col-md-8" id="currentStatus"></div>
+                      </div>
+
+                      <div class="row">
+                        <div class="col-lg-3 col-md-4 label">Email</div>
+                        <div class="col-lg-9 col-md-8" id=currentEmailId></div>
+                      </div>
                     </div>
-
                     <div class="tab-pane fade profile-edit pt-3" id="profile-edit">
 
                       <!-- Profile Edit Form -->
-                      <form>
+                      <div>
                         <div class="row mb-3">
                           <label for="profileImage" class="col-md-4 col-lg-3 col-form-label">User Image</label>
                           <div class="col-md-8 col-lg-9">
                             <div style="position: relative; display: inline-block;">
                               <!-- Spinner -->
-                              <div id="uploadSpinner" class="spinner-border text-secondary" role="status" 
-                                   style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10;">
-                                  <span class="visually-hidden">Updating...</span>
-                              </div>
+                              <span class="spinner-border text-secondary spinner2" id="spinner"></span>
                               <!-- Profile Image -->
-                              <img src="default-profile.jpg" alt="Profile" id="editProfile" >
-                          </div>                            <div class="pt-2">
+                              <img src="" alt="Profile" id="editProfile" >
+                            </div>                            
+                            <div class="pt-2">
                               <a class="btn btn-primary btn-sm" title="Upload new profile image"
                                 onclick="changeImageDom.click()">
                                 <input class="form-control" type="file" id="changeImage" 
                                 name="image" onchange="updateAvatar()" style="display: none;">
                                 <i class="bi bi-upload"></i></a>
-                              <a href="#" class="btn btn-danger btn-sm" title="Remove my profile image"
+                              <a href="javascript:void(0);" class="btn btn-danger btn-sm" title="Remove my profile image"
                                 onclick="deleteAvatar()"><i class="bi bi-trash"></i></a>
                             </div>
                           </div>
@@ -105,15 +117,15 @@
                         </div>
                         
                         <div class="text-center">
-                          <button type="submit" class="btn btn-primary" onclick="editUserData()">
-                            Save Changes</button>
+                          <button type="submit" class="btn btn-primary" onclick="editUserData()"
+                            id="saveChange" disabled>Save Changes</button>
                         </div>
-                      </form>                        
+                      </div>                        
                     </div>
 
                     <div class="tab-pane fade pt-3" id="profile-change-password">
                       <!-- Change Password Form -->
-                      <form>
+                      <div>
 
                         <div class="row mb-3">
                           <label for="currentPassword" class="col-md-4 col-lg-3 col-form-label">Current Password</label>
@@ -138,9 +150,10 @@
                         </div>
 
                         <div class="text-center">
-                          <button type="submit" class="btn btn-primary">Change Password</button>
+                          <button type="button" class="btn btn-primary" onclick="changePassword()"
+                           id="resetPassword" disabled>Change Password</button>
                         </div>
-                      </form><!-- End Change Password Form -->
+                      </div><!-- End Change Password Form -->
                     </div>
                   </div><!-- End Bordered Tabs -->
                 </div>
@@ -153,20 +166,27 @@
 
 <script>
   const changeImageDom = document.getElementById('changeImage');
-  const profileOverviewDom = document.getElementById('profile-overview');
-  const profileEditDom = document.getElementById('profile-edit');
+  const currentUserNameDom = document.getElementById('currentUserName');
+  const currentDobDom = document.getElementById('currentDob');
+  const currentStatusDom = document.getElementById('currentStatus');
+  const currentEmailIdDom = document.getElementById('currentEmailId');
+  const currentPasswordDom = document.getElementById('currentPassword');
+  const newPasswordDom = document.getElementById('newPassword');
   const firstNameDom = document.getElementById('firstName');
   const lastNameDom = document.getElementById('lastName');
   const dobDom = document.getElementById('dob');
   const emailDom = document.getElementById('email');
-  const spinnerDom = document.getElementById("uploadSpinner");
+  const spinnerDom = document.getElementById('spinner');
+  const resetPasswordDom = document.getElementById('resetPassword');
+  const renewPasswordDom = document.getElementById('renewPassword');
+  const saveChangeDom = document.getElementById('saveChange');
 
-  
   function updateAvatar() {
     var myHeaders = new Headers();
     var formdata = new FormData();
     formdata.append("image", changeImageDom.files[0]);
-    spinnerDom.style.display = "inline-block";
+    spinnerDom.style.display = "block";
+
     var requestOptions = {
       method: 'PUT',
       headers: myHeaders,
@@ -175,14 +195,22 @@
     };
 
     fetch(getAppUrl(`api/warden/${wardenId}/editavatar`), requestOptions)
-    .then(() => {
-      setTimeout(wardenImage, 1000)
+    .then(async (response) => {
+      if (response.status === 400) {
+
+        alert(await response.text())
+      }
+      setTimeout(() => {
+        wardenImage();
+        spinnerDom.style.display = "none"; // Hide spinner
+      }, 1000);
     })
     .catch(error => alert('Edit warden image something went wrong.Please try later'));
   }
 
   function deleteAvatar() {
     var myHeaders = new Headers();
+    spinnerDom.style.display = "block";
     var requestOptions = {
       method: 'DELETE',
       headers: myHeaders,
@@ -191,61 +219,45 @@
 
     fetch(getAppUrl(`api/warden/${wardenId}/deleteavatar`), requestOptions)
       .then(() => {
-        wardenImage()
-        resetAvatarInput()
+        setTimeout(() => {
+          wardenImage();
+          spinnerDom.style.display = "none"; // Hide spinner
+        }, 1000);
       })
       .catch(error => alert('Deleting warden image something went wrong.Please try later'));
   }
 
   function readWardenById() {
-        var myHeaders = new Headers();
-        var requestOptions = {
-            method: 'GET',
-            headers: myHeaders
-        };
+    var myHeaders = new Headers();
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders
+    };
 
-        fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
-            .then(async (response) => {
-                const warden = await response.json();
-                profileOverviewDom.innerHTML += ` 
-                    <div class="row">
-                        <div class="col-lg-3 col-md-4 label ">Full Name</div>
-                        <div class="col-lg-9 col-md-8">${warden.firstName}${warden.lastName}</div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-lg-3 col-md-4 label">DOB</div>
-                        <div class="col-lg-9 col-md-8">${warden.birth}</div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-lg-3 col-md-4 label">Status</div>
-                        <div class="col-lg-9 col-md-8">${warden.superAdmin === 1 ? 'Admin' : 'Warden'}</div>
-                      </div>
-
-                      <div class="row">
-                        <div class="col-lg-3 col-md-4 label">Email</div>
-                        <div class="col-lg-9 col-md-8">${warden.emailId}</div>
-                      </div>`;
-            
-            firstNameDom.value = warden.firstName;
-            lastNameDom.value = warden.lastName;
-            dobDom.value = warden.dob.split('T')[0];
-            emailDom.value = warden.emailId;
-            
-            })
-            .catch(error => alert('Something went wrong.Please try later.'))
+    fetch(getAppUrl(`api/warden/${wardenId}?date=${Date.now()}`), requestOptions)
+      .then(async (response) => {
+        const warden = await response.json();
+        currentUserNameDom.innerText = warden.firstName + warden.lastName
+        currentDobDom.innerText = warden.birth
+        currentStatusDom.innerText = warden.superAdmin === 1 ? 'Admin' : 'Warden'
+        currentEmailIdDom.innerText = warden.emailId
+                    
+        firstNameDom.value = warden.firstName;
+        lastNameDom.value = warden.lastName;
+        dobDom.value = convertToDateInputFormat(warden.dob);
+        emailDom.value = warden.emailId;
+      })
+      .catch(error => alert('Something went wrong.Please try later.'))
   }
 
-  function editUserData() {
-    var myHeaders = new Headers(); 
+  function changePassword() {
+    resetPasswordDom.disabled = true;
+    var myHeaders = new Headers();
     myHeaders.append("Content-Type", "application/json");
 
     var raw = JSON.stringify({
-      "firstName": firstNameDom.value,
-      "lastName": lastNameDom.value,
-      "dob": dobDom.value,
-      "emailId": emailDom.value,
+      "oldPassword": currentPasswordDom.value,
+      "newPassword": newPasswordDom.value
     });
 
     var requestOptions = {
@@ -255,28 +267,96 @@
       redirect: 'follow'
     };
 
-    fetch(getAppUrl(`api/warden/${wardenId}`), requestOptions)
-      .then(async (response) => {
-          if (response.status === 200) {
-            window.location = getAppUrl('warden/details')
-          } else {
-            const responseText = await response.json();
-              if (Array.isArray(responseText)) {
-                alert(responseText[0]);
-              } else {
-                alert(responseText);
-              }
-          }
+    fetch(getAppUrl(`api/warden/changepassword/${wardenId}`), requestOptions)
+      .then(async(response) => {
+        if (response.status === 200) {
+          setTimeout(() => {
+              readWardenById();
+            }, 1000);
+            alert('Successfully changed');
+            currentPasswordDom.value = '';
+            newPasswordDom.value = '';
+            renewPasswordDom.value = '';
+            resetPasswordDom.disabled = true;
+        } else {
+          alert(await response.text())
+          resetPasswordDom.disabled = false;
+        }
       })
-      .catch(error => alert('Something went wrong.Please try later.'));
+      .catch(error => {
+        alert('Something went wrong.Please try later.');
+        resetPasswordDom.disabled = false;
+      });
   }
 
-  function resetAvatarInput() {
-    const fileInput = document.querySelector('input[type="file"]'); 
-    if (fileInput) {
-        fileInput.value = ""; 
-    }
+  function editUserData() {
+    saveChangeDom.disabled = true;
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+
+    var raw = JSON.stringify({
+      "firstName": firstNameDom.value,
+      "lastName": lastNameDom.value,
+      "dob": dobDom.value,
+      "emailId": emailDom.value
+    });
+
+    var requestOptions = {
+      method: 'PUT',
+      headers: myHeaders,
+      body: raw,
+      redirect: 'follow'
+    };
+
+    fetch(getAppUrl(`api/warden/edituserwarden/${wardenId}`), requestOptions)
+      .then(async(response) => {
+        if (response.status === 200) {
+          setTimeout(() => {
+              readWardenById();
+            }, 1000);
+            alert('Successfully changed');
+            saveChangeDom.disabled = true;
+        } else {
+          const responseText = await response.json();
+          if (Array.isArray(responseText)) {
+              const errorMessage = responseText.join('\n');
+              alert(errorMessage);
+              saveChangeDom.disabled = false;
+          } else {
+            alert(responseText.error || responseText);
+            saveChangeDom.disabled = false;
+          }
+        }
+      })
+      .catch(error => {
+        alert('Something went wrong.Please try later.');
+        saveChangeDom.disabled = false;
+      });
   }
+
+  function togglePersonalDetailsButton() {
+    saveChangeDom.disabled = !(
+      firstNameDom.value.length > 0 &&
+      lastNameDom.value.length > 0 &&
+      dobDom.value.length > 0 &&
+      emailDom.value.length > 0);
+  }
+
+  function togglePasswordButton() {
+    resetPasswordDom.disabled = !(
+      currentPasswordDom.value.length > 5 &&
+      newPasswordDom.value.length > 5 &&
+      renewPasswordDom.value.length > 5 &&
+      renewPasswordDom.value === newPasswordDom.value);
+  }
+
+  firstNameDom.addEventListener('input', togglePersonalDetailsButton);
+  lastNameDom.addEventListener('input', togglePersonalDetailsButton);
+  dobDom.addEventListener('input', togglePersonalDetailsButton);
+  emailDom.addEventListener('input', togglePersonalDetailsButton);
+  currentPasswordDom.addEventListener('input', togglePasswordButton);
+  newPasswordDom.addEventListener('input', togglePasswordButton);
+  renewPasswordDom.addEventListener('input', togglePasswordButton);
 
   window.addEventListener('load',()=> {
     readWardenById()

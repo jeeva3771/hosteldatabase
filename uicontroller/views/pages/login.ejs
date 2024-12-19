@@ -1,4 +1,5 @@
-<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, studentAppURL: studentAppURL, title: 'Login' }) %>
+<%- include('../partials/wardenuse/header.ejs', { appURL: appURL, studentAppURL: studentAppURL,
+   title: 'Login' }) %>
 
   <main>
     <div class="container">
@@ -8,7 +9,7 @@
             <div class="col-lg-4 col-md-6 d-flex flex-column align-items-center justify-content-center">
 
               <div class="d-flex justify-content-center py-4">
-                <a href="" class="logo d-flex align-items-center w-auto">
+                <a href="javascript:void(0)" class="logo d-flex align-items-center w-auto">
                   <img src="<%=appURL%>assets/img/logo.png" alt="">
                   <span class="d-none d-lg-block">Hostel</span>
                 </a>
@@ -37,7 +38,7 @@
                     <div class="col-12">
                       <label for="password" class="form-label">Password</label>
                       <input type="password" name="password" class="form-control" id="password"
-                        onkeyup="toggleLoginButton()" placeholder="Enter password" value="prem234" required>
+                        onkeyup="toggleLoginButton()" placeholder="Enter password" value="123123" required>
                       <div class="invalid-feedback">Please enter your password!</div>
                     </div>
 
@@ -75,6 +76,7 @@
     const password = document.getElementById('password');
 
     function loginUser() {
+      loginButton.disabled = true;
       const myHeaders = new Headers();
       myHeaders.append("Content-Type", "application/json");
 
@@ -96,9 +98,13 @@
               window.location = getAppUrl('home')
             } else {
               alert(await response.text())
+              loginButton.disabled = false;
             }
         })
-        .catch(error => alert('Something went wrong.Please try later.'))
+        .catch(error => {
+          alert('Something went wrong.Please try later.')
+          loginButton.disabled = false;
+      })
     }
 
     function secure() {
@@ -106,7 +112,7 @@
     }
 
     function toggleLoginButton() {
-      loginButton.disabled = !(email.value.length > 0 && password.value.length > 0)
+      loginButton.disabled = !(email.value.length > 0 && password.value.length > 5)
     }
 
   </script>

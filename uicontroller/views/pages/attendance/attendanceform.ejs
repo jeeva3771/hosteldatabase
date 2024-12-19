@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'attendance'}) %>
 
 <section class="section">
     <div class="row">
@@ -21,34 +21,35 @@
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center" id="blockCodeContainer">
                             <p><strong>Block</strong></p>
-                            <div class="col-5">
+                            <div class="col-7">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="floorNumberContainer">
                             <p><strong>Floor Number</strong></p>
-                            <div class="col-4 mx-auto">
+                            <div class="col-6 mx-auto">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="container text-center mt-2">
+                    <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="roomNumberContainer">
                             <p><strong>Room Number</strong></p>
-                            <div class="col-4 mx-auto">
+                            <div class="col-6 mx-auto">
                                 <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="d-flex flex-row mb-3 align-items-center justify-content-center mt-4" id="status">
+                    <div class="d-flex flex-row mb-3 align-items-center justify-content-center mt-4" 
+                        id="status">
                         <b class="me-2">Attendance Taken :</b>
                         <div class="p-2 smallBox mt-0 clr1"></div>
                         <span class="ms-2">100%</span>
@@ -135,6 +136,7 @@
     }
 
     function saveOrUpdateAttendance() {
+        submitButtonDom.disabled = true;
         const students = Array.from(document.querySelectorAll('#studentList table tr:not(:first-child)'));
         const studentAttendanceData = students.map((student) => {
             const studentId = student.querySelector('input[type="radio"]').id.split('_')[1];
@@ -168,10 +170,14 @@
                 if (response.status === 200) {
                     window.location = getAppUrl('attendance');
                 } else {
-                    alert(await response.text())
+                    alert(await response.text());
+                    submitButtonDom.disabled = false;
                 }
             })
-            .catch(error => alert('Something went wrong.Please try later.'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.')
+                submitButtonDom.disabled = false;
+            });
     }
     
     function toggleSubmitButton() {
@@ -196,14 +202,16 @@
         var disabledOptions = [];
 
         try {
-            if (!checkInDom.value || checkInDom.value > today) {
+            if (checkInDom.value > today) {
                 statusDom.style.display = 'none';
+                blockCodeDom.innerText = 'Not allowed to take attendance for a future date.';
+                blockCodeDom.style.color = 'red';
                 return;
             }
 
             const myParam = urlParamsDom.get('blockId');
-            const url = myParam ? getAppUrl('api/attendance/block') + `?blockId=${myParam}` :
-                getAppUrl('api/attendance/block') + `?date=${checkInDom.value}`;
+            const url = myParam ? `${getAppUrl('api/attendance/block')}?blockId=${myParam}` :
+                `${getAppUrl('api/attendance/block')}?date=${checkInDom.value}`;
 
             if (myParam) {
                 blockCodeDom.value = myParam;
@@ -278,13 +286,16 @@
         var activeOptions = [];
         var disabledOptions = [];
         try {
-            if (!checkInDom.value || checkInDom.value > today) {
+            if (checkInDom.value > today) {
+                floorNumberDom.innerText = 'Not allowed to take attendance for a future date.';
+                floorNumberDom.style.color = 'red';
                 return;
             }
 
             const myParam = urlParamsDom.get('blockFloorId');
-            const url = myParam ? getAppUrl('api/attendance/blockfloor') + `?date=${checkInDom.value}&blockId=${myParam}` :
-                getAppUrl('api/attendance/blockfloor') + `?date=${checkInDom.value}&blockId=${blockId}`;
+            const url = myParam ? 
+            `${getAppUrl('api/attendance/blockfloor')}?date=${checkInDom.value}&blockId=${myParam}` :
+                `${getAppUrl('api/attendance/blockfloor')}?date=${checkInDom.value}&blockId=${blockId}`;
 
             if (myParam) {
                 floorNumberDom.value = myParam;
@@ -361,13 +372,16 @@
         var disabledOptions = [];
 
         try {
-            if (!checkInDom.value || checkInDom.value > today) {
+            if (checkInDom.value > today) {
+                roomNumberDom.innerText = 'Not allowed to take attendance for a future date.';
+                roomNumberDom.style.color = 'red';
                 return;
             }
 
             const myParam = urlParamsDom.get('roomId'); 
-            const url = myParam ? getAppUrl('api/attendance/room') + `?date=${checkInDom.value}&blockFloorId=${myParam}` :
-                getAppUrl('api/attendance/room') + `?date=${checkInDom.value}&blockFloorId=${blockFloorId}`;
+            const url = myParam ? 
+            `${getAppUrl('api/attendance/room')}?date=${checkInDom.value}&blockFloorId=${myParam}` :
+                `${getAppUrl('api/attendance/room')}?date=${checkInDom.value}&blockFloorId=${blockFloorId}`;
 
             if (myParam) {
                 roomNumberDom.value = myParam;
@@ -440,7 +454,19 @@
     async function populateStudentList(roomId) {
         studentListDom.innerHTML = '';
 
+        if (studentListDom.style.color) {
+            studentListDom.style.color = '';
+        }
+
+        if (checkInDom.value > today) {
+            submitButtonDom.style.display = 'none';
+            studentListDom.innerText = 'Not allowed to take attendance for a future date.';
+            studentListDom.style.color = 'red';
+            return;
+        }
+
         if (checkInParam) {
+            checkInDom.readOnly = true;
             backDom.style.display = 'none';
         } else {
             backDom.style.display = 'block';
@@ -449,8 +475,8 @@
         statusDom.style.visibility = 'hidden';
 
         try {
-            const response = await fetch(getAppUrl(`api/attendance/student/${roomId}`) + 
-                `?checkIn=${checkInDom.value}`);
+            const response = await fetch(
+                `${getAppUrl(`api/attendance/student/${roomId}`)}?checkIn=${checkInDom.value}`);
             const students = await response.json();
 
             const table = document.createElement('table');
@@ -493,10 +519,13 @@
     }
 
     checkInDom.addEventListener('change', () => {
+        if (statusDom.style.visibility) {
+            statusDom.style.visibility = 'visible';
+        }
+
         if (checkInDom.value > today) {
             statusDom.style.visibility = 'hidden';
-            alert('Date cannot be in the future');
-        }
+        } 
 
         if (floorNumberContainerDom.style.display === 'block') {
             return populateFloorNumber(currentBlockId)
@@ -522,7 +551,7 @@
         } else {
             studentContainerDom.style.display = 'none'
             roomNumberContainerDom.style.display = 'block'
-            statusDom.style.display = 'block';
+            statusDom.style.visibility = 'visible';
             backDom.style.display = 'block';
         }
     }

@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Student form' }) %>
 <%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Student form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs') %>
+<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'student'}) %>
 
 <section class="section">
     <div class="row">
@@ -125,7 +125,7 @@
                             </div>
                         </div>
                         <div class="text-center">
-                            <button type="reset" class="btn btn-secondary">Reset</button>
+                            <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateStudent()" class="btn btn-primary"
                                 id="submitButton" disabled>Submit</button>
                         </div>
@@ -155,11 +155,11 @@
     const updateImageDom = document.getElementById('updateImage');
     const studentImageDom = document.getElementById('studentImage');
     const removeImageDom = document.getElementById('removeImage');
+    const fileInputDom = document.querySelector('input[type="file"]'); 
+    var resetDom = document.getElementById('reset');
     const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
-
     const today = new Date().toISOString().split('T')[0];
-    joinedDateDom.value = today;
 
     function saveOrUpdateStudent() {
         var myHeaders = new Headers();
@@ -192,7 +192,7 @@
         fetch(url, requestOptions)
             .then(async (response) => {
                 if ([200, 201].includes(response.status)) {
-                    window.location = getAppUrl('api/student');
+                    window.location = getAppUrl('student');
                 } else {
                     const responseText = await response.json();
 
@@ -200,7 +200,7 @@
                         const errorMessage = responseText.join('\n');
                         alert(errorMessage);
                     } else {
-                        alert(responseText);
+                        alert(responseText.error || responseText);
                     }
                 }
             })
@@ -233,8 +233,10 @@
 
         if (studentId) {
             await getStudentById(studentId);
+            resetDom.style.display = 'none';
         } else if (!studentId) {
             uploadFileSectionDom.style.display = 'none';
+            joinedDateDom.value = today;
         }
 
         studentNameDom.addEventListener('input', toggleSubmitButton);
@@ -246,8 +248,8 @@
         fatherNameDom.addEventListener('input', toggleSubmitButton);
         fatherNumDom.addEventListener('input', toggleSubmitButton);
         addressDom.addEventListener('input', toggleSubmitButton);
-        blockCodeDom.addEventListener('change', populateFloorNumber);
-        floorNumberDom.addEventListener('change', populateRoomNumber);
+        blockCodeDom.addEventListener('change', populateFloorNumber, toggleSubmitButton);
+        floorNumberDom.addEventListener('change', populateRoomNumber, toggleSubmitButton);
         roomNumberDom.addEventListener('change', toggleSubmitButton);
         joinedDateDom.addEventListener('input', toggleSubmitButton);
         updateImageDom.addEventListener('change', toggleSubmitButton);
@@ -309,7 +311,9 @@
             const blockId = blockCode.value;
 
             if (blockId === 'Select a Block' || blockId === '') {
-                floorNumber.innerHTML = '';
+                floorNumberDom.innerHTML = '';
+                roomNumberDom.innerHTML = '';
+                toggleSubmitButton();
                 return;
             }
 
@@ -351,7 +355,8 @@
             const blockFloorId = floorNumber.value;
 
             if (blockFloorId === 'Select a Floor' || blockFloorId === '') {
-                roomNumber.innerHTML = '';
+                roomNumberDom.innerHTML = '';
+                toggleSubmitButton();
                 return;
             }
 
@@ -368,23 +373,23 @@
             roomNumber.innerHTML = '<option selected>Select a Room</option>';
 
             rooms.forEach(item => {
-            const room = item.room;
-            const option = document.createElement('option');
-            option.value = room.roomId;
-            option.textContent = room.roomNumber;
+                const room = item.room;
+                const option = document.createElement('option');
+                option.value = room.roomId;
+                option.textContent = `${room.roomNumber}${room.isAirConditioner === 1 ? ' - a/c' : ''}`;
 
-            if (room.roomCapacity === 0) {
-                option.disabled = true;
-                option.textContent += ' (Unavailable)';
-                disabledOptions.push(option); 
-            } else if (item.isFull === true) {
-                option.disabled = true;
-                option.textContent += ' (Room Filled)';
-                disabledOptions.push(option);
-            } else {
-                activeOptions.push(option); 
-            }
-        })
+                if (room.roomCapacity === 0) {
+                    option.disabled = true;
+                    option.textContent += ' (Unavailable)';
+                    disabledOptions.push(option); 
+                } else if (item.isFull === true) {
+                    option.disabled = true;
+                    option.textContent += ' (Room Filled)';
+                    disabledOptions.push(option);
+                } else {
+                    activeOptions.push(option); 
+                }
+            })
         activeOptions.forEach(option => roomNumber.appendChild(option));
         disabledOptions.forEach(option => roomNumber.appendChild(option));
         } catch (error) {
@@ -400,21 +405,21 @@
         try {
             const response = await fetch(getAppUrl(`api/student/${studentId}`));
             const student = await response.json();
-            studentNameDom.value = student.name
-            registerNumDom.value = student.registerNumber
-            dobDom.value = student.dob.split('T')[0]
-            courseDom.value = student.courseId
-            emailIdDom.value = student.emailId
-            studNumDom.value = student.phoneNumber
-            fatherNameDom.value = student.fatherName
-            fatherNumDom.value = student.fatherNumber
-            addressDom.value = student.address
-            blockCodeDom.value = student.blockId
+            studentNameDom.value = student.name;
+            registerNumDom.value = student.registerNumber;
+            dobDom.value = convertToDateInputFormat(student.dob);
+            courseDom.value = student.courseId;
+            emailIdDom.value = student.emailId;
+            studNumDom.value = student.phoneNumber;
+            fatherNameDom.value = student.fatherName;
+            fatherNumDom.value = student.fatherNumber;
+            addressDom.value = student.address;
+            blockCodeDom.value = student.blockId;
             await populateFloorNumber();
             floorNumberDom.value = student.blockFloorId;
             await populateRoomNumber();
             roomNumberDom.value = student.roomId;
-            joinedDateDom.value = student.joinedDate.split('T')[0]
+            joinedDateDom.value = convertToDateInputFormat(student.joinedDate);
         } catch (error) {
             alert('Something went wrong.Please try later.')
         }
@@ -433,7 +438,11 @@
         };
 
         fetch(getAppUrl(`api/student/${studentId}/editimage`), requestOptions)
-            .then(() => {
+            .then(async(response) => {
+                if (response.status === 400) {
+                    resetStudentImageInput()
+                    return alert(await response.text())
+                }
                 setTimeout(getStudentImage, 1000)
             })
             .catch(error => alert('Edit student image something went wrong.Please try later'));
@@ -448,10 +457,16 @@
         };
 
         fetch(getAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
-            .then(() => {
+            .then(()=> {
                 setTimeout(getStudentImage, 1000)
                 updateImageDom.value = ''
             })
             .catch(error => alert('Delete Student image something went wrong.Please try later.'));
+    }
+
+    function resetStudentImageInput() {
+        if (fileInputDom) {
+            fileInputDom.value = ""; 
+        }
     }
 </script>

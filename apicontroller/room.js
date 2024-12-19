@@ -131,7 +131,7 @@ async function readRoomNumberByBlockFloorId(req, res) {
     try {
         const roomNumberByBlockFloorId = await mysqlQuery(/*sql*/`
             SELECT 
-                roomId, roomNumber, roomCapacity,
+                roomId, roomNumber, roomCapacity, isAirConditioner,
                 (SELECT COUNT(*)
                  FROM student AS s
                  WHERE s.roomId = r.roomId
@@ -171,7 +171,7 @@ async function createRoom(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const validateInsert = await validateInsertItems(req.body, false, roomId = null, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, false, roomId = null, mysqlClient);
         console.log(validateInsert)
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
@@ -184,7 +184,7 @@ async function createRoom(req, res) {
             mysqlClient
         )
         if (newRoom.affectedRows === 0) {
-            res.status(400).send("No insert was made")
+            res.status(400).send({error:"No insert was made"})
         } else {
             res.status(201).send("Insert Successfully")
         }
@@ -216,23 +216,19 @@ async function updateRoomById(req, res) {
     try {
         const room = await validateRoomById(roomId, mysqlClient)
         if (!room) {
-            return res.status(404).send("Room not found or already deleted");
+            return res.status(404).send({error:"Room not found or already deleted"});
         }
 
-        const isValid = await validateUpdateRoom(roomId, mysqlClient, req.body)
-        if (!isValid) {
-            return res.status(409).send("students in room shift to another room than try");
-        }
-
-        const validateInsert = await validateInsertItems(req.body, true, roomId, mysqlClient);
+        const validateInsert = await validatePayload(req, req.body, true, roomId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
 
-        const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? AND deletedAt IS NULL`,
+        const isUpdate = await mysqlQuery(/*sql*/`UPDATE room SET ${updates.join(', ')} WHERE roomId = ? 
+            AND deletedAt IS NULL`,
             values, mysqlClient)
         if (isUpdate.affectedRows === 0) {
-            res.status(204).send("Room not found or no changes made")
+            res.status(204).send({error:"Room not found or no changes made"})
         }
 
         const getUpdatedRoom = await mysqlQuery(/*sql*/`SELECT * FROM room WHERE roomId = ?`, [roomId], mysqlClient)
@@ -257,23 +253,27 @@ async function deleteRoomById(req, res) {
             return res.status(404).send("roomId is not defined")
         }
 
-        const checkRoomReference = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student 
-        WHERE roomId = ?
-        AND deletedAt IS NULL`, [roomId], mysqlClient)
+        const [checkStudentInRoom] = await mysqlQuery(/*sql*/`
+            SELECT COUNT(*) AS count FROM student 
+            WHERE roomId = ?
+            AND deletedAt IS NULL`, 
+            [roomId]
+        , mysqlClient)
 
 
-        if (checkRoomReference[0].count > 0) {
-            return res.status(409).send('Student in room. Shift the student and try again')
+        if (checkStudentInRoom.count > 0) {
+            return res.status(409).send('Students in a room shift to another room and then try to delete.')
         }
 
-        const deletedRoom = await mysqlQuery(/*sql*/`UPDATE room 
-            SET roomNumber = CONCAT(IFNULL(roomNumber, ''), '-', NOW()), 
+        const deletedRoom = await mysqlQuery(/*sql*/`
+            UPDATE room SET 
+                roomNumber = CONCAT(IFNULL(roomNumber, ''), '-', NOW()), 
                 deletedAt = NOW(), 
                 deletedBy = ? 
             WHERE roomId = ? 
             AND deletedAt IS NULL`,
-            [deletedBy, roomId],
-            mysqlClient
+            [deletedBy, roomId]
+        , mysqlClient
         )
 
         if (deletedRoom.affectedRows === 0) {
@@ -313,7 +313,7 @@ async function validateRoomById(roomId, mysqlClient) {
     return false
 }
 
-async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlClient) {
+async function validatePayload(req, body, isUpdate = false, roomId = null, mysqlClient) {
     const {
         blockFloorId,
         blockId,
@@ -325,7 +325,6 @@ async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlC
 
     const errors = []
 
-    try {
         if (blockFloorId !== undefined) {
             if (isNaN(blockFloorId) || blockFloorId <= 0) {
                 errors.push('BlockFloorId is invalid')
@@ -411,38 +410,25 @@ async function validateInsertItems(body, isUpdate = false, roomId = null, mysqlC
         if (isAirConditioner !== undefined) {
             if (![0, 1].includes(isAirConditioner)) {
                 errors.push('isAirConditioner is invalid')
+            } else if (isUpdate === true && isActive === 0) {
+                const validateStudentInRoom = await mysqlQuery(/*sql*/`
+                        SELECT 
+                            COUNT(*) AS count 
+                        FROM 
+                            student 
+                        WHERE 
+                            roomId = ? AND
+                            deletedAt IS NULL`, 
+                        [roomId], mysqlClient)
+            
+                if (validateStudentInRoom[0].count > 0) {
+                    errors.push("Students in room shift to another room and then try to inactive.")
+                }
             }
         } else {
             errors.push('isAirConditioner is missing')
         }
         return errors
-    } catch(error) {
-        req.log.error(error)
-    }
-}
-
-function getStudentCountByRoomId(roomId, mysqlClient) {
-    return new Promise((resolve, reject) => {
-        mysqlClient.query(/*sql*/`SELECT count(*) AS count FROM student WHERE roomId = ?
-        AND deletedAt IS NULL`,
-            [roomId],
-            (err, roomIdCount) => {
-                if (err) {
-                    return reject(err)
-                }
-                resolve(roomIdCount)
-            })
-    })
-}
-
-async function validateUpdateRoom(roomId, mysqlClient, body) {
-    if (body.isActive === 0) {
-        var [studentRoom] = await getStudentCountByRoomId(roomId, mysqlClient)
-        if (studentRoom.count > 0) {
-            return false
-        }
-    }
-    return true
 }
 
 module.exports = (app) => {

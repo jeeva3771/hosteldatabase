@@ -1,7 +1,7 @@
 <%- include('../partials/wardenuse/header.ejs', { appURL: appURL, title: 'F.A.Q' }) %>
 <%- include('../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Frequently Asked Questions' }) %>
 <%- include('../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../partials/wardenuse/aside.ejs') %>
+<%- include('../partials/wardenuse/aside.ejs', {activeMenu: 'faq'}) %>
 
 <section class="section faq">
     <div class="row">
@@ -12,18 +12,21 @@
             <h5 class="card-title">Basic Questions</h5>
 
             <div>
-              <h6>1. Nisi ut ut exercitationem voluptatem esse sunt rerum?</h6>
-              <p>Saepe perspiciatis ea. Incidunt blanditiis enim mollitia qui voluptates. Id rem nulla tenetur nihil in unde rerum. Quae consequatur placeat qui cumque earum eius omnis quos.</p>
+              <h6>1. What is the Hostel Attendance Management System?</h6>
+              <p>It is a system that helps manage student attendance in hostels by tracking attendance,
+                room assignments, and block and block floor details.</p>
             </div>
 
             <div class="pt-2">
-              <h6>2. Reiciendis dolores repudiandae?</h6>
-              <p>Id ipsam non ut. Placeat doloremque deserunt quia tenetur inventore laboriosam dolores totam odio. Aperiam incidunt et. Totam ut quos sunt atque modi molestiae dolorem.</p>
+              <h6>2. How can I access the system?</h6>
+              <p>You can log in with your admin, warden, or student credentials, depending on your role.</p>
             </div>
 
             <div class="pt-2">
-              <h6>3. Qui qui reprehenderit ut est illo numquam voluptatem?</h6>
-              <p>Enim inventore in consequuntur ipsam voluptatem consequatur beatae. Nostrum consequuntur voluptates et blanditiis.</p>
+              <h6>3. How do I mark attendance for students?</h6>
+              <p>Both the admin and the warden can mark attendance by selecting the block, floor, room, 
+                and students from the interface. They can then update the attendance status of each
+                student as "Present" or "Absent.</p>
             </div>
 
           </div>
@@ -32,77 +35,26 @@
         <!-- F.A.Q Group 1 -->
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Laborum dolorem quam porro</h5>
+            <h5 class="card-title">Forgot Your Login Credentials?</h5>
 
             <div class="accordion accordion-flush" id="faq-group-1">
 
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsOne-1" type="button" data-bs-toggle="collapse">
-                    Debitis adipisci eius?
+                    What should I do if I forget my login credentials?
                   </button>
                 </h2>
                 <div id="faqsOne-1" class="accordion-collapse collapse" data-bs-parent="#faq-group-1">
                   <div class="accordion-body">
-                    Ut quasi odit odio totam accusamus vero eius. Nostrum asperiores voluptatem eos nulla ab dolores est asperiores iure. Quo est quis praesentium aut maiores. Corrupti sed aut expedita fugit vero dolorem. Nemo rerum sapiente. A quaerat dignissimos.
+                    If you forget your login credentials, use the "Forgot Password" 
+                    option available on the login page. You will receive an OTP to reset your password.<br>
+                    <b>Note:</b> After multiple failed attempts to log in, your account will be temporarily locked 
+                    for 3 hours after you can try again.
                   </div>
                 </div>
               </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsOne-2" type="button" data-bs-toggle="collapse">
-                    Omnis fugiat quis repellendus?
-                  </button>
-                </h2>
-                <div id="faqsOne-2" class="accordion-collapse collapse" data-bs-parent="#faq-group-1">
-                  <div class="accordion-body">
-                    In minus quia impedit est quas deserunt deserunt et. Nulla non quo dolores minima fugiat aut saepe aut inventore. Qui nesciunt odio officia beatae iusto sed voluptatem possimus quas. Officia vitae sit voluptatem nostrum a.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsOne-3" type="button" data-bs-toggle="collapse">
-                    Et occaecati praesentium aliquam modi incidunt?
-                  </button>
-                </h2>
-                <div id="faqsOne-3" class="accordion-collapse collapse" data-bs-parent="#faq-group-1">
-                  <div class="accordion-body">
-                    Voluptates magni amet enim perspiciatis atque excepturi itaque est. Sit beatae animi incidunt eum repellat sequi ea saepe inventore. Id et vel et et. Nesciunt itaque corrupti quia ducimus. Consequatur maiores voluptatum fuga quod ut non fuga.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsOne-4" type="button" data-bs-toggle="collapse">
-                    Quo unde eaque vero dolor quis ipsam?
-                  </button>
-                </h2>
-                <div id="faqsOne-4" class="accordion-collapse collapse" data-bs-parent="#faq-group-1">
-                  <div class="accordion-body">
-                    Numquam ut reiciendis aliquid. Quia veritatis quasi ipsam sed quo ut eligendi et non. Doloremque sed voluptatem at in voluptas aliquid dolorum.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsOne-5" type="button" data-bs-toggle="collapse">
-                    Natus sunt quo atque mollitia accusamus?
-                  </button>
-                </h2>
-                <div id="faqsOne-5" class="accordion-collapse collapse" data-bs-parent="#faq-group-1">
-                  <div class="accordion-body">
-                    Aut necessitatibus maxime quis dolor et. Nihil laboriosam molestiae qui molestias placeat corrupti non quo accusamus. Nemo qui quis harum enim sed. Aliquam molestias pariatur delectus voluptas quidem qui rerum id quisquam. Perspiciatis voluptatem voluptatem eos. Vel aut minus labore at rerum eos.
-                  </div>
-                </div>
-              </div>
-
             </div>
-
           </div>
         </div><!-- End F.A.Q Group 1 -->
 
@@ -113,29 +65,26 @@
         <!-- F.A.Q Group 2 -->
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Deserunt ut unde corporis</h5>
+            <h5 class="card-title">Understanding the Challenges of Attendance Management</h5>
 
             <div class="accordion accordion-flush" id="faq-group-2">
 
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsTwo-1" type="button" data-bs-toggle="collapse">
-                    Cumque voluptatem recusandae blanditiis?
+                    Who can access the attendance data?
                   </button>
                 </h2>
                 <div id="faqsTwo-1" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
                   <div class="accordion-body">
-                    Ut quasi odit odio totam accusamus vero eius. Nostrum asperiores voluptatem eos nulla ab dolores est asperiores iure. Quo est quis praesentium aut maiores. Corrupti sed aut expedita fugit vero dolorem. Nemo rerum sapiente. A quaerat dignissimos.
+                    Both the admin and the warden have the same access to attendance data. There is no difference in their 
+                    ability to manage attendance.
                   </div>
                 </div>
               </div>
 
               <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsTwo-2" type="button" data-bs-toggle="collapse">
-                    Provident beatae eveniet placeat est aperiam repellat adipisci?
-                  </button>
-                </h2>
+                
                 <div id="faqsTwo-2" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
                   <div class="accordion-body">
                     In minus quia impedit est quas deserunt deserunt et. Nulla non quo dolores minima fugiat aut saepe aut inventore. Qui nesciunt odio officia beatae iusto sed voluptatem possimus quas. Officia vitae sit voluptatem nostrum a.
@@ -146,12 +95,15 @@
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsTwo-3" type="button" data-bs-toggle="collapse">
-                    Minus aliquam modi id reprehenderit nihil?
+                    How can I update the attendance data if I made a mistake? 
                   </button>
                 </h2>
                 <div id="faqsTwo-3" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
                   <div class="accordion-body">
-                    Voluptates magni amet enim perspiciatis atque excepturi itaque est. Sit beatae animi incidunt eum repellat sequi ea saepe inventore. Id et vel et et. Nesciunt itaque corrupti quia ducimus. Consequatur maiores voluptatum fuga quod ut non fuga.
+                    If a mistake is made while marking attendance, both the admin and the 
+                    warden can edit or update the attendance records directly through the system.
+                    To update the attendance, go to the attendance list. You will find an edit icon next to each 
+                    attendance record. Click on the icon to make changes, and then save the updated information.
                   </div>
                 </div>
               </div>
@@ -159,12 +111,12 @@
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsTwo-4" type="button" data-bs-toggle="collapse">
-                    Quaerat qui est iusto asperiores qui est reiciendis eos et?
+                    What happens if there is no attendance data for a selected student, month, or year?
                   </button>
                 </h2>
                 <div id="faqsTwo-4" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
                   <div class="accordion-body">
-                    Numquam ut reiciendis aliquid. Quia veritatis quasi ipsam sed quo ut eligendi et non. Doloremque sed voluptatem at in voluptas aliquid dolorum.
+                    If no matching attendance data exists, the default calendar view will be displayed.
                   </div>
                 </div>
               </div>
@@ -172,12 +124,27 @@
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsTwo-5" type="button" data-bs-toggle="collapse">
-                    Laboriosam asperiores eum?
+                    Can I access the system from mobile devices?
                   </button>
                 </h2>
                 <div id="faqsTwo-5" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
                   <div class="accordion-body">
-                    Aut necessitatibus maxime quis dolor et. Nihil laboriosam molestiae qui molestias placeat corrupti non quo accusamus. Nemo qui quis harum enim sed. Aliquam molestias pariatur delectus voluptas quidem qui rerum id quisquam. Perspiciatis voluptatem voluptatem eos. Vel aut minus labore at rerum eos.
+                    Yes, the system is mobile-friendly and can be accessed using smartphones, tablets, 
+                    or desktops.
+                  </div>
+                </div>
+              </div>
+
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button class="accordion-button collapsed" data-bs-target="#faqsTwo-6" type="button" data-bs-toggle="collapse">
+                    How do I contact support if I face technical issues?
+                  </button>
+                </h2>
+                <div id="faqsTwo-6" class="accordion-collapse collapse" data-bs-parent="#faq-group-2">
+                  <div class="accordion-body">
+                    If you encounter technical issues, please contact support by 
+                    emailing support@example.com or calling +1-800-123-4567.                
                   </div>
                 </div>
               </div>
@@ -190,75 +157,23 @@
         <!-- F.A.Q Group 3 -->
         <div class="card">
           <div class="card-body">
-            <h5 class="card-title">Dolore occaecati ducimus quam</h5>
+            <h5 class="card-title">Access Restricted</h5>
 
             <div class="accordion accordion-flush" id="faq-group-3">
 
               <div class="accordion-item">
                 <h2 class="accordion-header">
                   <button class="accordion-button collapsed" data-bs-target="#faqsThree-1" type="button" data-bs-toggle="collapse">
-                    Assumenda doloribus est fugiat sint incidunt animi totam nisi?
+                    Who can edit, delete, or add warden information?
                   </button>
                 </h2>
                 <div id="faqsThree-1" class="accordion-collapse collapse" data-bs-parent="#faq-group-3">
                   <div class="accordion-body">
-                    Ut quasi odit odio totam accusamus vero eius. Nostrum asperiores voluptatem eos nulla ab dolores est asperiores iure. Quo est quis praesentium aut maiores. Corrupti sed aut expedita fugit vero dolorem. Nemo rerum sapiente. A quaerat dignissimos.
+                    Only admins have the authority to edit, delete, or add warden information. 
+                    If you need access, please contact the system administrator.
                   </div>
                 </div>
               </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsThree-2" type="button" data-bs-toggle="collapse">
-                    Consequatur saepe explicabo odio atque nisi?
-                  </button>
-                </h2>
-                <div id="faqsThree-2" class="accordion-collapse collapse" data-bs-parent="#faq-group-3">
-                  <div class="accordion-body">
-                    In minus quia impedit est quas deserunt deserunt et. Nulla non quo dolores minima fugiat aut saepe aut inventore. Qui nesciunt odio officia beatae iusto sed voluptatem possimus quas. Officia vitae sit voluptatem nostrum a.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsThree-3" type="button" data-bs-toggle="collapse">
-                    Voluptates vel est fugiat molestiae rem sit eos sint?
-                  </button>
-                </h2>
-                <div id="faqsThree-3" class="accordion-collapse collapse" data-bs-parent="#faq-group-3">
-                  <div class="accordion-body">
-                    Voluptates magni amet enim perspiciatis atque excepturi itaque est. Sit beatae animi incidunt eum repellat sequi ea saepe inventore. Id et vel et et. Nesciunt itaque corrupti quia ducimus. Consequatur maiores voluptatum fuga quod ut non fuga.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsThree-4" type="button" data-bs-toggle="collapse">
-                    Ab ipsa cum autem voluptas doloremque velit?
-                  </button>
-                </h2>
-                <div id="faqsThree-4" class="accordion-collapse collapse" data-bs-parent="#faq-group-3">
-                  <div class="accordion-body">
-                    Numquam ut reiciendis aliquid. Quia veritatis quasi ipsam sed quo ut eligendi et non. Doloremque sed voluptatem at in voluptas aliquid dolorum.
-                  </div>
-                </div>
-              </div>
-
-              <div class="accordion-item">
-                <h2 class="accordion-header">
-                  <button class="accordion-button collapsed" data-bs-target="#faqsThree-5" type="button" data-bs-toggle="collapse">
-                    Aliquam magni ducimus facilis numquam dolorum harum eveniet iusto?
-                  </button>
-                </h2>
-                <div id="faqsThree-5" class="accordion-collapse collapse" data-bs-parent="#faq-group-3">
-                  <div class="accordion-body">
-                    Aut necessitatibus maxime quis dolor et. Nihil laboriosam molestiae qui molestias placeat corrupti non quo accusamus. Nemo qui quis harum enim sed. Aliquam molestias pariatur delectus voluptas quidem qui rerum id quisquam. Perspiciatis voluptatem voluptatem eos. Vel aut minus labore at rerum eos.
-                  </div>
-                </div>
-              </div>
-
             </div>
 
           </div>

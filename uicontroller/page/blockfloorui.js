@@ -8,8 +8,9 @@ function blockFloorPageUi(req, res) {
         avatarWardenId: avatarWardenId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Blockfloor', link:'/blockfloor'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
+            {name:'Blockfloor', link:''}
         ]
     });
 }
@@ -22,9 +23,10 @@ function addBlockFloorUi(req, res) {
         blockFloorId: '',
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Blockfloor', link:'/blockfloor'},
-            {name:'Add', link:'/blockfloor/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
+            {name:'Blockfloor', link:getAppUrl('blockfloor')},
+            {name:'Add', link:''}
         ]
     });
 }
@@ -38,9 +40,10 @@ function editBlockFloorUi(req, res) {
         blockFloorId: blockFloorId,
         user: getUserProfile(req.session),
         breadCrumbs: [
-            {name:'Home', link:'/home'},
-            {name:'Blockfloor', link:'/blockfloor'},
-            {name:'Edit', link:'/blockfloor/add'}
+            {name:'Home', link:getAppUrl('home')},
+            {name:'Structure', link:''},
+            {name:'Blockfloor', link:getAppUrl('blockfloor')},
+            {name:'Edit', link:''}
         ]
     });
 }
