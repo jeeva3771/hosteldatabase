@@ -173,7 +173,7 @@
                             </td>
                             <td>${student.name}</td>
                             <td>${student.registerNumber}</td>
-                            <td>${student.createdFirstName} ${student.createdLastName}</td>
+                            <td>${student.createdFirstName}${student.createdLastName}</td>
                             <td>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onclick="readStudentById(${student.studentId})">
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -406,7 +406,8 @@
                                         <strong>Created By</strong>
                                     </div>
                                     <div class="col-sm-8">
-                                        <strong> : </strong>${student.createdFirstName} ${student.createdLastName}
+                                        <strong> : </strong>
+                                        ${capitalizeFirstLetter(student.createdFirstName)}${student.createdLastName}
                                     </div>
                                 </div>
                                 <div class="row">
@@ -422,7 +423,10 @@
                                         <strong>Updated By</strong>
                                     </div>
                                     <div class="col-sm-8">
-                                        <strong> : </strong>${student.updatedFirstName !== null ? student.updatedFirstName : '---'} ${student.updatedLastName !== null ? student.updatedLastName : ''}
+                                        <strong> : </strong>
+                                        ${student.updatedFirstName !== null ?
+                                        capitalizeFirstLetter(student.updatedFirstName) : '---'}${student.updatedLastName !== null ?
+                                         student.updatedLastName : ''}
                                     </div>
                                 </div>
                             </div>

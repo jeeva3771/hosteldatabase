@@ -153,7 +153,7 @@
                         <tr>
                             <td>${(pageNo - 1) * limitDom.value + i + 1}</td>
                             <td>${course.courseName}</td>
-                            <td>${course.createdFirstName} ${course.createdLastName}</td>
+                            <td>${course.createdFirstName}${course.createdLastName}</td>
                             <td>   
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readCourseById(${course.courseId})">
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -282,7 +282,8 @@
                                             <strong>Created By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${course.createdFirstName} ${course.createdLastName}
+                                            <strong> : </strong>
+                                            ${capitalizeFirstLetter(course.createdFirstName)}${course.createdLastName}
                                         </div>
                                     </div>
                                     <div class="row">
@@ -298,7 +299,10 @@
                                             <strong>updated By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${course.updatedFirstName !== null ? course.updatedFirstName : '---'} ${course.updatedLastName !== null ? course.updatedLastName : ''}
+                                            <strong> : </strong>
+                                            ${course.updatedFirstName !== null ? 
+                                            capitalizeFirstLetter(course.updatedFirstName) : '---'}${course.updatedLastName !== null ? 
+                                            course.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>

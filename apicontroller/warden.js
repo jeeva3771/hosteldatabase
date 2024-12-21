@@ -337,10 +337,15 @@ async function deleteWardenById(req, res) {
             return res.status(404).send("wardenId is not defined")
         }
 
-        const deletedWarden = await mysqlQuery(/*sql*/`UPDATE warden SET deletedAt = NOW(), deletedBy = ?
-            WHERE wardenId = ? AND deletedAt IS NULL`,
-            [deletedBy, wardenId],
-            mysqlClient)
+        const deletedWarden = await mysqlQuery(/*sql*/`
+            UPDATE warden SET 
+                emailId = CONCAT(IFNULL(emailId, ''), '-', NOW()), 
+                deletedAt = NOW(), 
+                deletedBy = ?
+            WHERE wardenId = ? 
+            AND deletedAt IS NULL`,
+            [deletedBy, wardenId]
+        , mysqlClient)
 
         if (deletedWarden.affectedRows === 0) {
             return res.status(404).send("warden not found or already deleted")
@@ -661,7 +666,7 @@ async function validatePayload(req, body, isUpdate = false, wardenId = null, mys
     
     const errors = []
 
-   const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
+    const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
     if (validateMainDetails.length > 0) {
         errors.push(...validateMainDetails)
     }
@@ -756,9 +761,9 @@ async function validateMainPayload(body, isUpdate = false, wardenId, mysqlClient
                             AND deletedAt IS NULL`;
                 params = [emailId];
             }
-            
-            const validateEmailId = await mysqlQuery(query, params, mysqlClient);
-            if (validateEmailId[0].count > 0) {
+    
+            const [validateEmailId] = await mysqlQuery(query, params, mysqlClient);
+            if (validateEmailId.count > 0) {
                 errors.push("Email Id already exists");
             }
         }

@@ -192,7 +192,7 @@
                     <td>${block.blockCode}</td>
                     <td>${block.blockLocation}</td>
                     <td>${block.isActive === 1 ? 'Active' : ''}</td>
-                    <td>${block.createdFirstName} ${block.createdLastName}</td>
+                    <td>${block.createdFirstName}${block.createdLastName}</td>
                     <td>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onclick="readBlockById(${block.blockId})">
                             <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -336,7 +336,8 @@
                                             <strong>Created By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${block.createdFirstName} ${block.createdLastName}
+                                            <strong> : </strong>
+                                            ${capitalizeFirstLetter(block.createdFirstName)}${block.createdLastName}
                                         </div>
                                     </div>
                                     <div class="row">
@@ -352,8 +353,9 @@
                                             <strong>Updated By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${block.updatedFirstName !== null ?
-                                            block.updatedFirstName : '---'} ${block.updatedLastName !== null ? 
+                                            <strong> : </strong>
+                                            ${block.updatedFirstName !== null ?
+                                            capitalizeFirstLetter(block.updatedFirstName) : '---'}${block.updatedLastName !== null ? 
                                             block.updatedLastName : ''}
                                         </div>
                                     </div>

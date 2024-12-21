@@ -191,7 +191,7 @@
                             <td>${blockFloor.blockCode}</td>
                             <td>${blockFloor.floorNumber}</td>
                             <td>${blockFloor.isActive === 1 ? 'Active' : ''}</td>
-                            <td>${blockFloor.createdFirstName} ${blockFloor.createdLastName}</td>
+                            <td>${blockFloor.createdFirstName}${blockFloor.createdLastName}</td>
                             <td>
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readBlockFloorById(${blockFloor.blockFloorId})">
                                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -336,7 +336,8 @@
                                             <strong>Created By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${blockFloor.createdFirstName} ${blockFloor.createdLastName}
+                                            <strong> : </strong>
+                                            ${capitalizeFirstLetter(blockFloor.createdFirstName)}${blockFloor.createdLastName}
                                         </div>
                                     </div>
                                     <div class="row">
@@ -352,7 +353,10 @@
                                             <strong>Updated By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${blockFloor.updatedFirstName !== null ? blockFloor.updatedFirstName : '---'} ${blockFloor.updatedLastName !== null ? blockFloor.updatedLastName : ''}
+                                            <strong> : </strong>
+                                            ${blockFloor.updatedFirstName !== null ? 
+                                            capitalizeFirstLetter(blockFloor.updatedFirstName) : '---'}${blockFloor.updatedLastName !== null ?
+                                            blockFloor.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>

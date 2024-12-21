@@ -4,10 +4,9 @@ const EMAIL_AUTH = {
         service: 'gmail',
         auth: {
             user: EMAIL_FROM,
-            pass: 'yios kuac qbqn igcd'
+            pass: 'lvwi ewnx gggg qbhd'
         }
     }
-
 
 module.exports =  {
     EMAIL_AUTH,

@@ -17,7 +17,7 @@ function mysqlQuery(sql, options, mysqlClient) {
 
 function getUserProfile(session) {
     return {
-        name: `${session.warden.firstName.charAt(0).toUpperCase()}${session.warden.firstName.slice(1)}${session.warden.lastName}`,
+        name: `${session.warden.firstName[0].toUpperCase()}${session.warden.firstName.slice(1)}${session.warden.lastName}`,
         professional: `${session.warden.superAdmin === 1 ? 'Admin' : 'Warden'}`
     }
 }

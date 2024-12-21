@@ -189,7 +189,7 @@
                     <td>${warden.firstName}</td>
                     <td>${warden.lastName}</td>
                     <td>${warden.superAdmin === 1 ? 'Admin' : ''}</td>
-                    <td>${warden.createdFirstName} ${warden.createdLastName}</td>
+                    <td>${warden.createdFirstName}${warden.createdLastName}</td>
                     <td> 
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle mr-2 focus" viewBox="0 0 16 16" onClick="readWardenById(${warden.wardenId})">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -381,7 +381,8 @@
                                         <strong>Created By</strong>
                                     </div>
                                     <div class="col-sm-8">
-                                        <strong> : </strong>${warden.createdFirstName} ${warden.createdLastName}
+                                        <strong> : </strong>
+                                        ${capitalizeFirstLetter(warden.createdFirstName)}${warden.createdLastName}
                                     </div>
                                 </div>
                                 <div class="row">
@@ -397,7 +398,10 @@
                                         <strong>Updated By</strong>
                                     </div>
                                     <div class="col-sm-8">
-                                        <strong> : </strong>${warden.updatedFirstName !== null ? warden.updatedFirstName : '---'} ${warden.updatedLastName !== null ? warden.updatedLastName : ''}
+                                        <strong> : </strong>
+                                        ${warden.updatedFirstName !== null ?
+                                        capitalizeFirstLetter(warden.updatedFirstName) : '---'}${warden.updatedLastName !== null ?
+                                         warden.updatedLastName : ''}
                                     </div>
                                 </div>
                             </div>
