@@ -283,9 +283,6 @@ async function addOrEditAttendance(req, res) {
     const { blockId, blockFloorId, roomId } = req.params;
     const { checkInDate, attendance } = req.body;
     const wardenId = req.session.warden.wardenId;
-    if (!mysqlClient || typeof mysqlClient.query !== 'function') {
-        return res.status(500).send('Database client is not initialized.');
-    }
 
     try {
         const errors = await validatePayload(req.params, mysqlClient);
