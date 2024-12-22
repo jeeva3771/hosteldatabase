@@ -1,6 +1,32 @@
 const { mysqlQuery } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const sharp = require('sharp');
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, path.join(__dirname, '..', 'studentuploads'))
+    },
+    filename: function (req, file, cb) {
+        const studentId = req.params.studentId;
+        cb(null, `${studentId}.jpg`);
+    }
+})
+
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg') {
+        cb(null, true);
+    } else {
+        req.fileValidationError = 'Invalid file type. Only JPEG files are allowed.';
+        cb(null, false);
+    }
+};
+
+const upload = multer({ storage, fileFilter })
+const multerMiddleware = upload.single('studentImage');
+
 
 const OTP_LIMIT_NUMBER = 6;
 const OTP_OPTION = {
@@ -68,8 +94,9 @@ async function verifyOtpStudentAuthentication(req, res) {
     const otpAttemptMax = 3;
 
     try {
-        const studentDetails = await mysqlQuery(/*sql*/`
+        const [studentDetails] = await mysqlQuery(/*sql*/`
             SELECT
+                studentId,
                 name,
                 registerNumber, 
                 otp,
@@ -82,11 +109,12 @@ async function verifyOtpStudentAuthentication(req, res) {
         if (studentDetails.length === 0) {
             return res.status(404).send('Oops! Something went wrong. Please contact warden or admin.')
         }
-        let studentName = studentDetails[0].name;
-        let studentRegNo = studentDetails[0].registerNumber;
-        const studentOtp = studentDetails[0].otp;
-        const studentOtpAttempt = studentDetails[0].otpAttempt || 0;
-        const studentOtpTiming = studentDetails[0].otpTiming;
+        let studentId = studentDetails.studentId;
+        let studentName = studentDetails.name;
+        let studentRegNo = studentDetails.registerNumber;
+        const studentOtp = studentDetails.otp;
+        const studentOtpAttempt = studentDetails.otpAttempt || 0;
+        const studentOtpTiming = studentDetails.otpTiming;
         
         const blockedTime = new Date(studentOtpTiming).getTime();
         if (currentTime < blockedTime) {
@@ -128,8 +156,10 @@ async function verifyOtpStudentAuthentication(req, res) {
                 return res.status(404).send('Oops! Something went wrong. Please contact admin.')
             } else {
                 req.session.studentInfo = {
+                    studentId: studentId,
                     name: studentName,
                     regNo: studentRegNo
+
                 }
                 req.session.isLoggedStudent = true
             }
@@ -193,13 +223,11 @@ async function studentAttendanceReport(req, res) {
 
     if (errors.length > 0) {
         let errorMessage;
-
         if (errors.length === 1) {
             errorMessage = `Please select a ${errors[0]} before generating the report.`
         } else {
             errorMessage = `Please select a ${errors.join(", ")} before generating the report.`
         }
-
         return res.status(400).send(errorMessage)
     }
 
@@ -236,6 +264,45 @@ async function studentAttendanceReport(req, res) {
     }
 }
 
+async function studentDetails(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const studentId = req.session.studentInfo.studentId;
+    try {
+        const [student] = await mysqlQuery(/*sql*/`
+            SELECT 
+                s.*,
+                bk.blockCode,
+                b.floorNumber,
+                r.roomNumber,
+                c.courseName,
+                DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
+                DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
+                DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp
+            FROM student AS s
+            LEFT JOIN 
+                block AS bk ON bk.blockId = s.blockId
+            LEFT JOIN 
+                blockfloor AS b ON b.blockFloorId = s.blockFloorId
+            LEFT JOIN 
+                room AS r ON r.roomId = s.roomId
+            LEFT JOIN 
+                course AS c ON c.courseId = s.courseId
+            WHERE 
+                s.deletedAt IS NULL 
+                AND s.studentId = ?`,
+            [studentId]
+        , mysqlClient)
+
+        if (!student) {
+            return res.status(404).send('Student not found');
+        }
+        res.status(200).send(student)
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
+}
+
 function studentLogOut(req, res) {
     req.session.destroy((err) => {
         if (err) logger.error();
@@ -243,9 +310,55 @@ function studentLogOut(req, res) {
     })
 }
 
+function readStudentImageById(req, res) {
+    const studentId = req.params.studentId;
+    try {
+        var fileName = `${studentId}.jpg`;
+        const baseDir = path.join(__dirname, '..', 'studentuploads');
+        const imagePath = path.join(baseDir, fileName);
+        const defaultImagePath = path.join(baseDir, 'studentdefault.jpg');
+
+        const imageToServe = fs.existsSync(imagePath) ? imagePath : defaultImagePath;
+
+        res.setHeader('Content-Type', 'image/jpeg');
+        fs.createReadStream(imageToServe).pipe(res);
+    } catch (error) {
+        console.log(error)
+        req.log.error(error);
+        res.status(500).send(error.message);
+    }
+}
+
+async function readStudentName(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const studentId = req.session.studentInfo.studentId;
+
+    try {
+        const [student] = await mysqlQuery(/*sql*/`
+            SELECT 
+                name
+            FROM student 
+            WHERE studentId = ? 
+                AND deletedAt IS NULL`,
+            [studentId]
+        , mysqlClient)
+
+        if (!student) {
+            return res.status(404).send('Student not found');
+        }
+        res.status(200).send(student)
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
+}
+
 module.exports = (app) => {
+    app.get('/api/student/name', readStudentName)
+    app.get('/api/student/:studentId/image', readStudentImageById)
     app.post('/api/student/generateotp', generateOtp)
     app.put('/api/student/verifyotp/authentication', verifyOtpStudentAuthentication)
     app.get('/api/student/attendancereport', studentAttendanceReport)
+    app.get('/api/student/details', studentDetails)
     app.get('/api/student/logout', studentLogOut)
 }

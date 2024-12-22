@@ -15,13 +15,6 @@ function mysqlQuery(sql, options, mysqlClient) {
     })
 }
 
-function getUserProfile(session) {
-    return {
-        name: `${session.warden.firstName[0].toUpperCase()}${session.warden.firstName.slice(1)}${session.warden.lastName}`,
-        professional: `${session.warden.superAdmin === 1 ? 'Admin' : 'Warden'}`
-    }
-}
-
 function deleteFile(uploadedFilePath, fs) {
     return new Promise((resolve, reject) => {
         console.log(`Does file exist? ${fs.existsSync(uploadedFilePath)}`);
@@ -50,7 +43,6 @@ function isPasswordValid(enteredPassword, storedHashedPassword) {
 
 module.exports = {
     mysqlQuery,
-    getUserProfile,
     deleteFile,
     hashPassword,
     isPasswordValid

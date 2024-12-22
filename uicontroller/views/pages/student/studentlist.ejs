@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Student list' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Student list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'Student list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'student'}) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'student' }) %>
 
 <section class="section">
     <div class="row">
@@ -113,11 +113,13 @@
     const paginationDom = document.getElementById("pagination");
     const searchDom = document.getElementById("searchInput");
     const orderIconDom = document.querySelectorAll('.sortIcon');
+    const studentImageDom = document.getElementById('studentImage');
+
     const columnSortOrders = {
-                name: 'ASC',
-                registerNumber: 'ASC',
-                createdBy: 'ASC'
-            };
+        name: 'ASC',
+        registerNumber: 'ASC',
+        createdBy: 'ASC'
+    };
 
     var currentColumn = 'createdAt';
     var url = `&orderby=s.${currentColumn}&sort=DESC`;
@@ -170,6 +172,17 @@
                             <td class="text-center">
                                 <img src="" alt="Profile" class="rounded-circle imageSizing"
                                     id="studentImage-${student.studentId}" name="image">
+                                <a class="btn btn-primary btn-sm upload-btn" title="Upload new profile image" style="width: 20px; height: 20px; padding: 0;"
+                                    data-student-id="${student.studentId}" >
+                                <input class="form-control upload-input" type="file"
+                                    name="studentImage" id="changeImage-${student.studentId}"
+                                    data-student-id="${student.studentId}" style="display: none;">
+                                    <i class="bi bi-upload" style="font-size: 12px;"></i>
+                                </a>
+                                <a href="javascript:void(0);" class="btn btn-danger btn-sm remove-btn" title="Remove my profile image"
+                                    data-student-id="${student.studentId}" style="width: 20px; height: 20px; padding: 0;" >
+                                    <i class="bi bi-trash" style="font-size: 12px;"></i>
+                                </a>
                             </td>
                             <td>${student.name}</td>
                             <td>${student.registerNumber}</td>
@@ -195,6 +208,29 @@
                     const studentImageDom = document.getElementById(`studentImage-${student.studentId}`);
                     studentImage(student.studentId, studentImageDom);
                 });
+
+                document.querySelectorAll('.upload-btn').forEach(uploadBtn => {
+                    uploadBtn.addEventListener('click', (event) => {
+                        const studentId = event.currentTarget.getAttribute('data-student-id');
+                        const fileInput = document.getElementById(`changeImage-${studentId}`);
+                        fileInput.click(); 
+                    });
+                });
+
+                document.querySelectorAll('.upload-input').forEach(input => {
+                    input.addEventListener('change', (event) => {
+                        const studentId = event.target.getAttribute('data-student-id');
+                        updateStudentImage(studentId);
+                    });
+                });
+
+                document.querySelectorAll('.remove-btn').forEach(removeBtn => {
+                    removeBtn.addEventListener('click', (event) => {
+                        const studentId = event.currentTarget.getAttribute('data-student-id');
+                        deleteStudentImage(studentId);
+                    });
+                });
+                
                 var totalPages = Math.ceil(studentCount / limitDom.value);
                 var paginationHtml = '';
 
@@ -439,6 +475,51 @@
             })
             .catch(error => alert('Something went wrong.Please try later.'));
     }
+
+    function updateStudentImage(studentId) {
+        const changeImageDom = document.getElementById(`changeImage-${studentId}`);
+        var myHeaders = new Headers();
+        var formdata = new FormData();
+        formdata.append("studentImage", changeImageDom.files[0]);
+
+        var requestOptions = {
+            method: 'PUT',
+            headers: myHeaders,
+            body: formdata,
+            redirect: 'follow'
+        };
+
+        fetch(getAppUrl(`api/student/${studentId}/editimage`), requestOptions)
+            .then(async(response) => {
+                if (response.status === 400) {
+                    return alert(await response.text())
+                }
+                setTimeout(() => {
+                    const studentImageDom = document.getElementById(`studentImage-${studentId}`);
+                    studentImage(studentId, studentImageDom);
+                }, 1000);
+            })
+            .catch(error => alert('Edit student image something went wrong.Please try later'));
+    }
+
+    function deleteStudentImage(studentId) {
+        var myHeaders = new Headers();
+        var requestOptions = {
+            method: 'DELETE',
+            headers: myHeaders,
+            redirect: 'follow'
+        };
+
+        fetch(getAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
+            .then(()=> {
+                setTimeout(() => {
+                    const studentImageDom = document.getElementById(`studentImage-${studentId}`);
+                    studentImage(studentId, studentImageDom);
+                }, 1000);
+            })
+            .catch(error => alert('Delete Student image something went wrong.Please try later.'));
+    }
+
 
     function deleteStudentById(studentId) {
         var validateDelete = confirm('are you sure you want to delete?')

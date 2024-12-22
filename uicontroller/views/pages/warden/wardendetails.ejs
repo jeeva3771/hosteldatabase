@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'User Details' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'User Details' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'User Details' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'warden/details' }) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'user' }) %>
 
 <section class="section profile">
     <div class="row">
@@ -9,8 +9,8 @@
             <div class="card">
                 <div class="card-body profile-card pt-4 d-flex flex-column align-items-center">
                   <img src="" alt="Profile" class="rounded-circle" id="image" name="image">
-                  <h2><%=user.name%></h2>
-                  <h3><%= user.professional%></h3>
+                  <h2 id="userName"></h2>
+                  <h3 id="userStatus"></h3>
                   <div class="social-links mt-2">
                     <a href="#" class="twitter"><i class="bi bi-twitter"></i></a>
                     <a href="#" class="facebook"><i class="bi bi-facebook"></i></a>
@@ -237,7 +237,7 @@
     fetch(getAppUrl(`api/warden/${wardenId}?date=${Date.now()}`), requestOptions)
       .then(async (response) => {
         const warden = await response.json();
-        currentUserNameDom.innerText = warden.firstName + warden.lastName
+        currentUserNameDom.innerText = capitalizeFirstLetter(warden.firstName) + warden.lastName
         currentDobDom.innerText = warden.birth
         currentStatusDom.innerText = warden.superAdmin === 1 ? 'Admin' : 'Warden'
         currentEmailIdDom.innerText = warden.emailId
@@ -312,10 +312,11 @@
       .then(async(response) => {
         if (response.status === 200) {
           setTimeout(() => {
-              readWardenById();
-            }, 1000);
-            alert('Successfully changed');
-            saveChangeDom.disabled = true;
+            readWardenById();
+            wardenDetails();
+          }, 1000);
+          alert('Successfully changed');
+          saveChangeDom.disabled = true;
         } else {
           const responseText = await response.json();
           if (Array.isArray(responseText)) {

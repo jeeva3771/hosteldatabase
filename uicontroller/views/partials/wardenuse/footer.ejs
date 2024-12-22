@@ -29,6 +29,11 @@
 
 <script>
   var wardenId = <%= avatarWardenId || 'null' %>;
+  const mainLogoUserNameDom = document.getElementById('mainLogoUserName');
+  const logoUserNameDom = document.getElementById('logoUserName');
+  const logoUserStatusDom = document.getElementById('logoUserStatus');
+  const userNameDom = document.getElementById('userName');
+  const userStatusDom = document.getElementById('userStatus');
   const userImageDom = document.getElementById('userImage');
   const imageDom = document.getElementById('image');
   const editProfileDom = document.getElementById('editProfile');
@@ -69,12 +74,39 @@
     }
   }
 
+  function wardenDetails() {
+    var myHeaders = new Headers();
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders
+    };
+
+    fetch(`${appURL}api/warden/wardendetails/${wardenId}?date=${Date.now()}`, requestOptions)
+      .then(async (response) => {
+          var warden = await response.json();
+          const userName = capitalizeFirstLetter(warden.firstName) + warden.lastName;
+          const userStatus = warden.superAdmin === 1 ? 'Admin' : 'Warden';
+
+          mainLogoUserNameDom.innerText = userName;
+          logoUserNameDom.innerText = userName;
+          logoUserStatusDom.innerText = userStatus;
+
+          if (userNameDom && userStatusDom) {
+            userNameDom.innerText = userName;
+            userStatusDom.innerText = userStatus;
+          }
+      })
+      .catch((error) => alert('Something went wrong.Please try later.'));
+  }
+
   function capitalizeFirstLetter(str) {
     return str[0].toUpperCase() + str.slice(1);
   }
 
   window.addEventListener('load', () => {
+    wardenDetails();
     wardenImage();
   });
+  
 </script>
 </html>

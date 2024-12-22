@@ -56,7 +56,7 @@ const mainMenu = [
             <% }) %>
           </ul>
         <% } else { %>
-          <a class="nav-link <%= activeMenu === item.name.toLowerCase().replace(/\s+/g, '') ? 'active' : 'collapsed' %>" 
+          <a class="nav-link <%= activeMenu === item.name.toLowerCase().replace(/[\s.]+/g, '') ? 'active' : 'collapsed' %>" 
              href="<%= appURL + item.url %>">
             <i class="<%= item.icon %>"></i>
             <span><%= item.name %></span>

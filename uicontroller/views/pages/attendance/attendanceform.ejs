@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'Attendance' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'attendance'}) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'attendance' }) %>
 
 <section class="section">
     <div class="row">
@@ -24,8 +24,8 @@
                     <div class="container text-center mt-3">
                         <div class="row justify-content-center" id="blockCodeContainer">
                             <p><strong>Block</strong></p>
-                            <div class="col-7">
-                                <div class="row row-cols-4 g-3 justify-content-center" id="blockCode">
+                            <div class="col-12">
+                                <div class="row row-cols-6 g-3 justify-content-center" id="blockCode">
                                 </div>
                             </div>
                         </div>
@@ -33,8 +33,8 @@
                     <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="floorNumberContainer">
                             <p><strong>Floor Number</strong></p>
-                            <div class="col-6 mx-auto">
-                                <div class="row row-cols-4 g-3 justify-content-center" id="floorNumber">
+                            <div class="col-12 mx-auto">
+                                <div class="row row-cols-6 g-3 justify-content-center" id="floorNumber">
                                 </div>
                             </div>
                         </div>
@@ -42,8 +42,8 @@
                     <div class="container text-center mt-3">
                         <div class="row justify-content-center hidden" id="roomNumberContainer">
                             <p><strong>Room Number</strong></p>
-                            <div class="col-6 mx-auto">
-                                <div class="row row-cols-4 g-3 justify-content-center" id="roomNumber">
+                            <div class="col-12 mx-auto">
+                                <div class="row row-cols-6 g-3 justify-content-center" id="roomNumber">
                                 </div>
                             </div>
                         </div>

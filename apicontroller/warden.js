@@ -177,7 +177,7 @@ async function createWarden(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const isValidInsert = await validatePayload(req, req.body, false, null, mysqlClient);
+        const isValidInsert = await validatePayload(req.body, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert);
         }
@@ -248,7 +248,7 @@ async function updateWardenById(req, res) {
             return res.status(404).send({error:"Warden not found or already deleted"});
         }
 
-        const isValidUpdate = await validatePayload(req, req.body, true, wardenId, mysqlClient);
+        const isValidUpdate = await validatePayload(req.body, true, wardenId, mysqlClient);
         if (isValidUpdate.length > 0) {
             return res.status(400).send(isValidUpdate)
         }
@@ -400,6 +400,31 @@ async function authentication(req, res) {
             req.session.warden = null
             res.status(400).send('Invalid Password.')
         }
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message)
+    }
+}
+
+async function wardenDetails(req, res) {
+    const mysqlClient = req.app.mysqlClient;
+    const wardenId = req.session.warden.wardenId;
+    try {
+        const [warden] = await mysqlQuery(/*sql*/`
+            SELECT 
+                firstName,
+                lastName,
+                superAdmin
+            FROM warden 
+            WHERE wardenId = ? 
+                AND deletedAt IS NULL`,
+            [wardenId]
+        , mysqlClient)
+
+        if (!warden) {
+            return res.status(404).send('User not found');
+        }
+        res.status(200).send(warden)
     } catch (error) {
         req.log.error(error)
         res.status(500).send(error.message)
@@ -658,7 +683,7 @@ async function processResetPassword(req, res) {
     }
 }
 
-async function validatePayload(req, body, isUpdate = false, wardenId = null, mysqlClient) {
+async function validatePayload(body, isUpdate = false, wardenId = null, mysqlClient) {
     const {
         password,
         superAdmin
@@ -799,6 +824,7 @@ module.exports = (app) => {
     app.put('/api/warden/edituserwarden/:wardenId', editUserWarden)
     app.put('/api/warden/changepassword/:wardenId', changePassword)
     app.get('/api/warden/:wardenId/avatar', readWardenAvatarById)
+    app.get('/api/warden/wardendetails/:wardenId', wardenDetails)
     app.put('/api/warden/:wardenId/editavatar', multerMiddleware, updateWardenAvatar)
     app.delete('/api/warden/:wardenId/deleteavatar', deleteWardenAvatar)
     app.get('/api/warden', readWardens)

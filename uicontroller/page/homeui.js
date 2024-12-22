@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query');
 const { getAppUrl, getStudentAppUrl } = require('../../utilityclient/url');
 
 module.exports = (app) => {
@@ -25,7 +24,6 @@ module.exports = (app) => {
             res.render('pages/home', {
                 avatarWardenId: avatarWardenId,
                 appURL: getAppUrl(),
-                user: getUserProfile(req.session),
                 breadCrumbs: [
                     { name: 'Home', link: getAppUrl('home') },
                     { name: 'Dashboard', link: '' }

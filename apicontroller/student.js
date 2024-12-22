@@ -159,7 +159,9 @@ async function readStudentById(req, res) {
                 warden AS w2 ON w2.wardenId = s.updatedBy
             WHERE 
                 s.deletedAt IS NULL AND studentId = ?`,
-            [studentId], mysqlClient)
+            [studentId]
+        , mysqlClient)
+        
         if (student.length === 0) {
             return res.status(404).send("StudentId not valid");
         }
@@ -254,7 +256,7 @@ async function createStudent(req, res) {
     const mysqlClient = req.app.mysqlClient;
 
     try {
-        const validateInsert = await validatePayload(req, req.body, false, studentId = null, mysqlClient);
+        const validateInsert = await validatePayload(req.body, false, studentId = null, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert);
         }
@@ -333,7 +335,7 @@ async function updateStudentById(req, res) {
             return res.status(404).send({error:"Student not found or already deleted"});
         }
 
-        const validateInsert = await validatePayload(req, req.body, true, studentId, mysqlClient);
+        const validateInsert = await validatePayload(req.body, true, studentId, mysqlClient);
         if (validateInsert.length > 0) {
             return res.status(400).send(validateInsert)
         }
@@ -374,7 +376,8 @@ async function deleteStudentImage(req, res) {
         await deleteFile(imagePath, fs);
         res.status(200).send('Student Image updated successfully');
     } catch (error) {
-        res.status(500).send('Internal Server Error');
+        req.log.error(error)
+        res.status(500).send(error.message);
     }
 }
 
@@ -451,7 +454,7 @@ async function validateStudentById(studentId, mysqlClient) {
     return false
 }
 
-async function validatePayload(req, body, isUpdate = false, studentId = null, mysqlClient) {
+async function validatePayload(body, isUpdate = false, studentId = null, mysqlClient) {
     const {
         roomId,
         blockFloorId,
@@ -477,152 +480,148 @@ async function validatePayload(req, body, isUpdate = false, studentId = null, my
         { name: 'Register Number', value: registerNumber }
     ]
 
-    try {
-        await Promise.all(validateExistingItems.map(async (item) => {
-            const query = /*sql*/ `
-                    SELECT 
-                        COUNT(*) AS count
-                    FROM student
-                    WHERE ${isUpdate === true ? `studentId != ? AND` : ''}
-                        (phoneNumber = ? 
-                        OR fatherNumber = ? 
-                        OR emailId = ? 
-                        OR registerNumber = ?)
-                        AND deletedAt IS NULL`;
+    await Promise.all(validateExistingItems.map(async (item) => {
+        const query = /*sql*/ `
+            SELECT 
+                COUNT(*) AS count
+            FROM student
+            WHERE ${isUpdate === true ? `studentId != ? AND` : ''}
+                (phoneNumber = ? 
+                OR fatherNumber = ? 
+                OR emailId = ? 
+                OR registerNumber = ?)
+                AND deletedAt IS NULL`;
 
-            const params = isUpdate
-                ? [studentId, item.value.trim, item.value, item.value, item.value]
-                : [item.value, item.value, item.value, item.value];
+        const params = isUpdate
+            ? [studentId, item.value.trim, item.value, item.value, item.value]
+            : [item.value, item.value, item.value, item.value];
 
-            const checkExisting = await mysqlQuery(query, params, mysqlClient);
-            if (checkExisting[0].count > 0) {
-                errors.push(`${item.name} already exists`);
-            }
-        }));
-
-        if (roomId !== undefined) {
-            if (isNaN(roomId) || roomId <= 0) {
-                errors.push('RoomId is invalid')
-            }
-        } else {
-            errors.push('RoomId is missing')
+        const checkExisting = await mysqlQuery(query, params, mysqlClient);
+        if (checkExisting[0].count > 0) {
+            errors.push(`${item.name} already exists`);
         }
+    }));
 
-        if (blockFloorId !== undefined) {
-            if (isNaN(blockFloorId) || blockFloorId <= 0) {
-                errors.push('BlockFloorId is invalid')
-            }
-        } else {
-            errors.push('BlockFloorId is missing')
+    if (roomId !== undefined) {
+        if (isNaN(roomId) || roomId <= 0) {
+            errors.push('RoomId is invalid')
         }
-
-        if (blockId !== undefined) {
-            if (isNaN(blockId) || blockId <= 0) {
-                errors.push('BlockId is invalid')
-            }
-        } else {
-            errors.push('BlockId is missing')
-        }
-
-        if (name !== undefined) {
-            if (name.length < 2) {
-                errors.push('Name is invalid')
-            }
-        } else {
-            errors.push('Name is missing')
-        }
-
-        if (registerNumber !== undefined) {
-            if (registerNumber.length < 2) {
-                errors.push('Register Number is invalid')
-            }
-        } else {
-            errors.push('Register Number is missing')
-        }
-
-        if (dob !== undefined) {
-            const date = new Date(dob);
-            if (isNaN(date.getTime())) {
-                errors.push('DOB is invalid');
-            } else {
-                const today = new Date();
-                if (date > today) {
-                    errors.push('DOB cannot be in the future');
-                }
-            }
-        } else {
-            errors.push('DOB is missing')
-        }
-
-        if (courseId !== undefined) {
-            if (isNaN(courseId) || courseId <= 0) {
-                errors.push('CourseId is invalid')
-            }
-        } else {
-            errors.push('CourseId is missing')
-        }
-
-        if (joinedDate !== undefined) {
-            const date = new Date(joinedDate);
-            if (isNaN(date.getTime())) {
-                errors.push('Joined Date is invalid');
-            } else {
-                const today = new Date();
-                if (date > today) {
-                    errors.push('Joined Date cannot be in the future');
-                }
-            }
-        } else {
-            errors.push('Joined Date is missing')
-        }
-
-        if (phoneNumber !== undefined) {
-            var phoneNumberCheck = phoneNumberPattern.test(phoneNumber)
-            if (phoneNumberCheck === false) {
-                errors.push('Phone Number is invalid');
-            }
-        } else {
-            errors.push('Phone Number is missing');
-        }
-
-        if (emailId !== undefined) {
-            const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-            var emailCheck = emailPattern.test(emailId)
-            if (emailCheck === false) {
-                errors.push('Email Id is invalid');
-            }
-        } else {
-            errors.push('Email Id is missing');
-        }
-
-        if (fatherName !== undefined) {
-            if (fatherName.length < 2) {
-                errors.push('Father Name is invalid')
-            }
-        } else {
-            errors.push('Father Name is missing')
-        }
-
-        if (fatherNumber !== undefined) {
-            var phoneNumberCheck = phoneNumberPattern.test(fatherNumber)
-            if (phoneNumberCheck === false) {
-                errors.push('Father Number is invalid');
-            }
-        } else {
-            errors.push('Father Number is missing');
-        }
-
-        if (address !== undefined) {
-            if (address.length < 5) {
-                errors.push('Address is invalid')
-            }
-        } else {
-            errors.push('Address is missing')
-        }
-        return errors
-    } catch(error) {
-        req.log.error(error)
+    } else {
+        errors.push('RoomId is missing')
     }
+
+    if (blockFloorId !== undefined) {
+        if (isNaN(blockFloorId) || blockFloorId <= 0) {
+            errors.push('BlockFloorId is invalid')
+        }
+    } else {
+        errors.push('BlockFloorId is missing')
+    }
+
+    if (blockId !== undefined) {
+        if (isNaN(blockId) || blockId <= 0) {
+            errors.push('BlockId is invalid')
+        }
+    } else {
+        errors.push('BlockId is missing')
+    }
+
+    if (name !== undefined) {
+        if (name.length < 2) {
+            errors.push('Name is invalid')
+        }
+    } else {
+        errors.push('Name is missing')
+    }
+
+    if (registerNumber !== undefined) {
+        if (registerNumber.length < 2) {
+            errors.push('Register Number is invalid')
+        }
+    } else {
+        errors.push('Register Number is missing')
+    }
+
+    if (dob !== undefined) {
+        const date = new Date(dob);
+        if (isNaN(date.getTime())) {
+            errors.push('DOB is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('DOB cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('DOB is missing')
+    }
+
+    if (courseId !== undefined) {
+        if (isNaN(courseId) || courseId <= 0) {
+            errors.push('CourseId is invalid')
+        }
+    } else {
+        errors.push('CourseId is missing')
+    }
+
+    if (joinedDate !== undefined) {
+        const date = new Date(joinedDate);
+        if (isNaN(date.getTime())) {
+            errors.push('Joined Date is invalid');
+        } else {
+            const today = new Date();
+            if (date > today) {
+                errors.push('Joined Date cannot be in the future');
+            }
+        }
+    } else {
+        errors.push('Joined Date is missing')
+    }
+
+    if (phoneNumber !== undefined) {
+        var phoneNumberCheck = phoneNumberPattern.test(phoneNumber)
+        if (phoneNumberCheck === false) {
+            errors.push('Phone Number is invalid');
+        }
+    } else {
+        errors.push('Phone Number is missing');
+    }
+
+    if (emailId !== undefined) {
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+        var emailCheck = emailPattern.test(emailId)
+        if (emailCheck === false) {
+            errors.push('Email Id is invalid');
+        }
+    } else {
+        errors.push('Email Id is missing');
+    }
+
+    if (fatherName !== undefined) {
+        if (fatherName.length < 2) {
+            errors.push('Father Name is invalid')
+        }
+    } else {
+        errors.push('Father Name is missing')
+    }
+
+    if (fatherNumber !== undefined) {
+        var phoneNumberCheck = phoneNumberPattern.test(fatherNumber)
+        if (phoneNumberCheck === false) {
+            errors.push('Father Number is invalid');
+        }
+    } else {
+        errors.push('Father Number is missing');
+    }
+
+    if (address !== undefined) {
+        if (address.length < 5) {
+            errors.push('Address is invalid')
+        }
+    } else {
+        errors.push('Address is missing')
+    }
+    return errors
 }
 
 module.exports = (app) => {

@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query');
 const { getAppUrl } = require('../../utilityclient/url');
 
 function blockFloorPageUi(req, res) {
@@ -6,7 +5,6 @@ function blockFloorPageUi(req, res) {
     res.render('pages/blockfloor/blockfloorlist.ejs', {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:''},
@@ -21,7 +19,6 @@ function addBlockFloorUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         blockFloorId: '',
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:''},
@@ -38,7 +35,6 @@ function editBlockFloorUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         blockFloorId: blockFloorId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:''},

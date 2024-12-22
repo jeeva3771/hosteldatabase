@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query')
 const { getAppUrl } = require('../../utilityclient/url');
 
 function errorUi(req, res) {
@@ -12,7 +11,6 @@ function contactUi(req, res) {
     res.render('pages/contact.ejs', {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Pages', link:''},
@@ -26,7 +24,6 @@ function faqUi(req, res) {
     res.render('pages/faq.ejs', {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Pages', link:''},

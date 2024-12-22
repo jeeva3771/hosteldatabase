@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Student form' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Student form' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'Student form' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'student'}) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'student' }) %>
 
 <section class="section">
     <div class="row">
@@ -109,21 +109,6 @@
                               <input type="date" class="form-control" id="joinedDate">
                             </div>
                         </div>
-                        <div class="row mb-3" id="uploadFileSection">
-                            <label for="inputNumber" class="col-sm-2 col-form-label">Image Upload
-                            <div class="ms-4 mt-2">
-                                <img src="" alt="Profile" class="rounded-circle imageSizing" id="studentImage" 
-                                    name="studentImage">
-                                <button type="button" class="btn btn-outline-danger btn-sm removeImage" 
-                                    onclick="deleteStudentImage()" id="removeImage">Remove</button>
-                            </div>
-                            </label>
-                            <div class="col-sm-10">
-                              <input class="form-control" type="file" id="updateImage" name="studentImage"
-                                onchange="updateStudentImage()">
-                                <p class="fw-medium ms-3">Optional.</p>
-                            </div>
-                        </div>
                         <div class="text-center">
                             <button type="reset" class="btn btn-secondary" id="reset">Reset</button>
                             <button type="button" onclick="saveOrUpdateStudent()" class="btn btn-primary"
@@ -150,12 +135,7 @@
     const blockCodeDom = document.getElementById('blockCode');
     const floorNumberDom = document.getElementById('floorNumber');
     const roomNumberDom = document.getElementById('roomNumber');
-    const joinedDateDom = document.getElementById('joinedDate');
-    const uploadFileSectionDom = document.getElementById('uploadFileSection');
-    const updateImageDom = document.getElementById('updateImage');
-    const studentImageDom = document.getElementById('studentImage');
-    const removeImageDom = document.getElementById('removeImage');
-    const fileInputDom = document.querySelector('input[type="file"]'); 
+    const joinedDateDom = document.getElementById('joinedDate');   
     var resetDom = document.getElementById('reset');
     const submitButtonDom = document.getElementById('submitButton');
     var studentId = <%= studentId || 'null' %> ;
@@ -229,13 +209,11 @@
         await populateBlockCode();
         await populateFloorNumber();
         await populateRoomNumber();
-        await getStudentImage();
 
         if (studentId) {
             await getStudentById(studentId);
             resetDom.style.display = 'none';
         } else if (!studentId) {
-            uploadFileSectionDom.style.display = 'none';
             joinedDateDom.value = today;
         }
 
@@ -252,8 +230,6 @@
         floorNumberDom.addEventListener('change', populateRoomNumber, toggleSubmitButton);
         roomNumberDom.addEventListener('change', toggleSubmitButton);
         joinedDateDom.addEventListener('input', toggleSubmitButton);
-        updateImageDom.addEventListener('change', toggleSubmitButton);
-        removeImageDom.addEventListener('click', toggleSubmitButton);
     }
 
     initializeForm();
@@ -397,10 +373,6 @@
         }
     }
 
-    async function getStudentImage() {
-        studentImageDom.src = `${getAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
-    }
-
     async function getStudentById(studentId) {
         try {
             const response = await fetch(getAppUrl(`api/student/${studentId}`));
@@ -425,48 +397,4 @@
         }
     }
 
-    function updateStudentImage() {
-        var myHeaders = new Headers();
-        var formdata = new FormData();
-        formdata.append("studentImage", updateImageDom.files[0]);
-
-        var requestOptions = {
-            method: 'PUT',
-            headers: myHeaders,
-            body: formdata,
-            redirect: 'follow'
-        };
-
-        fetch(getAppUrl(`api/student/${studentId}/editimage`), requestOptions)
-            .then(async(response) => {
-                if (response.status === 400) {
-                    resetStudentImageInput()
-                    return alert(await response.text())
-                }
-                setTimeout(getStudentImage, 1000)
-            })
-            .catch(error => alert('Edit student image something went wrong.Please try later'));
-    }
-
-    function deleteStudentImage() {
-        var myHeaders = new Headers();
-        var requestOptions = {
-            method: 'DELETE',
-            headers: myHeaders,
-            redirect: 'follow'
-        };
-
-        fetch(getAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
-            .then(()=> {
-                setTimeout(getStudentImage, 1000)
-                updateImageDom.value = ''
-            })
-            .catch(error => alert('Delete Student image something went wrong.Please try later.'));
-    }
-
-    function resetStudentImageInput() {
-        if (fileInputDom) {
-            fileInputDom.value = ""; 
-        }
-    }
 </script>

@@ -283,9 +283,12 @@ async function addOrEditAttendance(req, res) {
     const { blockId, blockFloorId, roomId } = req.params;
     const { checkInDate, attendance } = req.body;
     const wardenId = req.session.warden.wardenId;
+    if (!mysqlClient || typeof mysqlClient.query !== 'function') {
+        return res.status(500).send('Database client is not initialized.');
+    }
 
     try {
-        const errors = await validatePayload(req, req.params, mysqlClient);
+        const errors = await validatePayload(req.params, mysqlClient);
         if (errors.length > 0) {
             console.log(errors)
             return res.status(400).send(errors);
@@ -293,7 +296,8 @@ async function addOrEditAttendance(req, res) {
 
         const attendancePromises = attendance.map(({ studentId, isPresent }) => {
             return mysqlQuery(/*sql*/ `
-                    INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, checkInDate, isPresent, wardenId)
+                    INSERT INTO attendance (studentId, roomId, blockId, blockFloorId, 
+                        checkInDate, isPresent, wardenId)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
                     ON DUPLICATE KEY UPDATE
                         checkInDate = VALUES(checkInDate),
@@ -312,7 +316,7 @@ async function addOrEditAttendance(req, res) {
     }
 }
 
-async function studentAttendanceReport(req, res) {
+async function studentAttendanceReport(req, res) {    
     const mysqlClient = req.app.mysqlClient;
     const {
         month,
@@ -378,7 +382,7 @@ async function studentAttendanceReport(req, res) {
     }
 }
 
-async function validatePayload(req, params, mysqlClient) {
+async function validatePayload(params, mysqlClient) {
     const {
         roomId,
         blockFloorId,
@@ -387,43 +391,43 @@ async function validatePayload(req, params, mysqlClient) {
 
     const errors = [];
 
-    try {
-        if (roomId !== undefined) {
-            if (isNaN(roomId) || roomId <= 0) {
-                errors.push('roomId is invalid')
-            }
-        } else {
-            errors.push('roomId is missing')
+    if (roomId !== undefined) {
+        if (isNaN(roomId) || roomId <= 0) {
+            errors.push('roomId is invalid')
         }
-
-        if (blockFloorId !== undefined) {
-            if (isNaN(blockFloorId) || blockFloorId <= 0) {
-                errors.push('blockFloorId is invalid')
-            }
-        } else {
-            errors.push('blockFloorId is missing')
-        }
-
-        if (blockId !== undefined) {
-            if (isNaN(blockId) || blockId <= 0) {
-                errors.push('blockId is invalid')
-            }
-        } else {
-            errors.push('blockId is missing')
-        }
-
-        const isValidateEntry = await mysqlQuery(/*sql*/ `SELECT studentId FROM student WHERE 
-            blockId = ? AND blockFloorId = ? AND  roomId = ?`,
-            [blockId, blockFloorId, roomId],
-            mysqlClient
-        );
-        if (isValidateEntry.length === 0) {
-            errors.push('RoomId or BlockFloorId or BlockId is not valid');
-        }
-        return errors
-    } catch(error) {
-        req.log.error(error)
+    } else {
+        errors.push('roomId is missing')
     }
+
+    if (blockFloorId !== undefined) {
+        if (isNaN(blockFloorId) || blockFloorId <= 0) {
+            errors.push('blockFloorId is invalid')
+        }
+    } else {
+        errors.push('blockFloorId is missing')
+    }
+
+    if (blockId !== undefined) {
+        if (isNaN(blockId) || blockId <= 0) {
+            errors.push('blockId is invalid')
+        }
+    } else {
+        errors.push('blockId is missing')
+    }
+
+    const isValidateEntry = await mysqlQuery(/*sql*/ `
+        SELECT studentId FROM student 
+        WHERE 
+            blockId = ? 
+            AND blockFloorId = ?
+            AND  roomId = ?`,
+        [blockId, blockFloorId, roomId]
+    , mysqlClient)
+
+    if (isValidateEntry.length === 0) {
+        errors.push('RoomId or BlockFloorId or BlockId is not valid')
+    }
+    return errors
 }
 
 module.exports = (app) => {

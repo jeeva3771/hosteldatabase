@@ -28,6 +28,50 @@
 <script src="<%=studentAppURL%>assets/js/main.js"></script>
   
 <script>
+  var studentId = <%= studentId || 'null' %>;
+  const userImageDom = document.getElementById('userImage');
+  const userNameDom = document.getElementById('userName');
+  const mainLogoStudentNameDom = document.getElementById('mainLogoStudentName');
+  const logoStudentNameDom = document.getElementById('logoStudentName');
+  const imageDom = document.getElementById('image');
+
+  function studentImage() {
+    userImageDom.src =  `${getStudentAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
+    if (imageDom) {
+      imageDom.src = `${getStudentAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
+    }
+  }
+
+  function readStudentName() {
+    var myHeaders = new Headers();
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders
+    };
+
+    fetch(`${getStudentAppUrl('api/student/name')}?date=${Date.now()}`, requestOptions)
+      .then(async (response) => {
+          var student = await response.json();
+          const userName = capitalizeFirstLetter(student.name)
+          
+          mainLogoStudentNameDom.innerText = userName;
+          logoStudentNameDom.innerText = userName
+          if (userNameDom) {
+            userNameDom.innerText = userName;
+          }
+      })
+      .catch((error) => alert('Something went wrong.Please try later.'));
+  }
+
+  function capitalizeFirstLetter(str) {
+    return str[0].toUpperCase() + str.slice(1);
+  }
+  
+  window.addEventListener('load', () => {
+    studentImage();
+    readStudentName();
+  });
+  
 
 </script>
 </html>

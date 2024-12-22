@@ -9,7 +9,6 @@ function wardenPageUi(req, res) {
         res.render('pages/warden/wardenlist.ejs', {
             appURL: getAppUrl(),
             avatarWardenId: avatarWardenId,
-            user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:getAppUrl('home')},
                 {name:'Warden', link:''},
@@ -27,7 +26,6 @@ function addWardenUi(req, res) {
             appURL: getAppUrl(),
             avatarWardenId: avatarWardenId,
             wardenId: '',
-            user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:getAppUrl('home')},
                 {name:'Warden', link:getAppUrl('warden')},
@@ -47,7 +45,6 @@ function editWardenUi(req, res) {
             appURL: getAppUrl(),
             wardenId: wardenId,
             avatarWardenId: avatarWardenId,
-            user: getUserProfile(req.session),
             breadCrumbs: [
                 {name:'Home', link:getAppUrl('home')},
                 {name:'Warden', link:getAppUrl('warden')},
@@ -68,7 +65,6 @@ function wardenDetailsUi(req, res) {
     res.render('pages/warden/wardendetails.ejs',{
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
             {name:'User', link:getAppUrl('warden/details')},

@@ -105,7 +105,7 @@ async function createCourse(req, res) {
     const createdBy = req.session.warden.wardenId
 
     try {
-        const validateInsert = await validatePayload(req, req.body, false, courseId = null, mysqlClient);
+        const validateInsert = await validatePayload(req.body, false, courseId = null, mysqlClient);
         if (validateInsert) {
             return res.status(400).send([validateInsert]);
         }
@@ -147,7 +147,7 @@ async function updateCourseById(req, res) {
             return res.status(404).send({error:"Course not found or already deleted"});
         }
 
-        const validateInsert = await validatePayload(req, req.body, true, courseId, mysqlClient);
+        const validateInsert = await validatePayload(req.body, true, courseId, mysqlClient);
         if (validateInsert) {
             return res.status(400).send([validateInsert]);
         }
@@ -237,44 +237,44 @@ async function validateCourseById(courseId, mysqlClient) {
     return false;
 }
 
-async function validatePayload(req, body, isUpdate = false, courseId = null, mysqlClient) {
+async function validatePayload(body, isUpdate = false, courseId = null, mysqlClient) {
     const { courseName } = body;
 
-    try {
-        if (courseName !== undefined) {
-            if (courseName.length <= 1) {
-                return "course Name is invalid";
-            } else {
-                let query;
-                let params;
-
-                if (isUpdate === true) {
-                    query = /*sql*/`SELECT 
-                                COUNT(*) AS count 
-                            FROM course 
-                            WHERE courseName = ?
-                                AND courseId != ? 
-                                AND deletedAt IS NULL`;
-                    params = [courseName, courseId];
-                } else {
-                    query = /*sql*/`SELECT 
-                                COUNT(*) AS count
-                            FROM course 
-                            WHERE courseName = ? 
-                                AND deletedAt IS NULL`;
-                    params = [courseName];
-                }
-
-                const validCourseName = await mysqlQuery(query, params, mysqlClient);
-                if (validCourseName[0].count > 0) {
-                    return "Course Name already exists";
-                }
-            }
+    if (courseName !== undefined) {
+        if (courseName.length <= 1) {
+            return "course Name is invalid";
         } else {
-            return "Course Name missing";
+            let query;
+            let params;
+
+            if (isUpdate === true) {
+                query = /*sql*/`
+                    SELECT 
+                        COUNT(*) AS count 
+                    FROM course 
+                    WHERE courseName = ?
+                        AND courseId != ? 
+                        AND deletedAt IS NULL`;
+
+                params = [courseName, courseId];
+            } else {
+                query = /*sql*/`
+                    SELECT 
+                        COUNT(*) AS count
+                    FROM course 
+                    WHERE courseName = ? 
+                        AND deletedAt IS NULL`;
+
+                params = [courseName];
+            }
+
+            const validCourseName = await mysqlQuery(query, params, mysqlClient);
+            if (validCourseName[0].count > 0) {
+                return "Course Name already exists";
+            }
         }
-    } catch {
-        req.log.error(error)
+    } else {
+        return "Course Name missing";
     }
 }
 
