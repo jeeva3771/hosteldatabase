@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Room list' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Room list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'Room list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'room'}) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'room' }) %>
 
 <section class="section">
     <div class="row">
@@ -210,7 +210,7 @@
                     <td>${room.floorNumber}</td>
                     <td>${room.roomNumber}</td>
                     <td>${room.isActive === 1 ? 'Active' : ''}</td>
-                    <td>${room.createdFirstName} ${room.createdLastName}</td>
+                    <td>${room.createdFirstName}${room.createdLastName}</td>
                     <td>
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-info-circle focus mr-2" viewBox="0 0 16 16" onclick="readRoomById(${room.roomId})">
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
@@ -379,7 +379,8 @@
                                             <strong>Created By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${room.createdFirstName} ${room.createdLastName}
+                                            <strong> : </strong>
+                                            ${capitalizeFirstLetter(room.createdFirstName)}${room.createdLastName}
                                         </div>
                                     </div>
                                     <div class="row">
@@ -395,7 +396,9 @@
                                             <strong>Updated By</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${room.updatedFirstName !== null ? room.updatedFirstName : '---'} ${room.updatedLastName !== null ? room.updatedLastName : ''}
+                                            <strong> : </strong>${room.updatedFirstName !== null ?
+                                            capitalizeFirstLetter(room.updatedFirstName) : '---'}${room.updatedLastName !== null ?
+                                            room.updatedLastName : ''}
                                         </div>
                                     </div>
                                 </div>

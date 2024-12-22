@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query');
 const { getAppUrl } = require('../../utilityclient/url');
 
 function studentPageUi(req, res) {
@@ -6,7 +5,6 @@ function studentPageUi(req, res) {
     res.render('pages/student/studentlist.ejs', {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Student', link:''}
@@ -20,7 +18,6 @@ function addStudentUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         studentId: '',
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Student', link:getAppUrl('student')},
@@ -36,7 +33,6 @@ function editStudentUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         studentId: studentId,
-        user: getUserProfile(req.session),
         breadCrumbs: [
             {name:'Home', link:getAppUrl('home')},
             {name:'Student', link:getAppUrl('student')},

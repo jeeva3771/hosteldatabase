@@ -1,7 +1,7 @@
 <header id="header" class="header fixed-top d-flex align-items-center">
 
     <div class="d-flex align-items-center justify-content-between">
-      <a href="index.html" class="logo d-flex align-items-center">
+      <a href="<%=studentAppURL%>student/attendance/report/" class="logo d-flex align-items-center">
         <img src="<%=studentAppURL%>assets/img/logo.png" alt="">
         <span class="d-none d-lg-block">Hostel</span>
       </a>
@@ -169,54 +169,26 @@
   
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
             <img src="" alt="Profile" class="rounded-circle" id="userImage">
-            <span class="d-none d-md-block dropdown-toggle ps-2">
-
-            </span>
+            <span class="d-none d-md-block dropdown-toggle ps-2" id="mainLogoStudentName"></span>
           </a><!-- End Profile Image Icon -->
   
           <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
             <li class="dropdown-header">
-              <h6>
-
-              </h6>
-              <span>
-
-              </span>
+              <h6 id="logoStudentName"></h6>
+              <span>Student</span>
             </li>
             <li>
               <hr class="dropdown-divider">
             </li>
-  
             <li>
-              <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)">
+              <a class="dropdown-item d-flex align-items-center" href="<%=studentAppURL%>student/details/">
                 <i class="bi bi-person"></i>
-                <span>User Details</span>
+                <span>Student Details</span>
               </a>
             </li>
             <li>
               <hr class="dropdown-divider">
             </li>
-  
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)">
-                <i class="bi bi-gear"></i>
-                <span>Account Settings</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-  
-            <li>
-              <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)">
-                <i class="bi bi-question-circle"></i>
-                <span>Need Help?</span>
-              </a>
-            </li>
-            <li>
-              <hr class="dropdown-divider">
-            </li>
-  
             <li>
               <a class="dropdown-item d-flex align-items-center" href="<%=studentAppURL%>api/student/logout/">
                 <i class="bi bi-box-arrow-right"></i>

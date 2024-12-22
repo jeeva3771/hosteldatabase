@@ -1,7 +1,7 @@
 <%- include('../../partials/wardenuse/header.ejs', { appURL: appURL, title: 'Attendance list' }) %>
-<%- include('../../partials/wardenuse/nonloginlayout.ejs', { user: user, subTitle: 'Attendance list' }) %>
+<%- include('../../partials/wardenuse/nonloginlayout.ejs', { subTitle: 'Attendance list' }) %>
 <%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
-<%- include('../../partials/wardenuse/aside.ejs', {activeMenu: 'attendance'}) %>
+<%- include('../../partials/wardenuse/aside.ejs', { activeMenu: 'attendance' }) %>
 
 <section class="section">
     <div class="row">
@@ -367,18 +367,19 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <strong>Reviewed By	</strong>
+                                            <strong>Reviewed At</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${attendance.reviewedWardenFirstName} ${attendance.reviewedWardenLastName}
+                                            <strong> : </strong>${attendance.createdTimeStamp}
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-sm-4">
-                                            <strong>Created At</strong>
+                                            <strong>Reviewed By	</strong>
                                         </div>
                                         <div class="col-sm-8">
-                                            <strong> : </strong>${attendance.createdTimeStamp}
+                                            <strong> : </strong>
+                                            ${capitalizeFirstLetter(attendance.reviewedWardenFirstName)}${attendance.reviewedWardenLastName}
                                         </div>
                                     </div>
                                     <div class="row">
@@ -395,7 +396,7 @@
                                         </div>
                                         <div class="col-sm-8">
                                             <strong> : </strong>${attendance.updatedWardenFirstName !== null ? 
-                                            attendance.updatedWardenFirstName : '---'} ${attendance.updatedWardenLastName !== null ?
+                                            capitalizeFirstLetter(attendance.updatedWardenFirstName) : '---'}${attendance.updatedWardenLastName !== null ?
                                             attendance.updatedWardenLastName : ''}
                                         </div>
                                     </div>

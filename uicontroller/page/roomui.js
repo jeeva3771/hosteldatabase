@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query');
 const { getAppUrl } = require('../../utilityclient/url');
 
 
@@ -7,7 +6,6 @@ function roomPageUi(req, res) {
     res.render('pages/room/roomlist.ejs', {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
-        user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:''},
@@ -22,7 +20,6 @@ function addRoomUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         roomId: '',
-        user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:'#tables-nav'},
@@ -40,7 +37,6 @@ function editRoomUi(req, res) {
         appURL: getAppUrl(),
         avatarWardenId: avatarWardenId,
         roomId: roomId,
-        user: getUserProfile(req.session),
         breadCrumbs : [ 
             {name:'Home', link:getAppUrl('home')},
             {name:'Structure', link:'#tables-nav'},

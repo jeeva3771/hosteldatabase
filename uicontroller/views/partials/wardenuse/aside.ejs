@@ -9,7 +9,7 @@ const mainMenu = [
     icon: 'bi bi-layout-text-window-reverse',
     children: [
       { name: 'Block', url: 'block/' },
-      { name: 'Blockfloor', url: 'blockfloor/' },
+      { name: 'Block Floor', url: 'blockfloor/' },
       { name: 'Room', url: 'room/' },
     ],
   },
@@ -33,7 +33,8 @@ const mainMenu = [
       <% } %>
       <li class="nav-item">
         <% if (item.children) { 
-          const isActiveParent = item.children.some(child => activeMenu === child.name.toLowerCase());
+          const isActiveParent = item.children.some(child => activeMenu === 
+            child.name.toLowerCase().replace(/\s+/g, ''));
         %>
           <a class="nav-link <%= isActiveParent ? '' : 'collapsed' %>" 
              data-bs-target="#<%= item.name.toLowerCase().replace(/\s+/g, '-') %>-nav"
@@ -47,7 +48,7 @@ const mainMenu = [
             <% item.children.forEach(child => { %>
               <li>
                 <a href="<%= appURL + child.url %>" 
-                  class="<%= activeMenu === child.name.toLowerCase().replace(/\s+/g) ? 'active' : '' %>">
+                  class="<%= activeMenu === child.name.toLowerCase().replace(/\s+/g, '') ? 'active' : '' %>">
                   <i class="bi bi-circle"></i>
                   <span><%= child.name %></span>
                 </a>
@@ -55,7 +56,7 @@ const mainMenu = [
             <% }) %>
           </ul>
         <% } else { %>
-          <a class="nav-link <%= activeMenu === item.name.toLowerCase() ? 'active' : 'collapsed' %>" 
+          <a class="nav-link <%= activeMenu === item.name.toLowerCase().replace(/[\s.]+/g, '') ? 'active' : 'collapsed' %>" 
              href="<%= appURL + item.url %>">
             <i class="<%= item.icon %>"></i>
             <span><%= item.name %></span>

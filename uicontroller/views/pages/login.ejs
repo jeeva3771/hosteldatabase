@@ -98,12 +98,12 @@
               window.location = getAppUrl('home')
             } else {
               alert(await response.text())
-              loginButton.disabled = false;
+              loginButton.disabled = false
             }
         })
         .catch(error => {
           alert('Something went wrong.Please try later.')
-          loginButton.disabled = false;
+          loginButton.disabled = false
       })
     }
 

@@ -1,6 +1,7 @@
 <%- include('../../partials/studentuse/header.ejs', { studentAppURL: studentAppURL, title: 'Attendance Report' }) %>
 <%- include('../../partials/studentuse/nonloginlayout.ejs', { subTitle: 'Attendance Report' }) %>
-<%- include('../../partials/studentuse/aside.ejs') %>
+<%- include('../../partials/breadcrumb.ejs', { breadCrumbs: breadCrumbs }) %>
+<%- include('../../partials/studentuse/aside.ejs', { activeMenu: 'attendancereport' } ) %>
 
 <section class="section">
     <div class="row">
@@ -225,6 +226,8 @@
     }
 
     function renderDefaultCalendar(firstDay, lastDate) {
+        downloadDom.style.display = 'none';
+
         let date = 1;
         dayHeadersDom.innerHTML = '';
         dateLabelDom.innerHTML = '';

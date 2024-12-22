@@ -68,6 +68,7 @@
     const submitDom = document.getElementById('submit');
 
     function generateOtp() {
+        sendOtpDom.disabled = true;
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -92,12 +93,17 @@
                 } else {
                     emailErrorDom.innerText = await response.text();
                     emailErrorDom.style.display = 'block';
+                    sendOtpDom.disabled = false;
                 }
             })
-            .catch(error => alert('Something went wrong.Please try later.'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.');
+                sendOtpDom.disabled = false;
+            });
     }
 
     function verifyStudentAuthentication() {
+        submitDom.disabled = true;
         var myHeaders = new Headers();
         myHeaders.append("Content-Type", "application/json");
 
@@ -122,13 +128,18 @@
                         otpErrorDom.innerText = errorData.message;
                         otpErrorDom.style.display = 'block';
                     } 
+                    submitDom.disabled = false;
                 } else if ([401, 404].includes(response.status)) {
                     const errorMessage = await response.text();
                     alert(errorMessage)
+                    submitDom.disabled = false;
                     window.location = getStudentAppUrl('student/emailverify/generateotp');
                 }
             }) 
-            .catch(error => alert('Something went wrong.Please try later.'));
+            .catch(error => {
+                alert('Something went wrong.Please try later.');
+                submitDom.disabled = false;
+            });
     }
 
     function toggleButton() {

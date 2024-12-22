@@ -343,38 +343,37 @@ async function validatePayload(body, isUpdate = false, blockFloorId = null, mysq
                 params = [blockId, floorNumber];
             }
 
-    const validFloorNumber = await mysqlQuery(query, params, mysqlClient);
-                if (validFloorNumber[0].count > 0) {
-                    errors.push("Floor Number already exists");
-                }
+            const validFloorNumber = await mysqlQuery(query, params, mysqlClient);
+            if (validFloorNumber[0].count > 0) {
+                errors.push("Floor Number already exists");
             }
-        } else {
-            errors.push('Floor Number is missing')
         }
+    } else {
+        errors.push('Floor Number is missing')
+    }
 
-        if (isActive !== undefined) {
-            if (![0, 1].includes(isActive)) {
-                errors.push('isActive is invalid')
-            } else if (isUpdate === true && isActive === 0) {
-                const validateStudentInBlockFloor = await mysqlQuery(/*sql*/`
-                        SELECT 
-                            COUNT(*) AS count 
-                        FROM 
-                            student 
-                        WHERE 
-                            blockFloorId = ? AND
-                            deletedAt IS NULL`, 
-                        [blockFloorId], mysqlClient)
+    if (isActive !== undefined) {
+        if (![0, 1].includes(isActive)) {
+            errors.push('isActive is invalid')
+        } else if (isUpdate === true && isActive === 0) {
+            const validateStudentInBlockFloor = await mysqlQuery(/*sql*/`
+                SELECT 
+                    COUNT(*) AS count 
+                FROM 
+                    student 
+                WHERE 
+                    blockFloorId = ? AND
+                    deletedAt IS NULL`, 
+                [blockFloorId], mysqlClient)
             
-                if (validateStudentInBlockFloor[0].count > 0) {
-                    errors.push("Students in blockfloor shift to another blockfloor and then try to inactive.")
-                }
+            if (validateStudentInBlockFloor[0].count > 0) {
+                errors.push("Students in blockfloor shift to another blockfloor and then try to inactive.")
             }
-        } else {
-            errors.push('isActive is missing')
         }
-        return errors
-
+    } else {
+        errors.push('isActive is missing')
+    }
+    return errors
 }
 
 function getBlockFloorById(blockFloorId, mysqlClient) {

@@ -29,6 +29,11 @@
 
 <script>
   var wardenId = <%= avatarWardenId || 'null' %>;
+  const mainLogoUserNameDom = document.getElementById('mainLogoUserName');
+  const logoUserNameDom = document.getElementById('logoUserName');
+  const logoUserStatusDom = document.getElementById('logoUserStatus');
+  const userNameDom = document.getElementById('userName');
+  const userStatusDom = document.getElementById('userStatus');
   const userImageDom = document.getElementById('userImage');
   const imageDom = document.getElementById('image');
   const editProfileDom = document.getElementById('editProfile');
@@ -69,30 +74,39 @@
     }
   }
 
-  // function activateSidebarLink() {
-  //   linksDom.forEach(link => {
-  //     const hrefPath = new URL(link.href).pathname;
+  function wardenDetails() {
+    var myHeaders = new Headers();
+    var requestOptions = {
+      method: 'GET',
+      headers: myHeaders
+    };
 
-  //     if (currentPath === hrefPath) {
-  //       link.classList.add("active");
-  //       link.classList.remove("collapsed");
+    fetch(`${appURL}api/warden/wardendetails/${wardenId}?date=${Date.now()}`, requestOptions)
+      .then(async (response) => {
+          var warden = await response.json();
+          const userName = capitalizeFirstLetter(warden.firstName) + warden.lastName;
+          const userStatus = warden.superAdmin === 1 ? 'Admin' : 'Warden';
 
-  //       const parentNavContent = link.closest(".nav-content");
-  //       if (parentNavContent) {
-  //         parentNavContent.classList.add("show");
+          mainLogoUserNameDom.innerText = userName;
+          logoUserNameDom.innerText = userName;
+          logoUserStatusDom.innerText = userStatus;
 
-  //         const parentToggleLink = parentNavContent.previousElementSibling;
-  //         if (parentToggleLink) {
-  //           parentToggleLink.classList.remove("collapsed");
-  //         }
-  //       }
-  //     }
-  //   });
-  // }
+          if (userNameDom && userStatusDom) {
+            userNameDom.innerText = userName;
+            userStatusDom.innerText = userStatus;
+          }
+      })
+      .catch((error) => alert('Something went wrong.Please try later.'));
+  }
+
+  function capitalizeFirstLetter(str) {
+    return str[0].toUpperCase() + str.slice(1);
+  }
 
   window.addEventListener('load', () => {
+    wardenDetails();
     wardenImage();
-    activateSidebarLink();
   });
+  
 </script>
 </html>
