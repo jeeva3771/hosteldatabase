@@ -6,10 +6,8 @@ const pinoHttp = require('pino-http');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const FileStoreWarden = require('session-file-store')(session);
+const MySQLStore = require('express-mysql-session')(session);
 const cors = require('cors');
-
-// const FileStoreStudent = require('session-file-store')(session);
 
 const { v4: uuidv4 } = require('uuid');
 
@@ -56,18 +54,6 @@ function setupApplication(app) {
         credentials : true
     }
     app.use(cors(corsOptions));
-
-    app.use(session({ 
-        store: new FileStoreWarden({}),
-        secret: process.env.SESSION_SECRET,
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            maxAge: 1000 * 60 *60 * 24,
-            secure: false
-        }
-    }));
-
     app.use(
         pinoHttp({
             logger,
@@ -101,6 +87,16 @@ function setupApplication(app) {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME
     })    
+
+    const sessionStore = new MySQLStore({}/* session store options */, app.mysqlClient);
+
+    sessionStore.close().then(() => {
+        // Successfuly closed the MySQL session store.
+        console.log('MySQLStore closed');
+    }).catch(error => {
+        // Something went wrong.
+        console.error(error);
+    });
 }
 
 const studentApp = express()
@@ -124,18 +120,18 @@ const pageStudentSessionExclude = [
 ]
 
 // only works for warden
-wardenApp.use((req, res, next) => {
-    if (pageWardenSessionExclude.includes(req.originalUrl)) {
-        return next()
-    }
+// wardenApp.use((req, res, next) => {
+//     if (pageWardenSessionExclude.includes(req.originalUrl)) {
+//         return next()
+//     }
     
-    if (req.originalUrl !== '/login') {
-        if (req.session.isLogged !== true) {
-            return res.status(401).redirect(getAppUrl('login'))
-        }
-    }
-    return next()
-})
+//     if (req.originalUrl !== '/login') {
+//         if (req.session.isLogged !== true) {
+//             return res.status(401).redirect(getAppUrl('login'))
+//         }
+//     }
+//     return next()
+// })
 
 wardenApp.mysqlClient.connect(function (err) {
     if (err) {
@@ -170,19 +166,19 @@ wardenApp.mysqlClient.connect(function (err) {
     }
 })
 
-// only works for student
-studentApp.use((req, res, next) => {
-    if (pageStudentSessionExclude.includes(req.originalUrl)) {
-        return next()
-    }
-    console.log(req.session.isLoggedStudent)
-    if (req.originalUrl !== '/student/login/') {
-        if (req.session.isLoggedStudent !== true) {
-            return res.status(401).send('Session expired.')
-        }
-    }
-    return next()
-})
+// // only works for student
+// studentApp.use((req, res, next) => {
+//     if (pageStudentSessionExclude.includes(req.originalUrl)) {
+//         return next()
+//     }
+
+//     if (req.originalUrl !== '/student/login/') {
+//         if (req.session.isLoggedStudent !== true ) {
+//             return res.status(401).redirect(getStudentAppUrl('student/login'))
+//         }
+//     }
+//     return next()
+// })
 
 studentApp.mysqlClient.connect(function (err) {
     if (err) {

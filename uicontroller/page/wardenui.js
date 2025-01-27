@@ -1,4 +1,3 @@
-const { getUserProfile } = require('../../utilityclient/query')
 const { getAppUrl } = require('../../utilityclient/url');
 
 function wardenPageUi(req, res) {

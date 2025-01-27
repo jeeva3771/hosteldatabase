@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient/query');
+const { mysqlQuery, deleteFile, studentDetailsData } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 const multer = require('multer');
@@ -10,7 +10,7 @@ const storage = multer.diskStorage({
         cb(null, path.join(__dirname, '..', 'studentuploads'))
     },
     filename: function (req, file, cb) {
-        const studentId = req.params.studentId;
+        const studentId = req.session.studentInfo.studentId;
         cb(null, `${studentId}.jpg`);
     }
 })
@@ -27,7 +27,6 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ storage, fileFilter })
 const multerMiddleware = upload.single('studentImage');
 
-
 const OTP_LIMIT_NUMBER = 6;
 const OTP_OPTION = {
     digits: true,
@@ -40,7 +39,7 @@ async function generateOtp(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const currentTime = new Date().getTime();
     const {
-        emailId = null
+        emailId
     } = req.body
 
     try {
@@ -76,6 +75,7 @@ async function generateOtp(req, res) {
             subject: 'One-Time Password',
             html: `Your one-time password (OTP) is <b>${otp}</b>. Please use this code to verify your identity.`
         }
+        
         await sendEmail(mailOptions)
 
         req.session.student = emailId
@@ -106,7 +106,7 @@ async function verifyOtpStudentAuthentication(req, res) {
             WHERE emailId = ? AND deletedAt IS NULL`,
             [emailId], mysqlClient);
 
-        if (studentDetails.length === 0) {
+        if (!studentDetails) {
             return res.status(404).send('Oops! Something went wrong. Please contact warden or admin.')
         }
         let studentId = studentDetails.studentId;
@@ -162,8 +162,9 @@ async function verifyOtpStudentAuthentication(req, res) {
 
                 }
                 req.session.isLoggedStudent = true
+                const student = await studentDetailsData(studentId, mysqlClient)
+                return res.status(200).send(student)
             }
-            return res.status(200).send('success');
         } else {
             if (studentOtpAttempt === 2) {
                 var updateBlockedTime = await mysqlQuery(/*sql*/`
@@ -203,15 +204,15 @@ async function verifyOtpStudentAuthentication(req, res) {
 }
 
 async function studentAttendanceReport(req, res) {
-    const mysqlClient = req.app.mysqlClient;
+    const mysqlClient = req.app.mysqlClient
+    const studentName = req.session.studentInfo.name
+    const registerNumber = req.session.studentInfo.regNo
     const {
         month,
-        year,
-        studentName,
-        registerNumber
-    } = req.query;
+        year
+    } = req.query
     var errors = []
-    let queryParameters = [month, year, studentName, registerNumber];
+    let queryParameters = [month, year, studentName, registerNumber]
 
     if (isNaN(month)) {
         errors.push('month')
@@ -244,8 +245,7 @@ async function studentAttendanceReport(req, res) {
             MONTH(a.checkInDate) = ?
             AND YEAR(a.checkInDate) = ?
             AND s.name = ?
-            AND s.registerNumber = ?`;
-        
+            AND s.registerNumber = ?`
         const studentReport = await mysqlQuery(sqlQuery, queryParameters, mysqlClient)
 
         if (studentReport.length === 0) {
@@ -264,54 +264,16 @@ async function studentAttendanceReport(req, res) {
     }
 }
 
-async function studentDetails(req, res) {
-    const mysqlClient = req.app.mysqlClient;
-    const studentId = req.session.studentInfo.studentId;
-    try {
-        const [student] = await mysqlQuery(/*sql*/`
-            SELECT 
-                s.*,
-                bk.blockCode,
-                b.floorNumber,
-                r.roomNumber,
-                c.courseName,
-                DATE_FORMAT(s.dob, "%y-%b-%D") AS birth,
-                DATE_FORMAT(s.joinedDate, "%y-%b-%D") AS joinDate,
-                DATE_FORMAT(s.createdAt, "%y-%b-%D %r") AS createdTimeStamp
-            FROM student AS s
-            LEFT JOIN 
-                block AS bk ON bk.blockId = s.blockId
-            LEFT JOIN 
-                blockfloor AS b ON b.blockFloorId = s.blockFloorId
-            LEFT JOIN 
-                room AS r ON r.roomId = s.roomId
-            LEFT JOIN 
-                course AS c ON c.courseId = s.courseId
-            WHERE 
-                s.deletedAt IS NULL 
-                AND s.studentId = ?`,
-            [studentId]
-        , mysqlClient)
-
-        if (!student) {
-            return res.status(404).send('Student not found');
-        }
-        res.status(200).send(student)
-    } catch (error) {
-        req.log.error(error)
-        res.status(500).send(error.message)
-    }
-}
-
-function studentLogOut(req, res) {
+function studentLogout(req, res) {
     req.session.destroy((err) => {
-        if (err) logger.error();
-        res.redirect('/student/login')
+        if (err) logger.error()
     })
+    console.log(req.session)
+    res.status(200).send('Logout successfully')
 }
 
 function readStudentImageById(req, res) {
-    const studentId = req.params.studentId;
+    const studentId = req.session.studentInfo.studentId;
     try {
         var fileName = `${studentId}.jpg`;
         const baseDir = path.join(__dirname, '..', 'studentuploads');
@@ -323,7 +285,6 @@ function readStudentImageById(req, res) {
         res.setHeader('Content-Type', 'image/jpeg');
         fs.createReadStream(imageToServe).pipe(res);
     } catch (error) {
-        console.log(error)
         req.log.error(error);
         res.status(500).send(error.message);
     }
@@ -332,7 +293,7 @@ function readStudentImageById(req, res) {
 async function readStudentName(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.session.studentInfo.studentId;
-
+ 
     try {
         const [student] = await mysqlQuery(/*sql*/`
             SELECT 
@@ -353,12 +314,68 @@ async function readStudentName(req, res) {
     }
 }
 
+async function updateImage(req, res) {
+    let uploadedFilePath;
+    const studentId = req.session.studentInfo.studentId;
+    const uploadedFile = req.file;
+
+    try {
+        if (studentId !== req.session.studentInfo.studentId) {
+            return res.status(409).send('Student is not valid to edit.');
+        }
+
+        if (!uploadedFile) {
+            return res.status(400).send('No file uploaded.');
+        }
+
+        if (req.fileValidationError) {
+            return res.status(400).send(req.fileValidationError);
+        }
+
+        uploadedFilePath = req.file.path;
+        console.log(uploadedFilePath + 'ooooooooooooo')
+        await sharp(fs.readFileSync(uploadedFilePath))
+            .resize({
+                width: parseInt(process.env.IMAGE_WIDTH),
+                height: parseInt(process.env.IMAGE_HEIGHT),
+                fit: sharp.fit.cover,
+                position: sharp.strategy.center,
+            })
+            .toFile(uploadedFilePath);
+            
+        return res.status(200).json('Image updated successfully');
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).json(error);
+    }
+}
+
+async function deleteImage(req, res) {
+    const studentId = req.session.studentInfo.studentId;
+
+    if (studentId !== req.session.studentInfo.studentId) {
+        return res.status(409).send('Student is not valid to delete image.')
+    }
+
+    try {
+        const rootDir = path.resolve(__dirname, '../');
+        const imagePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+
+        await deleteFile(imagePath, fs);
+        res.status(200).send('Image deleted successfully');
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send('Internal Server Error');
+    }
+}
+
 module.exports = (app) => {
     app.get('/api/student/name', readStudentName)
-    app.get('/api/student/:studentId/image', readStudentImageById)
+    app.get('/api/student/image', readStudentImageById)
+    app.delete('/api/student/deleteimage', deleteImage)
     app.post('/api/student/generateotp', generateOtp)
     app.put('/api/student/verifyotp/authentication', verifyOtpStudentAuthentication)
     app.get('/api/student/attendancereport', studentAttendanceReport)
-    app.get('/api/student/details', studentDetails)
-    app.get('/api/student/logout', studentLogOut)
+    app.get('/api/student/logout', studentLogout)
+    app.put('/api/student/editimage', multerMiddleware, updateImage)
 }
