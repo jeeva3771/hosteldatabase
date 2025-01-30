@@ -9,10 +9,13 @@ const session = require('express-session');
 const FileStoreWarden = require('session-file-store')(session);
 const cors = require('cors');
 
+<<<<<<< Updated upstream
 // const FileStoreStudent = require('session-file-store')(session);
 
 const { v4: uuidv4 } = require('uuid');
 
+=======
+>>>>>>> Stashed changes
 dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
 //apicontroller
@@ -63,7 +66,8 @@ function setupApplication(app) {
         resave: false,
         saveUninitialized: false,
         cookie: {
-            maxAge: 1000 * 60 *60 * 24,
+            // maxAge: 1000 * 60 *60 * 24,
+            marAge: 1000 * 60,
             secure: false
         }
     }));
