@@ -60,15 +60,15 @@ async function readWardens(req, res) {
             ww.lastName AS createdLastName,
             DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
             DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp
-            FROM warden AS w
-            LEFT JOIN
-              warden AS ww ON ww.wardenId = w.createdBy
-            WHERE 
-              w.deletedAt IS NULL 
-            AND (w.firstName LIKE ? OR w.lastName LIKE ? OR w.emailId LIKE ?
-              OR w.superAdmin LIKE ? OR ww.firstName LIKE ? OR ww.lastName Like ?)
-            ORDER BY 
-              ${orderBy} ${sort}`;
+        FROM warden AS w
+        LEFT JOIN
+            warden AS ww ON ww.wardenId = w.createdBy
+        WHERE 
+            w.deletedAt IS NULL 
+        AND (w.firstName LIKE ? OR w.lastName LIKE ? OR w.emailId LIKE ?
+            OR w.superAdmin LIKE ? OR ww.firstName LIKE ? OR ww.lastName Like ?)
+        ORDER BY 
+            ${orderBy} ${sort}`;
 
     let countQuery = /*sql*/ `
         SELECT COUNT(*) AS totalWardenCount 
@@ -386,6 +386,7 @@ async function authentication(req, res) {
         if (!warden) {
             req.session.isLogged = false
             req.session.warden = null
+            console.log(req.session)
             return res.status(400).send('Invalid Email.')
         }
 
@@ -394,6 +395,7 @@ async function authentication(req, res) {
         if (isValid) {
             req.session.warden = warden
             req.session.isLogged = true
+            console.log(req.session)
             res.status(200).send('success')
         } else {
             req.session.isLogged = false

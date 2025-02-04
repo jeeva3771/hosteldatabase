@@ -1,4 +1,4 @@
-const { mysqlQuery } = require('../utilityclient/query');
+const { mysqlQuery, deleteFile } = require('../utilityclient/query');
 const sendEmail = require('../utilityclient/email');
 const otpGenerator = require('otp-generator');
 const multer = require('multer');
@@ -329,6 +329,39 @@ function readStudentImageById(req, res) {
     }
 }
 
+async function updateStudentImage(req, res) {
+    let uploadedFilePath;
+    const studentId = req.session.studentInfo.studentId;
+
+    try {
+        if (studentId !== req.session.studentInfo.studentId) {
+            return res.status(409).send('Student is not valid to edit');
+        }
+
+        if (req.fileValidationError) {
+            return res.status(400).send(req.fileValidationError);
+        }
+
+        uploadedFilePath = req.file.path;
+        await sharp(fs.readFileSync(uploadedFilePath))
+            .resize({
+                width: parseInt(process.env.IMAGE_WIDTH),
+                height: parseInt(process.env.IMAGE_HEIGHT),
+                fit: sharp.fit.cover,
+                position: sharp.strategy.center,
+            })
+            .toFile(uploadedFilePath);
+            
+        return res.status(200).json('Student image updated successfully');
+    } catch (error) {
+       console.error();
+        
+        req.log.error(error)
+        res.status(500).json(error);
+    }
+}
+
+
 async function readStudentName(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.session.studentInfo.studentId;
@@ -353,9 +386,24 @@ async function readStudentName(req, res) {
     }
 }
 
+async function deleteStudentImage(req, res) {
+    const studentId = req.params.studentId;
+    try {
+        const rootDir = path.resolve(__dirname, '../');
+        const imagePath = path.join(rootDir, 'studentuploads', `${studentId}.jpg`);
+        await deleteFile(imagePath, fs);
+        res.status(200).send('Student Image updated successfully');
+    } catch (error) {
+        req.log.error(error)
+        res.status(500).send(error.message);
+    }
+}
+
 module.exports = (app) => {
     app.get('/api/student/name', readStudentName)
     app.get('/api/student/:studentId/image', readStudentImageById)
+    app.put('/api/student/:studentId/editimage', multerMiddleware, updateStudentImage)
+    app.delete('/api/student/:studentId/deleteimage', deleteStudentImage)
     app.post('/api/student/generateotp', generateOtp)
     app.put('/api/student/verifyotp/authentication', verifyOtpStudentAuthentication)
     app.get('/api/student/attendancereport', studentAttendanceReport)

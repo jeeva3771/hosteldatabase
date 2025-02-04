@@ -34,11 +34,16 @@
   const mainLogoStudentNameDom = document.getElementById('mainLogoStudentName');
   const logoStudentNameDom = document.getElementById('logoStudentName');
   const imageDom = document.getElementById('image');
+  const editProfileDom = document.getElementById('editProfile');
 
   function studentImage() {
     userImageDom.src =  `${getStudentAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
     if (imageDom) {
       imageDom.src = `${getStudentAppUrl('api/student')}${studentId}/image?date=${Date.now()}`
+    }
+
+    if (editProfileDom) {
+      editProfileDom.src = userImageDom.src
     }
   }
 

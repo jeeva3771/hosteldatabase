@@ -1,13 +1,15 @@
 const dotenv = require('dotenv');
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
-const FileStoreWarden = require('session-file-store')(session);
+// const FileStore= require('session-file-store')(session);
 // const FileStoreStudent = require('session-file-store')(session);
+const MySQLStore = require('express-mysql-session')(session);
+
 
 const { v4: uuidv4 } = require('uuid');
 
@@ -43,21 +45,19 @@ const logger = pino({
     level: 'info'
 });
 
+const dbOptions = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+};
+
+const sessionStore = new MySQLStore(dbOptions);
+
 function setupApplication(app) {
     app.use(express.static(path.join(__dirname, 'public')));
     app.use(express.json())
     app.use(cookieParser());
-
-    app.use(session({
-        store: new FileStoreWarden({}),
-        secret: process.env.SESSION_SECRET,
-        resave: true,
-        saveUninitialized: false,
-        cookie: {
-            maxAge: (1000 * 60 * 15) // 15 mins
-        }
-    }));
-
     app.use(
         pinoHttp({
             logger,
@@ -91,7 +91,17 @@ function setupApplication(app) {
         password: process.env.DB_PASSWORD,
         database: process.env.DB_NAME
     })    
-}
+
+    app.use(session({
+        store: sessionStore,
+        secret: process.env.SESSION_SECRET,
+        resave: false   ,
+        saveUninitialized: false,
+        cookie: {
+            maxAge: (1000 * 60 * 15) // 15 mins
+        }
+    })); 
+};
 
 const studentApp = express()
 const wardenApp = express()

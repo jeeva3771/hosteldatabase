@@ -1,10 +1,10 @@
-const EMAIL_FROM = 'jeeva37710@gmail.com'
+const EMAIL_FROM = 'jeevaoffl377@gmail.com'
 
 const EMAIL_AUTH = {
         service: 'gmail',
         auth: {
             user: EMAIL_FROM,
-            pass: 'lvwi ewnx gggg qbhd'
+            pass: 'micx qsyl atpg xjoj'
         }
     }
 

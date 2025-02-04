@@ -112,7 +112,7 @@
                           <div class="col-md-8 col-lg-9">
                             <div style="position: relative; display: inline-block;">
                               <!-- Spinner -->
-                              <span class="spinner-border text-secondary spinner2" id="spinner"></span>
+                              <span class="spinner-border text-secondary spinner" id="spinner"></span>
                               <!-- Profile Image -->
                               <img src="" alt="Profile" id="editProfile" >
                             </div>                            
@@ -120,10 +120,10 @@
                               <a class="btn btn-primary btn-sm" title="Upload new profile image"
                                 onclick="changeImageDom.click()">
                                 <input class="form-control" type="file" id="changeImage" 
-                                name="image" onchange="updateAvatar()" style="display: none;">
+                                name="image" onchange="updateImage()" style="display: none;">
                                 <i class="bi bi-upload"></i></a>
                               <a href="javascript:void(0);" class="btn btn-danger btn-sm" title="Remove my profile image"
-                                onclick="deleteAvatar()"><i class="bi bi-trash"></i></a>
+                                onclick="deleteImage()"><i class="bi bi-trash"></i></a>
                             </div>
                           </div>
                         </div>
@@ -140,43 +140,90 @@
 </main>
 <%- include('../../partials/studentuse/footer.ejs') %>
 <script>
-    const nameDom = document.getElementById('name');
-    const registerNumDom = document.getElementById('registerNum');
-    const dobDom = document.getElementById('dob');
-    const courseDom = document.getElementById('course');
-    const emailIdDom = document.getElementById('email');
-    const studNumDom = document.getElementById('studNum');
-    const fatherNameDom = document.getElementById('fatherName');
-    const fatherNumDom = document.getElementById('fatherNum');
-    const addressDom = document.getElementById('address');
-    const blockCodeDom = document.getElementById('blockCode');
-    const floorNumberDom = document.getElementById('floorNumber');
-    const roomNumberDom = document.getElementById('roomNumber');
-    const joinedDateDom = document.getElementById('joinedDate');
-    
-    async function studentDetails() {
-      try {
-        const response = await fetch(getStudentAppUrl('api/student/details'));
-        const student = await response.json();
-        nameDom.innerText = student.name;
-        registerNumDom.innerText = student.registerNumber;
-        dobDom.innerText = student.birth
-        courseDom.innerText = student.courseName;
-        emailIdDom.innerText = student.emailId;
-        studNumDom.innerText = student.phoneNumber;
-        fatherNameDom.innerText = student.fatherName;
-        fatherNumDom.innerText = student.fatherNumber;
-        addressDom.innerText = student.address;
-        blockCodeDom.innerText = student.blockCode;
-        floorNumberDom.innerText = student.floorNumber;
-        roomNumberDom.innerText = student.roomNumber;
-        joinedDateDom.innerText = student.joinDate;
-      } catch (error) {
-          alert('Something went wrong.Please try later.')
-      }
+  const changeImageDom = document.getElementById('changeImage');
+  const spinnerDom = document.getElementById('spinner');
+  const nameDom = document.getElementById('name');
+  const registerNumDom = document.getElementById('registerNum');
+  const dobDom = document.getElementById('dob');
+  const courseDom = document.getElementById('course');
+  const emailIdDom = document.getElementById('email');
+  const studNumDom = document.getElementById('studNum');
+  const fatherNameDom = document.getElementById('fatherName');
+  const fatherNumDom = document.getElementById('fatherNum');
+  const addressDom = document.getElementById('address');
+  const blockCodeDom = document.getElementById('blockCode');
+  const floorNumberDom = document.getElementById('floorNumber');
+  const roomNumberDom = document.getElementById('roomNumber');
+  const joinedDateDom = document.getElementById('joinedDate');
+  
+  async function studentDetails() {
+    try {
+      const response = await fetch(getStudentAppUrl('api/student/details'));
+      const student = await response.json();
+      nameDom.innerText = student.name;
+      registerNumDom.innerText = student.registerNumber;
+      dobDom.innerText = student.birth
+      courseDom.innerText = student.courseName;
+      emailIdDom.innerText = student.emailId;
+      studNumDom.innerText = student.phoneNumber;
+      fatherNameDom.innerText = student.fatherName;
+      fatherNumDom.innerText = student.fatherNumber;
+      addressDom.innerText = student.address;
+      blockCodeDom.innerText = student.blockCode;
+      floorNumberDom.innerText = student.floorNumber;
+      roomNumberDom.innerText = student.roomNumber;
+      joinedDateDom.innerText = student.joinDate;
+    } catch (error) {
+        alert('Something went wrong.Please try later.')
     }
+  }
 
-    window.addEventListener('load',()=> {
-        studentDetails()
+  function updateImage() {
+    var myHeaders = new Headers();
+    var formdata = new FormData();
+    formdata.append("studentImage", changeImageDom.files[0]);
+    spinnerDom.style.display = "block";
+
+    var requestOptions = {
+      method: 'PUT',
+      headers: myHeaders,
+      body: formdata,
+      redirect: 'follow'
+    };
+
+    fetch(getStudentAppUrl(`api/student/${studentId}/editimage`), requestOptions)
+    .then(async (response) => {
+      if (response.status === 400) {
+        alert(await response.text())
+      }
+      setTimeout(() => {
+        studentImage();
+        spinnerDom.style.display = "none"; // Hide spinner
+      }, 1000);
     })
+    .catch(error => alert('Edit student image something went wrong.Please try later'));
+  }
+
+  function deleteImage() {
+    var myHeaders = new Headers();
+    spinnerDom.style.display = "block";
+    var requestOptions = {
+      method: 'DELETE',
+      headers: myHeaders,
+      redirect: 'follow'
+    };
+
+    fetch(getStudentAppUrl(`api/student/${studentId}/deleteimage`), requestOptions)
+      .then(() => {
+        setTimeout(() => {
+          studentImage();
+          spinnerDom.style.display = "none"; // Hide spinner
+        }, 1000);
+      })
+      .catch(error => alert('Deleting student image something went wrong.Please try later'));
+  }
+
+  window.addEventListener('load',()=> {
+      studentDetails()
+  })
 </script>
