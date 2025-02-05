@@ -406,7 +406,7 @@ async function authentication(req, res) {
         // res.status(500).send(error.message)
 
         console.error("Authentication Error:", error); // Improved error logging
-        return res.status(500).json({ message: "Internal Server Error" });
+        return res.status(500).json(error.message);
     }
 }
 
