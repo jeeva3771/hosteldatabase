@@ -85,12 +85,7 @@ function setupApplication(app) {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, '/uicontroller/views'));
 
-    app.mysqlClient = mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-    })    
+    app.mysqlClient = mysql.createConnection(dbOptions)    
 
     app.use(session({
         store: sessionStore,
