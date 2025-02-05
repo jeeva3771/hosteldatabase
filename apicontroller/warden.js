@@ -386,7 +386,6 @@ async function authentication(req, res) {
         if (!warden) {
             req.session.isLogged = false
             req.session.warden = null
-            console.log(req.session)
             return res.status(400).send('Invalid Email.')
         }
 
@@ -403,8 +402,11 @@ async function authentication(req, res) {
             res.status(400).send('Invalid Password.')
         }
     } catch (error) {
-        req.log.error(error)
-        res.status(500).send(error.message)
+        // req.log.error(error)
+        // res.status(500).send(error.message)
+
+        console.error("Authentication Error:", error); // Improved error logging
+        return res.status(500).json({ message: "Internal Server Error" });
     }
 }
 
