@@ -402,11 +402,8 @@ async function authentication(req, res) {
             res.status(400).send('Invalid Password.')
         }
     } catch (error) {
-        // req.log.error(error)
-        // res.status(500).send(error.message)
-
-        console.error("Authentication Error:", error); // Improved error logging
-        return res.status(500).json(error.message);
+        req.log.error(error)
+        res.status(500).send(error.message)
     }
 }
 
