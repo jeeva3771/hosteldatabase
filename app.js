@@ -3,6 +3,8 @@ const express = require('express');
 const mysql = require('mysql2');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
+const cors = require('cors');
+
 const path = require('path');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
@@ -53,7 +55,10 @@ const dbOptions = {
     port: process.env.DB_PORT,
     ssl: {
         rejectUnauthorized: true
-    }
+    },
+    waitForConnections: true,
+  connectionLimit: 5,  // Max 5 connections at a time
+  queueLimit: 0
 };
 
 const sessionStore = new MySQLStore(dbOptions);
@@ -108,6 +113,18 @@ function setupApplication(app) {
             maxAge: (1000 * 60 * 15) // 15 mins
         }
     })); 
+
+    app.use(cors({
+        origin: ['http://localhost:1005', 'https://hosteldatabase.onrender.com'], // Allow frontend & deployed API
+        methods: ['GET', 'POST', 'PUT', 'DELETE'],
+        allowedHeaders: ['Content-Type', 'Authorization'],
+        credentials: true
+    }));
+
+    app.use((req, res, next) => {
+        res.header('Access-Control-Allow-Credentials', 'true');
+        next();
+    });
 };
 
 const studentApp = express()
