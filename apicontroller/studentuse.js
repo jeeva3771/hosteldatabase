@@ -333,7 +333,6 @@ async function updateImage(req, res) {
         }
 
         uploadedFilePath = req.file.path;
-        console.log(uploadedFilePath + 'ooooooooooooo')
         await sharp(fs.readFileSync(uploadedFilePath))
             .resize({
                 width: parseInt(process.env.IMAGE_WIDTH),

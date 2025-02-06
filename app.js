@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 const express = require('express');
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const pino = require('pino');
 const pinoHttp = require('pino-http');
 const path = require('path');
@@ -8,14 +8,10 @@ const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const FileStoreWarden = require('session-file-store')(session);
 const cors = require('cors');
-
-<<<<<<< Updated upstream
 // const FileStoreStudent = require('session-file-store')(session);
-
+const MySQLStore = require('express-mysql-session')(session);
 const { v4: uuidv4 } = require('uuid');
 
-=======
->>>>>>> Stashed changes
 dotenv.config({ path: `env/${process.env.NODE_ENV}.env` });
 
 //apicontroller
@@ -48,6 +44,15 @@ const logger = pino({
     level: 'info'
 });
 
+const dbOptions = {
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME
+};
+
+const sessionStore = new MySQLStore(dbOptions);
+
 function setupApplication(app) {
     app.use(express.static(path.join(__dirname, 'public')));
     app.use(express.json())
@@ -61,7 +66,7 @@ function setupApplication(app) {
     app.use(cors(corsOptions));
 
     app.use(session({ 
-        store: new FileStoreWarden({}),
+        store: sessionStore,
         secret: process.env.SESSION_SECRET,
         resave: false,
         saveUninitialized: false,
@@ -99,12 +104,7 @@ function setupApplication(app) {
     app.set('view engine', 'ejs');
     app.set('views', path.join(__dirname, '/uicontroller/views'));
 
-    app.mysqlClient = mysql.createConnection({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME
-    })    
+    app.mysqlClient = mysql.createConnection(dbOptions)    
 }
 
 const studentApp = express()

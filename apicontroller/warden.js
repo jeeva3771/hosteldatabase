@@ -394,7 +394,7 @@ async function authentication(req, res) {
         if (isValid) {
             req.session.warden = warden
             req.session.isLogged = true
-            res.status(200).send('success')
+            res.status(200).send(warden)
         } else {
             req.session.isLogged = false
             req.session.warden = null
