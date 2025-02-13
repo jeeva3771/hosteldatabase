@@ -69,6 +69,7 @@ async function readBlocks(req, res) {
         });
 
     } catch (error) {
+        console.log(error)
         req.log.error(error); 
         res.status(500).send(error.message)
     }
@@ -107,7 +108,7 @@ async function readBlockById(req, res) {
     }
 }
 
-async function readBlockFloorBlockCodeCount(req, res) {
+async function readBlockFloorBlockCodeCount(req, res) { 
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
     try {
@@ -143,7 +144,6 @@ async function readBlockFloorBlockCodeCount(req, res) {
 async function readBlockAttendancePercentage(req, res) {
     const mysqlClient = req.app.mysqlClient
     const blockId = req.query.blockId
-    console.log(blockId)
     try {
         const blockCount = await mysqlQuery(/*sql*/`SELECT COUNT(*) AS count FROM student WHERE blockId = ?`,
             [blockId], mysqlClient)

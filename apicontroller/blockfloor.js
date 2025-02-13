@@ -301,13 +301,11 @@ async function validatePayload(body, isUpdate = false, blockFloorId = null, mysq
     } = body
 
     const errors = []
-
     if (blockId !== undefined) {
-        if (isNaN(blockId) || blockId <= 0)
+        if (isNaN(blockId) || blockId <= 0) {
             errors.push('BlockId is invalid')
-        } else {
-            errors.push('BlockId is missing')
         }
+    }
 
     if (floorNumber !== undefined) {
         if (isNaN(floorNumber) || floorNumber <= 0) {

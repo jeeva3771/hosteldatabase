@@ -179,7 +179,6 @@ studentApp.use((req, res, next) => {
     if (pageStudentSessionExclude.includes(req.originalUrl)) {
         return next()
     }
-    console.log(req.session.isLoggedStudent)
     if (req.originalUrl !== '/student/login/') {
         if (req.session.isLoggedStudent !== true) {
             return res.status(401).send('Session expired.')
