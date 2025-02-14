@@ -141,7 +141,6 @@
                     } else {
                         alert(responseText.error || responseText);
                         submitButtonDom.disabled = false;
-
                     }
                 }
         })
@@ -230,7 +229,7 @@
                 return;
             }
 
-            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}`);
+            const response = await fetch(`${getAppUrl('api/blockfloor/floornumber')}?blockId=${blockId}&blockFloor=true`);
             const blockFloors = await response.json();
             floorNumberDom.innerHTML = '<option selected>Select a Floor</option>';
 

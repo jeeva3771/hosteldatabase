@@ -111,7 +111,7 @@ async function readBlockFloorById(req, res) {
     }
 }
 
-async function readFloorNumberByBlockFloorId(req, res) {
+async function readFloorNumberByBlockId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
     const includeBlockFloor = req.query.blockFloor === 'true';
@@ -131,7 +131,6 @@ async function readFloorNumberByBlockFloorId(req, res) {
         sqlQuery += ` FROM blockfloor AS b
             WHERE b.blockId = ? AND b.isActive = 1
             AND b.deletedAt IS NULL ORDER BY b.floorNumber ASC`;
-
         const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
 
         if (roomBlockFloorCount.length === 0) {
@@ -396,7 +395,7 @@ async function validateBlockFloorById(blockFloorId, mysqlClient) {
 
 module.exports = (app) => {
     app.get('/api/blockfloor', readBlockFloors)
-    app.get('/api/blockfloor/floornumber', readFloorNumberByBlockFloorId)
+    app.get('/api/blockfloor/floornumber', readFloorNumberByBlockId)
     app.get('/api/blockfloor/:blockfloorId', readBlockFloorById)
     app.post('/api/blockfloor', createBlockFloor)
     app.put('/api/blockfloor/:blockfloorId', updateBlockFloorById)
