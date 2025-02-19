@@ -291,6 +291,7 @@ function readStudentImageById(req, res) {
 }
 
 async function readStudentName(req, res) {
+    console.log('hiiiiiiiii')
     const mysqlClient = req.app.mysqlClient;
     const studentId = req.session.studentInfo.studentId;
  

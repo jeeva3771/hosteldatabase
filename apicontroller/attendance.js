@@ -139,6 +139,7 @@ async function readAttendanceById(req, res) {
 }
 
 async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
+    console.log('123')
     const mysqlClient = req.app.mysqlClient;
     const date = req.query.date;
 
@@ -168,6 +169,7 @@ async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
 
         res.status(200).send(getBlocksStudentCountAndAttendanceCount)
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }

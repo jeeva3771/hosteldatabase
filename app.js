@@ -71,8 +71,7 @@ function setupApplication(app) {
         resave: false,
         saveUninitialized: false,
         cookie: {
-            // maxAge: 1000 * 60 *60 * 24,
-            marAge: 1000 * 60,
+            maxAge: 1000 * 60 * 15,  // 15 minutes
             secure: false
         }
     }));
@@ -135,7 +134,7 @@ wardenApp.use((req, res, next) => {
     
     if (req.originalUrl !== '/login') {
         if (req.session.isLogged !== true) {
-            return res.status(401).redirect(getAppUrl('login'))
+            return res.status(401).send('Session expired.')
         }
     }
     return next()

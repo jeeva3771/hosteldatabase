@@ -58,7 +58,7 @@ async function readWardens(req, res) {
             w.*,
             ww.firstName AS createdFirstName,
             ww.lastName AS createdLastName,
-            DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,
+            DATE_FORMAT(w.dob, "%y-%b-%D") AS birth,  
             DATE_FORMAT(w.createdAt, "%y-%b-%D %r") AS createdTimeStamp
             FROM warden AS w
             LEFT JOIN
@@ -177,7 +177,7 @@ async function createWarden(req, res) {
     const createdBy = req.session.warden.wardenId;
 
     try {
-        const isValidInsert = await validatePayload(req.body, false, null, mysqlClient);
+        const isValidInsert = await validatePayload(req, req.body, false, null, mysqlClient);
         if (isValidInsert.length > 0) {
             return res.status(400).send(isValidInsert);
         }
@@ -219,6 +219,7 @@ async function createWarden(req, res) {
         }
         res.status(201).send('Insert successfully')
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -248,7 +249,7 @@ async function updateWardenById(req, res) {
             return res.status(404).send({error:"Warden not found or already deleted"});
         }
 
-        const isValidUpdate = await validatePayload(req.body, true, wardenId, mysqlClient);
+        const isValidUpdate = await validatePayload(null, req.body, true, wardenId, mysqlClient);
         if (isValidUpdate.length > 0) {
             return res.status(400).send(isValidUpdate)
         }
@@ -474,6 +475,7 @@ async function editUserWarden(req, res) {
             data: getUpdatedWarden[0]
         })
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send(error.message)
     }
@@ -683,20 +685,27 @@ async function processResetPassword(req, res) {
     }
 }
 
-async function validatePayload(body, isUpdate = false, wardenId = null, mysqlClient) {
+function sessionCheck(req, res) {
+    if (req.session && req.session.isLogged) {
+        return res.status(200).json({ message: "Session active" });
+    } else {
+        return res.status(401).json({ message: "Session expired" });
+    }
+}
+
+async function validatePayload(req, body, isUpdate = false, wardenId = null, mysqlClient) {
+    const errors = []
+    const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
+    if (validateMainDetails.length > 0) {
+        errors.push(...validateMainDetails)
+    }
     const {
         password,
         superAdmin
     } = body
     
-    const errors = []
-
-    const validateMainDetails = await validateMainPayload(body, isUpdate, wardenId, mysqlClient)
-    if (validateMainDetails.length > 0) {
-        errors.push(...validateMainDetails)
-    }
-
     if (isUpdate === false) {
+        console.log("password", password)
         if (password !== undefined) {
             if (password.length < 6) {
                 errors.push('Password is invalid')
@@ -705,9 +714,11 @@ async function validatePayload(body, isUpdate = false, wardenId = null, mysqlCli
             errors.push('Password is missing')
         }
     }
-    
-    if (req.fileValidationError) {
-        errors.push(req.fileValidationError)
+
+    if (isUpdate === false) {
+        if (req.fileValidationError) {
+            errors.push(req.fileValidationError)
+        }
     }
 
     if (superAdmin !== undefined) {
@@ -727,6 +738,7 @@ async function validateMainPayload(body, isUpdate = false, wardenId, mysqlClient
         dob,
         emailId
     } = body
+    console.log()
     const errors = []
 
     if (firstName !== undefined) {
@@ -834,4 +846,5 @@ module.exports = (app) => {
     app.delete('/api/warden/:wardenId', deleteWardenById)
     app.post('/api/login', authentication)
     app.get('/api/logout', userLogOut)
+    app.get('/auth/check-session', sessionCheck)
 }

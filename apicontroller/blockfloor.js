@@ -114,22 +114,21 @@ async function readBlockFloorById(req, res) {
 async function readFloorNumberByBlockId(req, res) {
     const mysqlClient = req.app.mysqlClient;
     const blockId = req.query.blockId;
-    const includeBlockFloor = req.query.blockFloor === 'true';
 
     try {
-        let sqlQuery = /*sql*/`SELECT 
-            blockFloorId, 
-            floorNumber`;
-
-        if (includeBlockFloor) {
-            sqlQuery += `, (SELECT COUNT(*)
-            FROM room AS r
-            WHERE r.blockFloorId = b.blockFloorId
-            AND r.deletedAt IS NULL) AS roomCount`;
-        }
-
-        sqlQuery += ` FROM blockfloor AS b
-            WHERE b.blockId = ? AND b.isActive = 1
+        let sqlQuery = /*sql*/`
+            SELECT 
+                blockFloorId, 
+                floorNumber,
+                (SELECT COUNT(*)
+                FROM room AS r
+                WHERE 
+                    r.blockFloorId = b.blockFloorId
+                    AND r.deletedAt IS NULL) 
+                AS roomCount FROM blockfloor AS b
+            WHERE 
+                b.blockId = ? 
+                AND b.isActive = 1
             AND b.deletedAt IS NULL ORDER BY b.floorNumber ASC`;
         const roomBlockFloorCount = await mysqlQuery(sqlQuery, [blockId], mysqlClient);
 
