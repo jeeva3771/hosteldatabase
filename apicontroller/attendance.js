@@ -139,7 +139,6 @@ async function readAttendanceById(req, res) {
 }
 
 async function readBlocksAndStudentCountAndAttendanceCount(req, res) {
-    console.log('123')
     const mysqlClient = req.app.mysqlClient;
     const date = req.query.date;
 
@@ -225,8 +224,8 @@ async function readRoomsAndStudentCountAndAttendanceCount(req, res) {
             SELECT 
                 r.roomId,
                 r.roomNumber,
-                count(s.roomId) as studentsCount, 
-                count(a.checkInDate) as attendanceCount
+                count(s.roomId) AS studentsCount, 
+                count(a.checkInDate) AS attendanceCount
             FROM room AS r
             LEFT JOIN 
                 student s ON r.roomId = s.roomId AND s.deletedAt IS NULL
@@ -285,11 +284,11 @@ async function addOrEditAttendance(req, res) {
     const { blockId, blockFloorId, roomId } = req.params;
     const { checkInDate, attendance } = req.body;
     const wardenId = req.session.warden.wardenId;
+    console.log(attendance)
 
     try {
         const errors = await validatePayload(req.params, mysqlClient);
         if (errors.length > 0) {
-            console.log(errors)
             return res.status(400).send(errors);
         }
 
