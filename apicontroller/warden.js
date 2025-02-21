@@ -378,12 +378,16 @@ async function authentication(req, res) {
 
     try {
         const [warden] = await mysqlQuery(/*sql*/`
-            SELECT * FROM warden 
-            WHERE emailId = ? 
-            AND deletedAt IS NULL`,
+            SELECT *,
+                DATE_FORMAT(dob, "%y-%b-%D") AS birth
+            FROM 
+                warden 
+            WHERE 
+                emailId = ? AND 
+                deletedAt IS NULL`,
             [emailId]
         , mysqlClient)
-        
+        console.log(warden)
         if (!warden) {
             req.session.isLogged = false
             req.session.warden = null

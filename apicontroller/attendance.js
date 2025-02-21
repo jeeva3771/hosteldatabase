@@ -274,6 +274,7 @@ async function readRoomStudents(req, res) {
 
         res.status(200).send(studentsWithAttendance);
     } catch (error) {
+        console.log(error)
         req.log.error(error)
         res.status(500).send('Error fetching student and attendance data: ' + error.message);
     }
